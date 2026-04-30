@@ -27,57 +27,64 @@ const Icon = {
   )
 };
 
-export default function WorkflowsControlCenter() {
+export default function WorkflowsFocusView() {
   return (
     <div className="p-6 space-y-6">
 
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Workflows</h1>
-        <div className="flex gap-2">
-          <Button variant="outline">CMD + K</Button>
-          <Button>Create Flow</Button>
+        <div>
+          <h1 className="text-xl font-semibold">Workflows</h1>
+          <p className="text-sm text-muted-foreground">Focus on what needs attention</p>
+        </div>
+        <Button>Create Flow</Button>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold">Filter</h2>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Icon.folder className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search folders..." className="pl-9 w-64" />
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">👤</span>
+            <Input placeholder="Search users..." className="pl-9 w-64" />
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-md text-sm">
+            <Icon.folder className="w-4 h-4" />
+            <span>Finance & Accounting</span>
+            <button className="ml-1 text-muted-foreground hover:text-foreground">
+              <Icon.close />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-md text-sm">
+            <span>👤</span>
+            <span>Suyash Singh</span>
+            <button className="ml-1 text-muted-foreground hover:text-foreground">
+              <Icon.close />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 overflow-x-auto">
-        <Button variant="secondary" className="flex items-center gap-2"><Icon.folder/> All</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> CrowdSourceTrials</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Customer Support</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Finance & Accounting</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Information Tech</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> My-Space</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> One_time</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Parakh Testing</Button>
-      </div>
-
-      <div className="grid grid-cols-5 gap-4 items-stretch">
-        <Card className="col-span-1">
-          <CardContent className="p-0 h-full">
-            <div className="flex items-center h-full px-3 gap-2">
-              <Icon.search />
-              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md text-lg font-bold">
-                <Icon.folder />
-                <span>All</span>
-                <button className="ml-1 text-muted-foreground"><Icon.close/></button>
-              </div>
-              <input className="flex-1 outline-none text-base" />
-            </div>
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-2">
+            <Icon.alert className="text-red-500" /> 3 Errors
           </CardContent>
         </Card>
-
-        <Card><CardContent className="p-4 flex items-center gap-2"><Icon.alert/> 3 Errors</CardContent></Card>
-        <Card><CardContent className="p-4">⏸ 40 Paused</CardContent></Card>
-        <Card><CardContent className="p-4">🧪 120 Unused</CardContent></Card>
-        <Card><CardContent className="p-4">✅ 125 Active</CardContent></Card>
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto">
-        <Button variant="outline">Suyash Singh (531)</Button>
-        <Button variant="outline">Naman Tamrakar (82)</Button>
-        <Button variant="outline">swapnil soni (52)</Button>
-        <Button variant="outline">Chirag Devlani (48)</Button>
-        <Button variant="outline">ankita bhatt (42)</Button>
-        <Button variant="outline">View All</Button>
+        <Card>
+          <CardContent className="p-4">⏸ 40 Paused</CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">🧪 120 Unused</CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">✅ 125 Active</CardContent>
+        </Card>
       </div>
 
       <Card>
