@@ -6,6 +6,7 @@ import {
   actionItems,
   navigationItems,
   flowItems,
+  collectionItems,
   logItems,
   helpItems,
   type CommandItem,
@@ -30,6 +31,12 @@ const KindIcon = {
       <circle cx="18" cy="6" r="2" />
       <circle cx="12" cy="18" r="2" />
       <path d="M8 6h8M7 8l4 8M17 8l-4 8" />
+    </svg>
+  ),
+  collection: () => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7h5l2 2h11v8a2 2 0 0 1-2 2H3z" />
+      <path d="M3 7V5a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2" />
     </svg>
   ),
   log: () => (
@@ -119,11 +126,13 @@ export function CommandPalette() {
     const filteredAction = actionItems.filter((i) => fuzzy(query, i));
     const filteredNav = navigationItems.filter((i) => fuzzy(query, i));
     const filteredFlow = flowItems.filter((i) => fuzzy(query, i));
+    const filteredCollection = collectionItems.filter((i) => fuzzy(query, i));
     const filteredLog = logItems.filter((i) => fuzzy(query, i));
     const filteredHelp = helpItems.filter((i) => fuzzy(query, i));
     const out: Section[] = [];
     if (filteredAction.length) out.push({ kind: "action", title: "Actions", items: filteredAction });
     if (filteredFlow.length) out.push({ kind: "flow", title: "Flows", items: filteredFlow });
+    if (filteredCollection.length) out.push({ kind: "collection", title: "Collections", items: filteredCollection });
     if (filteredLog.length) out.push({ kind: "log", title: "Logs", items: filteredLog });
     if (filteredHelp.length) out.push({ kind: "help", title: "Help & Docs", items: filteredHelp });
     if (filteredNav.length) out.push({ kind: "navigation", title: "Navigation", items: filteredNav });
@@ -174,11 +183,11 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-start pointer-events-none"
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-3xl mx-4 rounded-xl bg-[#0f1729] border border-white/10 shadow-2xl text-white overflow-hidden"
+        className="pointer-events-auto w-full max-w-3xl h-screen bg-[#0f1729] border-r border-white/10 shadow-2xl text-white overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKey}
       >
@@ -217,7 +226,7 @@ export function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-[60vh] overflow-y-auto">
+        <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto">
           {sections.length === 0 && (
             <div className="px-5 py-10 text-center text-sm text-white/50">
               No results for &quot;{query}&quot;
@@ -255,6 +264,9 @@ export function CommandPalette() {
                 )}
                 {section.kind === "action" && (
                   <div className="col-span-6">Description</div>
+                )}
+                {section.kind === "collection" && (
+                  <div className="col-span-6">Flows</div>
                 )}
               </div>
 
@@ -316,6 +328,12 @@ export function CommandPalette() {
                             {item.shortcut}
                           </kbd>
                         )}
+                      </div>
+                    )}
+
+                    {section.kind === "collection" && (
+                      <div className="col-span-6 text-white/60">
+                        {item.flowCount} {item.flowCount === 1 ? "flow" : "flows"}
                       </div>
                     )}
                   </div>

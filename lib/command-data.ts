@@ -1,4 +1,4 @@
-export type CommandKind = "action" | "navigation" | "flow" | "log" | "help";
+export type CommandKind = "action" | "navigation" | "flow" | "collection" | "log" | "help";
 
 export type CommandItem = {
   id: string;
@@ -15,7 +15,20 @@ export type CommandItem = {
   time?: string;
   // help/action fields
   description?: string;
+  // collection fields
+  flowCount?: number;
 };
+
+export const collectionItems: CommandItem[] = [
+  { id: "c1", kind: "collection", name: "MSG91 High Priority", flowCount: 12, href: "/collections/msg91-high-priority" },
+  { id: "c2", kind: "collection", name: "MSG91 Developers", flowCount: 8, href: "/collections/msg91-developers" },
+  { id: "c3", kind: "collection", name: "Partners Team", flowCount: 15, href: "/collections/partners-team" },
+  { id: "c4", kind: "collection", name: "Customer Support", flowCount: 6, href: "/collections/customer-support" },
+  { id: "c5", kind: "collection", name: "Finance & Accounting", flowCount: 4, href: "/collections/finance-accounting" },
+  { id: "c6", kind: "collection", name: "Information Tech", flowCount: 9, href: "/collections/information-tech" },
+  { id: "c7", kind: "collection", name: "OpenAI prompts", flowCount: 3, href: "/collections/openai-prompts" },
+  { id: "c8", kind: "collection", name: "CrowdSourceTrials", flowCount: 2, href: "/collections/crowdsource-trials" },
+];
 
 export const actionItems: CommandItem[] = [
   {
