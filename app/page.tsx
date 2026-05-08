@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { VersionSelector } from "@/components/version-selector";
 
 const Icon = {
   search: (props: React.SVGProps<SVGSVGElement>) => (
@@ -32,7 +33,10 @@ export default function WorkflowsControlCenter() {
     <div className="p-6 space-y-6">
 
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Workflows</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold">Workflows</h1>
+          <VersionSelector />
+        </div>
         <div className="flex gap-2">
           <Button variant="outline">CMD + K</Button>
           <Button>Create Flow</Button>

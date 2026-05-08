@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LeftNav } from "@/components/left-nav";
+import { CommandPalette } from "@/components/command-palette";
 
 export const metadata: Metadata = {
   title: "Workflows Control Center",
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body className="min-h-full flex">
         <LeftNav />
         <main className="flex-1 overflow-auto">{children}</main>
+        <CommandPalette />
       </body>
     </html>
   );
