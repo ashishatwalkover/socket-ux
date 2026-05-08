@@ -1,19 +1,32 @@
-export type CommandKind = "navigation" | "flow" | "log" | "help";
+export type CommandKind = "action" | "navigation" | "flow" | "log" | "help";
 
 export type CommandItem = {
   id: string;
   kind: CommandKind;
   name: string;
   href?: string;
+  // action fields
+  shortcut?: string;
   // flow fields
   status?: "Active" | "Paused" | "Error";
   updated?: string;
   collection?: string;
   // log fields
   time?: string;
-  // help fields
+  // help/action fields
   description?: string;
 };
+
+export const actionItems: CommandItem[] = [
+  {
+    id: "act-create-flow",
+    kind: "action",
+    name: "Create New Flow",
+    description: "Start building a new workflow from scratch",
+    href: "/?new=1",
+    shortcut: "C",
+  },
+];
 
 export const navigationItems: CommandItem[] = [
   { id: "nav-home", kind: "navigation", name: "Home", href: "/" },

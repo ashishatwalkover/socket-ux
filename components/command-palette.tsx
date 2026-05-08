@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
+  actionItems,
   navigationItems,
   flowItems,
   logItems,
@@ -12,6 +13,12 @@ import {
 } from "@/lib/command-data";
 
 const KindIcon = {
+  action: () => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  ),
   navigation: () => (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 18l6-6-6-6" />
@@ -109,15 +116,17 @@ export function CommandPalette() {
   }, [open]);
 
   const sections: Section[] = useMemo(() => {
+    const filteredAction = actionItems.filter((i) => fuzzy(query, i));
     const filteredNav = navigationItems.filter((i) => fuzzy(query, i));
     const filteredFlow = flowItems.filter((i) => fuzzy(query, i));
     const filteredLog = logItems.filter((i) => fuzzy(query, i));
     const filteredHelp = helpItems.filter((i) => fuzzy(query, i));
     const out: Section[] = [];
-    if (filteredNav.length) out.push({ kind: "navigation", title: "Navigation", items: filteredNav });
+    if (filteredAction.length) out.push({ kind: "action", title: "Actions", items: filteredAction });
     if (filteredFlow.length) out.push({ kind: "flow", title: "Flows", items: filteredFlow });
     if (filteredLog.length) out.push({ kind: "log", title: "Logs", items: filteredLog });
     if (filteredHelp.length) out.push({ kind: "help", title: "Help & Docs", items: filteredHelp });
+    if (filteredNav.length) out.push({ kind: "navigation", title: "Navigation", items: filteredNav });
     return out;
   }, [query]);
 
@@ -244,6 +253,9 @@ export function CommandPalette() {
                 {section.kind === "help" && (
                   <div className="col-span-6">Description</div>
                 )}
+                {section.kind === "action" && (
+                  <div className="col-span-6">Description</div>
+                )}
               </div>
 
               {/* Rows */}
@@ -294,6 +306,17 @@ export function CommandPalette() {
 
                     {section.kind === "help" && (
                       <div className="col-span-6 text-white/60 truncate">{item.description}</div>
+                    )}
+
+                    {section.kind === "action" && (
+                      <div className="col-span-6 flex items-center justify-between gap-2 text-white/60 truncate">
+                        <span className="truncate">{item.description}</span>
+                        {item.shortcut && (
+                          <kbd className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded">
+                            {item.shortcut}
+                          </kbd>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
