@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +32,7 @@ const Icon = {
 };
 
 export default function WorkflowsControlCenter() {
+  const router = useRouter();
   return (
     <div className="p-6 space-y-6">
 
@@ -98,7 +102,7 @@ export default function WorkflowsControlCenter() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
+              <tr className="border-b cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/flows/1')}>
                 <td className="p-4">
                   <div className="font-medium">Spreadsheet Update Trigger</div>
                   <div className="text-muted-foreground text-xs">Sheet updated trigger</div>
@@ -116,7 +120,7 @@ export default function WorkflowsControlCenter() {
                 </td>
               </tr>
 
-              <tr className="border-b">
+              <tr className="border-b cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/flows/2')}>
                 <td className="p-4">
                   <div className="font-medium">Always True Function</div>
                   <div className="text-muted-foreground text-xs">All runs failed</div>
@@ -134,7 +138,7 @@ export default function WorkflowsControlCenter() {
                 </td>
               </tr>
 
-              <tr>
+              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/flows/3')}>
                 <td className="p-4">
                   <div className="font-medium">Cron at 11:55</div>
                   <div className="text-muted-foreground text-xs">Not triggered yet</div>
