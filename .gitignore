@@ -80,3 +80,13 @@ lerna-debug.log*
 .cache
 .turbo
 package-lock.json
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
