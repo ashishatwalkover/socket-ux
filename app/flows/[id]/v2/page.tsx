@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const CW = 2120;
 const CH = 1660;
@@ -262,8 +262,22 @@ function EmptyEl({ n }: { n: FN }) {
   );
 }
 
-function GroupEl({ n }: { n: FN }) {
+function GroupEl({ n, collapsed = false, onToggle }: { n: FN; collapsed?: boolean; onToggle?: () => void }) {
   const c = GROUP_BG[n.id] ?? { bg: "rgba(148,163,184,0.07)", bd: "rgba(148,163,184,0.28)" };
+  const ChevronBtn = (
+    <button
+      onClick={(e) => { e.stopPropagation(); onToggle?.(); }}
+      className="w-4 h-4 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+      aria-label={collapsed ? "Expand" : "Collapse"}
+    >
+      <svg
+        width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        style={{ transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.15s ease" }}
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  );
   return (
     <div className="w-full h-full relative border-2" style={{ backgroundColor: c.bg, borderColor: c.bd }}>
       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
@@ -273,13 +287,16 @@ function GroupEl({ n }: { n: FN }) {
               <span className="inline-flex items-center gap-1.5 bg-white border border-gray-200 shadow-sm px-2 py-0.5 rounded-sm">
                 <span className="text-[8px] font-bold bg-gray-500 text-white px-1 py-0.5 rounded leading-none">ELSE</span>
                 <span className="text-[10px] font-medium text-gray-500">Nothing Matched</span>
+                <MoreMenu />
+                {ChevronBtn}
               </span>
-              <span className={`inline-flex items-center justify-center rounded-sm ${n.id === "grp-else-left" ? "bg-black" : "bg-green-500"}`} style={{width:"20px",height:"20px"}}>
-                {n.id === "grp-else-left"
-                  ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                }
-              </span>
+              {n.id !== "grp-else-left" && (
+                <span className="inline-flex items-center justify-center rounded-sm bg-green-500" style={{ width: "20px", height: "20px" }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+              )}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5">
@@ -287,34 +304,38 @@ function GroupEl({ n }: { n: FN }) {
                 <span className="text-[8px] font-bold bg-blue-500 text-white px-1 py-0.5 rounded leading-none">IF</span>
                 <span className="text-[10px] font-medium text-gray-700">{n.gl}</span>
                 <MoreMenu />
+                {ChevronBtn}
               </span>
-              <span className={`inline-flex items-center justify-center rounded-sm ${["grp-thread","grp-awaiting","grp-foo"].includes(n.id) ? "bg-black" : "bg-green-500"}`} style={{width:"20px",height:"20px"}}>
-                {["grp-thread","grp-awaiting","grp-foo"].includes(n.id)
-                  ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  : <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                }
-              </span>
+              {!["grp-thread", "grp-awaiting", "grp-foo"].includes(n.id) && (
+                <span className="inline-flex items-center justify-center rounded-sm bg-green-500" style={{ width: "20px", height: "20px" }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+              )}
             </span>
           )
         )}
       </div>
-      <button className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors whitespace-nowrap">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Add or drag step here
-      </button>
+      {!collapsed && (
+        <button className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors whitespace-nowrap">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add or drag step here
+        </button>
+      )}
     </div>
   );
 }
 
-function NodeEl({ n }: { n: FN }) {
+function NodeEl({ n, collapsed, onToggle }: { n: FN; collapsed?: boolean; onToggle?: () => void }) {
   switch (n.kind) {
     case "trigger":   return <TriggerEl n={n} />;
     case "action":    return <ActionEl n={n} />;
     case "condition": return <ConditionEl />;
     case "empty":     return <EmptyEl n={n} />;
-    case "group":     return <GroupEl n={n} />;
+    case "group":     return <GroupEl n={n} collapsed={collapsed} onToggle={onToggle} />;
   }
 }
 
@@ -414,6 +435,25 @@ export default function FlowPageV2() {
   const [tf, setTf] = useState({ x: 20, y: 16, scale: 0.58 });
   const [isPanning, setIsPanning] = useState(false);
   const lastMouse = useRef({ x: 0, y: 0 });
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      setTf(t => {
+        const next = Math.min(2, Math.max(0.15, +(t.scale + delta).toFixed(2)));
+        return { scale: next, x: mx - (mx - t.x) * (next / t.scale), y: my - (my - t.y) * (next / t.scale) };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const zoomBy = (d: number) =>
     setTf(t => ({ ...t, scale: Math.min(2, Math.max(0.15, +(t.scale + d).toFixed(2))) }));
@@ -435,27 +475,55 @@ export default function FlowPageV2() {
   };
 
   const stopPan = () => setIsPanning(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const toggleCollapse = (id: string) =>
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
   const groups  = NODES.filter(n => n.kind === "group");
   const rest    = NODES.filter(n => n.kind !== "group");
+
+  const hiddenIds = new Set<string>();
+  groups.forEach(g => {
+    if (!collapsed.has(g.id)) return;
+    NODES.forEach(c => {
+      if (c.id === g.id) return;
+      const fullyInside =
+        c.x >= g.x &&
+        c.y >= g.y &&
+        c.x + c.w <= g.x + g.w &&
+        c.y + c.h <= g.y + g.h;
+      if (fullyInside) hiddenIds.add(c.id);
+    });
+  });
+  const COLLAPSED_H = 28;
+
+  const INACTIVE_ID = "grp-thread";
+  const inactiveGroup = nodeMap[INACTIVE_ID];
+  const inactiveChildIds = new Set<string>();
+  if (inactiveGroup) {
+    NODES.forEach(c => {
+      if (c.id === INACTIVE_ID) return;
+      if (
+        c.x >= inactiveGroup.x &&
+        c.y >= inactiveGroup.y &&
+        c.x + c.w <= inactiveGroup.x + inactiveGroup.w &&
+        c.y + c.h <= inactiveGroup.y + inactiveGroup.h
+      ) inactiveChildIds.add(c.id);
+    });
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <FlowHeader currentVersion="v2" />
       <div
+        ref={viewportRef}
         className="flex-1 relative overflow-hidden bg-[#f4f4f4]"
         style={{ backgroundImage: "radial-gradient(circle, #c8c8c8 1px, transparent 1px)", backgroundSize: "28px 28px", cursor: isPanning ? "grabbing" : "grab" }}
         onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={stopPan} onMouseLeave={stopPan}
-        onWheel={e => {
-          e.preventDefault();
-          const delta = e.deltaY < 0 ? 0.05 : -0.05;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-          setTf(t => {
-            const next = Math.min(2, Math.max(0.15, +(t.scale + delta).toFixed(2)));
-            return { scale: next, x: mx - (mx - t.x) * (next / t.scale), y: my - (my - t.y) * (next / t.scale) };
-          });
-        }}
       >
         <div className="absolute bottom-5 left-5 z-20 flex flex-col gap-1">
           {([{ lbl: "+", fn: () => zoomBy(0.1) }, { lbl: "−", fn: () => zoomBy(-0.1) }, { lbl: "↺", fn: () => setTf({ x: 20, y: 16, scale: 0.58 }) }] as { lbl: string; fn: () => void }[]).map(b => (
@@ -468,6 +536,7 @@ export default function FlowPageV2() {
             {EDGES.map(e => {
               const a = nodeMap[e.from], b = nodeMap[e.to];
               if (!a || !b) return null;
+              if (hiddenIds.has(e.from) || hiddenIds.has(e.to)) return null;
               const isSide = e.side === "left" || e.side === "right";
               const sx = a.x + a.w / 2, sy = a.y + a.h;
               const ex = b.x + b.w / 2, ey = b.kind === "condition" ? b.y + b.h : b.y;
@@ -481,12 +550,64 @@ export default function FlowPageV2() {
               );
             })}
           </svg>
-          {groups.map(n => (
-            <div key={n.id} data-node-id={n.id} style={{ position: "absolute", left: n.x, top: n.y, width: n.w, height: n.h }}><NodeEl n={n} /></div>
-          ))}
-          {rest.map(n => (
-            <div key={n.id} data-node-id={n.id} style={{ position: "absolute", left: n.x, top: n.y, width: n.w, height: n.h }}><NodeEl n={n} /></div>
-          ))}
+          {groups.map(n => {
+            if (hiddenIds.has(n.id)) return null;
+            if (inactiveChildIds.has(n.id)) return null;
+            const isCollapsed = collapsed.has(n.id);
+            const h = isCollapsed ? COLLAPSED_H : n.h;
+
+            if (n.id === INACTIVE_ID) {
+              return (
+                <div
+                  key={n.id}
+                  data-node-id={n.id}
+                  className="absolute grayscale hover:grayscale-0 hover:opacity-100 transition-[filter,opacity] duration-200"
+                  style={{ left: n.x, top: n.y, width: n.w, height: h }}
+                >
+                  <GroupEl n={n} collapsed={isCollapsed} onToggle={() => toggleCollapse(n.id)} />
+                  {!isCollapsed && Array.from(inactiveChildIds).map(id => {
+                    const c = nodeMap[id];
+                    if (!c) return null;
+                    if (hiddenIds.has(c.id)) return null;
+                    const cIsCollapsed = collapsed.has(c.id);
+                    const ch = c.kind === "group" && cIsCollapsed ? COLLAPSED_H : c.h;
+                    return (
+                      <div
+                        key={c.id}
+                        data-node-id={c.id}
+                        style={{ position: "absolute", left: c.x - n.x, top: c.y - n.y, width: c.w, height: ch }}
+                      >
+                        <NodeEl n={c} collapsed={cIsCollapsed} onToggle={() => toggleCollapse(c.id)} />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={n.id}
+                data-node-id={n.id}
+                style={{ position: "absolute", left: n.x, top: n.y, width: n.w, height: h }}
+              >
+                <GroupEl n={n} collapsed={isCollapsed} onToggle={() => toggleCollapse(n.id)} />
+              </div>
+            );
+          })}
+          {rest.map(n => {
+            if (hiddenIds.has(n.id)) return null;
+            if (inactiveChildIds.has(n.id)) return null;
+            return (
+              <div
+                key={n.id}
+                data-node-id={n.id}
+                style={{ position: "absolute", left: n.x, top: n.y, width: n.w, height: n.h }}
+              >
+                <NodeEl n={n} />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

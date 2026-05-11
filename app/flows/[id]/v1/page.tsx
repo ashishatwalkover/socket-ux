@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const CW = 2120;
 const CH = 1660;
@@ -308,6 +308,25 @@ export default function FlowPageV1() {
   const [tf, setTf] = useState({ x: 20, y: 16, scale: 0.58 });
   const [isPanning, setIsPanning] = useState(false);
   const lastMouse = useRef({ x: 0, y: 0 });
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      setTf(t => {
+        const next = Math.min(2, Math.max(0.15, +(t.scale + delta).toFixed(2)));
+        return { scale: next, x: mx - (mx - t.x) * (next / t.scale), y: my - (my - t.y) * (next / t.scale) };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const zoomBy = (d: number) =>
     setTf(t => ({ ...t, scale: Math.min(2, Math.max(0.15, +(t.scale + d).toFixed(2))) }));
@@ -337,19 +356,10 @@ export default function FlowPageV1() {
     <div className="h-screen flex flex-col overflow-hidden">
       <FlowHeader currentVersion="v1" />
       <div
+        ref={viewportRef}
         className="flex-1 relative overflow-hidden bg-[#f4f4f4]"
         style={{ backgroundImage: "radial-gradient(circle, #c8c8c8 1px, transparent 1px)", backgroundSize: "28px 28px", cursor: isPanning ? "grabbing" : "grab" }}
         onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={stopPan} onMouseLeave={stopPan}
-        onWheel={e => {
-          e.preventDefault();
-          const delta = e.deltaY < 0 ? 0.05 : -0.05;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-          setTf(t => {
-            const next = Math.min(2, Math.max(0.15, +(t.scale + delta).toFixed(2)));
-            return { scale: next, x: mx - (mx - t.x) * (next / t.scale), y: my - (my - t.y) * (next / t.scale) };
-          });
-        }}
       >
         <div className="absolute bottom-5 left-5 z-20 flex flex-col gap-1">
           {([{ lbl: "+", fn: () => zoomBy(0.1) }, { lbl: "−", fn: () => zoomBy(-0.1) }, { lbl: "↺", fn: () => setTf({ x: 20, y: 16, scale: 0.58 }) }] as { lbl: string; fn: () => void }[]).map(b => (
