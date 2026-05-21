@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
 const CW = 2120;
 const CH = 1660;
@@ -329,6 +329,137 @@ function GroupEl({ n, collapsed = false, onToggle }: { n: FN; collapsed?: boolea
   );
 }
 
+type SummaryStepItem = { type: "step"; node: FN; n: number };
+type SummaryBranchItem = { type: "branch"; condition: FN; n: number; branches: { group: FN; items: SummaryItem[] }[] };
+type SummaryItem = SummaryStepItem | SummaryBranchItem;
+
+function smallestEnclosingGroup(node: FN, groups: FN[]): FN | null {
+  let best: FN | null = null;
+  for (const g of groups) {
+    if (g.id === node.id) continue;
+    if (
+      node.x >= g.x && node.y >= g.y &&
+      node.x + node.w <= g.x + g.w &&
+      node.y + node.h <= g.y + g.h
+    ) {
+      if (!best || (g.w * g.h) < (best.w * best.h)) best = g;
+    }
+  }
+  return best;
+}
+
+function buildSummary(): SummaryItem[] {
+  const groups = NODES.filter(n => n.kind === "group");
+  let counter = 1;
+  const visit = (parentId: string | null): SummaryItem[] => {
+    const direct = NODES.filter(n => {
+      if (n.id === parentId) return false;
+      if (n.kind === "group") return false;
+      const enc = smallestEnclosingGroup(n, groups);
+      return (enc?.id ?? null) === parentId;
+    }).sort((a, b) => a.y - b.y || a.x - b.x);
+    const out: SummaryItem[] = [];
+    for (const node of direct) {
+      if (node.kind === "condition") {
+        const n = counter++;
+        const outgoing = EDGES.filter(e => e.from === node.id && e.side);
+        const branches = outgoing
+          .map(e => {
+            const grp = NODES.find(g => g.id === e.to && g.kind === "group");
+            if (!grp) return null;
+            return { group: grp, items: visit(grp.id) };
+          })
+          .filter((x): x is { group: FN; items: SummaryItem[] } => Boolean(x));
+        out.push({ type: "branch", condition: node, n, branches });
+      } else if (node.kind === "empty") {
+        // skip placeholders in summary
+      } else {
+        out.push({ type: "step", node, n: counter++ });
+      }
+    }
+    return out;
+  };
+  return visit(null);
+}
+
+function SummaryStepRow({ item }: { item: SummaryStepItem }) {
+  const { node, n } = item;
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/60 transition-colors">
+      <span className="text-[11px] text-gray-400 font-medium w-5 text-right tabular-nums flex-shrink-0">{n}</span>
+      <AIc k={node.icon} />
+      <span className="text-[12px] text-gray-800 flex-1 truncate">{node.title ?? "Step"}</span>
+      {node.badge && <Bdg label={node.badge} color={node.bc} />}
+    </div>
+  );
+}
+
+function SummaryBranchRow({ item }: { item: SummaryBranchItem }) {
+  const [active, setActive] = useState(0);
+  const { branches, n, condition } = item;
+  if (!branches.length) return null;
+  const cur = branches[active];
+  const headLabel = cur.group.gl ?? "Branch";
+  return (
+    <div className="border-b border-gray-100 last:border-b-0">
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50/40">
+        <span className="text-[11px] text-gray-400 font-medium w-5 text-right tabular-nums flex-shrink-0">{n}</span>
+        <span className="text-[9px] font-bold bg-blue-500 text-white px-1.5 py-0.5 rounded leading-none">IF</span>
+        <span className="text-[12px] text-gray-700 flex-1 truncate">{headLabel}</span>
+        <span className="text-[10px] text-gray-400" title={condition.id}>{branches.length} paths</span>
+      </div>
+      <div className="px-4 pt-2 flex gap-1 flex-wrap bg-gray-50/40 border-t border-gray-100">
+        {branches.map((b, i) => {
+          const isActive = i === active;
+          const c = GROUP_BG[b.group.id];
+          return (
+            <button
+              key={b.group.id}
+              onClick={() => setActive(i)}
+              className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-t-md border transition-colors ${isActive ? "bg-white border-gray-200 border-b-white text-gray-800 font-medium -mb-px" : "bg-transparent border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              {c && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: c.bd }} />}
+              <span className="font-semibold uppercase tracking-wide">{b.group.badge ?? "Branch"}</span>
+              <span className="text-gray-400 truncate max-w-[160px] normal-case font-normal">· {b.group.gl}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="border-t border-gray-200 bg-white pl-4">
+        {cur.items.length === 0 ? (
+          <div className="px-4 py-3 text-[11px] text-gray-400 italic">No steps in this branch</div>
+        ) : cur.items.map((it, i) => (
+          it.type === "step"
+            ? <SummaryStepRow key={`s-${i}`} item={it} />
+            : <SummaryBranchRow key={`b-${i}`} item={it} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FlowSummary({ variant }: { variant: "page" | "drawer" }) {
+  const items = useMemo(() => buildSummary(), []);
+  const isDrawer = variant === "drawer";
+  return (
+    <div className={isDrawer ? "p-3" : "max-w-[760px] mx-auto py-8 px-6"}>
+      {!isDrawer && (
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-gray-800">Flow Summary</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Read-only linear view of all steps in execution order.</p>
+        </div>
+      )}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        {items.map((it, i) => (
+          it.type === "step"
+            ? <SummaryStepRow key={`s-${i}`} item={it} />
+            : <SummaryBranchRow key={`b-${i}`} item={it} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function NodeEl({ n, collapsed, onToggle }: { n: FN; collapsed?: boolean; onToggle?: () => void }) {
   switch (n.kind) {
     case "trigger":   return <TriggerEl n={n} />;
@@ -390,9 +521,9 @@ function VersionDropdown({ currentVersion }: { currentVersion: string }) {
   );
 }
 
-function FlowHeader({ currentVersion }: { currentVersion: string }) {
+function FlowHeader({ currentVersion, onToggleSummary, summaryOpen }: { currentVersion: string; onToggleSummary: () => void; summaryOpen: boolean }) {
   return (
-    <header className="flex items-center h-11 px-4 border-b border-gray-200 bg-white gap-3 flex-shrink-0 shadow-sm z-10">
+    <header className="relative flex items-center h-11 px-4 border-b border-gray-200 bg-white gap-3 flex-shrink-0 shadow-sm z-10">
       <nav className="flex items-center gap-1 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
         <span className="text-gray-300">/</span>
@@ -403,21 +534,24 @@ function FlowHeader({ currentVersion }: { currentVersion: string }) {
           PUBLISHED
         </span>
       </nav>
+      <div className="absolute left-1/2 -translate-x-1/2 flex border border-gray-200 rounded overflow-hidden text-xs">
+        <button className="px-3 py-1 bg-white font-semibold text-gray-800 border-b-2 border-blue-500">FLOW</button>
+        <button className="px-3 py-1 text-gray-500 hover:bg-gray-50 transition-colors">PUBLISHED</button>
+        <button className="px-3 py-1 text-gray-500 hover:bg-gray-50 transition-colors">LOG</button>
+      </div>
       <div className="flex items-center gap-2 ml-auto">
         <VersionDropdown currentVersion={currentVersion} />
-        <button className="flex items-center gap-1 text-xs border border-blue-300 text-blue-600 px-2.5 py-1 rounded font-medium hover:bg-blue-50 transition-colors">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 20h9" /><path d="M16.5 3.5l4 4L7 21l-4 1 1-4L16.5 3.5z" />
+        <button
+          onClick={onToggleSummary}
+          aria-label="Toggle summary"
+          className={`flex items-center gap-1 text-xs border px-2.5 py-1 rounded font-medium transition-colors ${summaryOpen ? "bg-gray-100 border-gray-300 text-gray-800" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
           </svg>
-          EDITING
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          SUMMARY
         </button>
-        <div className="flex border border-gray-200 rounded overflow-hidden text-xs">
-          <button className="px-3 py-1 bg-white font-semibold text-gray-800 border-b-2 border-blue-500">FLOW</button>
-          <button className="px-3 py-1 text-gray-500 hover:bg-gray-50 transition-colors">LOG</button>
-        </div>
         <button className="text-xs border border-red-200 text-red-500 px-2.5 py-1 rounded hover:bg-red-50 transition-colors font-medium">
           DISCARD CHANGES
         </button>
@@ -436,11 +570,21 @@ export default function FlowPageV2() {
   const [isPanning, setIsPanning] = useState(false);
   const lastMouse = useRef({ x: 0, y: 0 });
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"diagram" | "summary">("diagram");
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
+  useEffect(() => {
+    if (!summaryOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSummaryOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [summaryOpen]);
 
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      if (viewMode === "summary") return;
       e.preventDefault();
       const delta = e.deltaY < 0 ? 0.05 : -0.05;
       const rect = el.getBoundingClientRect();
@@ -453,13 +597,14 @@ export default function FlowPageV2() {
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [viewMode]);
 
   const zoomBy = (d: number) =>
     setTf(t => ({ ...t, scale: Math.min(2, Math.max(0.15, +(t.scale + d).toFixed(2))) }));
 
   const onMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
+    if (viewMode === "summary") return;
     setIsPanning(true);
     lastMouse.current.x = e.clientX;
     lastMouse.current.y = e.clientY;
@@ -518,13 +663,19 @@ export default function FlowPageV2() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <FlowHeader currentVersion="v2" />
+      <FlowHeader currentVersion="v2" onToggleSummary={() => setSummaryOpen(o => !o)} summaryOpen={summaryOpen} />
       <div
         ref={viewportRef}
-        className="flex-1 relative overflow-hidden bg-[#f4f4f4]"
-        style={{ backgroundImage: "radial-gradient(circle, #c8c8c8 1px, transparent 1px)", backgroundSize: "28px 28px", cursor: isPanning ? "grabbing" : "grab" }}
+        className={`flex-1 relative ${viewMode === "summary" ? "overflow-auto bg-gray-50" : "overflow-hidden bg-[#f4f4f4]"}`}
+        style={viewMode === "summary" ? undefined : { backgroundImage: "radial-gradient(circle, #c8c8c8 1px, transparent 1px)", backgroundSize: "28px 28px", cursor: isPanning ? "grabbing" : "grab" }}
         onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={stopPan} onMouseLeave={stopPan}
       >
+        <div className="absolute top-3 left-3 z-20 flex bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden text-[11px]">
+          <button onClick={() => setViewMode("diagram")} className={`px-2.5 py-1 transition-colors ${viewMode === "diagram" ? "bg-gray-100 text-gray-800 font-medium" : "text-gray-500 hover:bg-gray-50"}`}>Diagram</button>
+          <button onClick={() => setViewMode("summary")} className={`px-2.5 py-1 transition-colors ${viewMode === "summary" ? "bg-gray-100 text-gray-800 font-medium" : "text-gray-500 hover:bg-gray-50"}`}>Summary</button>
+        </div>
+        {viewMode === "summary" && <FlowSummary variant="page" />}
+        {viewMode === "diagram" && (<>
         <div className="absolute bottom-5 left-5 z-20 flex flex-col gap-1">
           {([{ lbl: "+", fn: () => zoomBy(0.1) }, { lbl: "−", fn: () => zoomBy(-0.1) }, { lbl: "↺", fn: () => setTf({ x: 20, y: 16, scale: 0.58 }) }] as { lbl: string; fn: () => void }[]).map(b => (
             <button key={b.lbl} onClick={b.fn} className="w-8 h-8 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 flex items-center justify-center text-gray-600 text-sm font-medium transition-colors">{b.lbl}</button>
@@ -609,7 +760,22 @@ export default function FlowPageV2() {
             );
           })}
         </div>
+        </>)}
       </div>
+      {summaryOpen && (
+        <>
+          <div className="fixed inset-0 top-11 bg-black/10 z-30" onClick={() => setSummaryOpen(false)} />
+          <aside className="fixed right-0 top-11 bottom-0 w-[420px] bg-white border-l border-gray-200 shadow-xl z-40 overflow-y-auto">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <span className="text-sm font-semibold text-gray-800">Flow Summary</span>
+              <button onClick={() => setSummaryOpen(false)} aria-label="Close" className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <FlowSummary variant="drawer" />
+          </aside>
+        </>
+      )}
     </div>
   );
 }

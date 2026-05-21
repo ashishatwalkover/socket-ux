@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    preloadEntriesOnStart: false,
+  },
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;

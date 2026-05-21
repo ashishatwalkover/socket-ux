@@ -90,18 +90,18 @@ export function LeftNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="w-64 bg-[#0f1729] text-white flex flex-col h-screen">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+    <nav className="w-64 bg-white text-gray-800 flex flex-col h-screen border-r border-gray-200">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
         <NavIcon.envelope />
         <span className="text-lg font-semibold tracking-wide">MSG91</span>
-        <NavIcon.chevron className="text-white/70" />
-        <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full text-white/80">
+        <NavIcon.chevron className="text-gray-500" />
+        <span className="ml-auto text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
           (βeta)
         </span>
       </div>
 
       {/* <div className="p-3">
-        <button className="w-full flex items-center justify-center gap-2 bg-[#7cb9ff] hover:bg-[#6aa8f0] text-[#0f1729] font-semibold py-2.5 rounded-md transition-colors">
+        <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-md transition-colors">
           <NavIcon.plus />
           <span className="text-sm tracking-wide">CREATE NEW FLOW</span>
         </button>
@@ -115,8 +115,8 @@ export function LeftNav() {
           const itemClass = cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors relative w-full text-left",
             isActive
-              ? "bg-white/10 text-white font-medium"
-              : "text-white/85 hover:bg-white/5"
+              ? "bg-gray-100 text-gray-900 font-medium"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           );
           const inner = (
             <>
@@ -128,7 +128,7 @@ export function LeftNav() {
               </span>
               <span>{item.name}</span>
               {item.action === "command-palette" && (
-                <kbd className="ml-auto text-[10px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded">
+                <kbd className="ml-auto text-[10px] bg-gray-100 text-gray-500 border border-gray-200 px-1.5 py-0.5 rounded">
                   ⌘K
                 </kbd>
               )}
@@ -137,7 +137,7 @@ export function LeftNav() {
           return (
             <div key={item.href}>
               {item.divider && (
-                <div className="my-2 border-t border-white/10" />
+                <div className="my-2 border-t border-gray-200" />
               )}
               {item.action === "command-palette" ? (
                 <button
@@ -157,8 +157,8 @@ export function LeftNav() {
         })}
       </div>
 
-      <div className="p-3 border-t border-white/10">
-        <p className="text-[10px] text-white/40 px-1">UX Preview Designs</p>
+      <div className="p-3 border-t border-gray-200">
+        <p className="text-[10px] text-gray-400 px-1">UX Preview Designs</p>
         <div className="mt-2 space-y-0.5">          
         </div>
       </div>

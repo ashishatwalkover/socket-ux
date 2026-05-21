@@ -138,7 +138,7 @@ export default function WorkflowsControlCenter() {
                 </td>
               </tr>
 
-              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/flows/3')}>
+              <tr className="border-b cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/flows/3')}>
                 <td className="p-4">
                   <div className="font-medium">Cron at 11:55</div>
                   <div className="text-muted-foreground text-xs">Not triggered yet</div>
@@ -147,6 +147,23 @@ export default function WorkflowsControlCenter() {
                 <td>—</td>
                 <td>0</td>
                 <td>1d ago</td>
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <Button size="icon"><Icon.play/></Button>
+                    <Button size="icon"><Icon.edit/></Button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/master-slide')}>
+                <td className="p-4">
+                  <div className="font-medium">Master Slide</div>
+                  <div className="text-muted-foreground text-xs">Linear summary of all flows</div>
+                </td>
+                <td><Badge>Active</Badge></td>
+                <td>—</td>
+                <td>0</td>
+                <td>just now</td>
                 <td className="p-4">
                   <div className="flex gap-2">
                     <Button size="icon"><Icon.play/></Button>
