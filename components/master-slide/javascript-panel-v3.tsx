@@ -87,9 +87,10 @@ const DEFAULT_CODE = [
 type RunStatus = "idle" | "running" | "ok" | "error";
 
 export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
-  const [prompt, setPrompt] = useState("Get today's date in YYYY-MM-DD format using moment.js");
+  const [prompt, setPrompt] = useState("");
   const [code, setCode] = useState(DEFAULT_CODE);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [askedAI, setAskedAI] = useState(false);
   const [status, setStatus] = useState<RunStatus>("idle");
   const [lastRunMs, setLastRunMs] = useState<number | null>(null);
   const [responseTab, setResponseTab] = useState<"response" | "logs">("response");
@@ -165,73 +166,74 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 bg-white">
         {/* prompt — magic box */}
         <section className="space-y-2">
-          {/* gradient frame */}
-          <div className="relative rounded-2xl p-[1.5px] overflow-hidden bg-[linear-gradient(135deg,#6366f1_0%,#a855f7_45%,#ec4899_100%)] shadow-[0_8px_24px_-12px_rgba(168,85,247,0.45)]">
-            <div className="relative bg-white rounded-[17px] overflow-hidden">
-              {/* soft sparkle backdrop */}
-              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(120%_60%_at_100%_100%,rgba(236,72,153,0.08),transparent_60%)]" />
-
-              {/* title row */}
-              <div className="relative flex items-center gap-2 px-3 pt-3">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-sm">
-                  <IconSparkle />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] font-semibold text-gray-900">Magic Box</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wide text-purple-600 bg-purple-50 border border-purple-100 px-1.5 py-[1px] rounded-full">AI</span>
-                  </div>
-                  <div className="text-[11px] text-gray-500 leading-snug">
-                    Just describe what you want in plain English — AI will write the script for you.
-                  </div>
-                </div>
+          {/* header — outside the box */}
+          <div className="flex items-center gap-2 px-1">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-sm">
+              <IconSparkle />
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[12px] font-semibold text-gray-900">Magic Box</span>
+                <span className="text-[9px] font-semibold uppercase tracking-wide text-purple-600 bg-purple-50 border border-purple-100 px-1.5 py-[1px] rounded-full">AI</span>
               </div>
+              <div className="text-[11px] text-gray-500 leading-snug">
+                Just describe what you want in plain English — AI will write the script for you.
+              </div>
+            </div>
+          </div>
 
+          {/* gradient frame — wraps only the input */}
+          <div className="relative rounded-lg p-[1.5px] overflow-hidden bg-[linear-gradient(135deg,#6366f1_0%,#a855f7_45%,#ec4899_100%)] shadow-[0_8px_24px_-12px_rgba(168,85,247,0.45)]">
+            <div className="relative bg-white rounded-[7px] overflow-hidden">
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(120%_60%_at_100%_100%,rgba(236,72,153,0.08),transparent_60%)]" />
               <textarea
                 ref={promptRef}
                 value={prompt}
                 onChange={e => setPrompt(e.target.value)}
                 placeholder='e.g. "Add 7 days to today and return as YYYY-MM-DD"'
                 rows={2}
-                className="relative block w-full resize-none bg-transparent px-3 pt-2.5 pb-2 text-sm text-gray-800 placeholder:text-gray-400 outline-none leading-relaxed"
+                className="relative block w-full resize-none bg-transparent px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none leading-relaxed"
               />
-
-              {/* example chips */}
-              <div className="relative flex flex-wrap items-center gap-1.5 px-3 pb-2">
-                <span className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Try:</span>
-                {[
-                  "Get today's date as YYYY-MM-DD",
-                  "Add 7 days to today",
-                  "Generate a random UUID",
-                ].map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setPrompt(s)}
-                    className="text-[11px] text-gray-600 bg-white border border-gray-200 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50/50 px-2 py-0.5 rounded-full transition-colors"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative flex items-center justify-between px-2.5 pb-2 pt-0.5 border-t border-gray-100/80">
-                <button className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-800 hover:bg-gray-50 px-2 py-1 rounded transition-colors">
-                  <IconChat />
-                  History
-                </button>
-                <button
-                  disabled={!prompt.trim()}
-                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:brightness-110 disabled:bg-none disabled:bg-gray-200 disabled:text-gray-400 text-white px-3 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wide shadow-sm transition-all"
-                >
-                  <IconSparkle />
-                  Generate code
-                </button>
-              </div>
             </div>
+          </div>
+
+          {/* footer — outside the box */}
+          <div className="flex items-center justify-between px-1">
+            <button
+              onClick={() => setAskedAI(true)}
+              disabled={!prompt.trim()}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:brightness-110 disabled:bg-none disabled:bg-gray-200 disabled:text-gray-400 text-white px-3 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wide shadow-sm transition-all"
+            >
+              <IconSparkle />
+              Ask AI
+            </button>
+            <button className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-800 hover:bg-gray-50 px-2 py-1 rounded transition-colors">
+              <IconChat />
+              Chat
+            </button>            
+          </div>
+
+          {/* example chips — stacked vertically */}
+          <div className="flex flex-col items-start gap-1.5 px-1 pt-1">
+            <span className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Try:</span>
+            {[
+              "Get today's date as YYYY-MM-DD",
+              "Add 7 days to today",
+              "Generate a random UUID",
+            ].map(s => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setPrompt(s)}
+                className="text-[11px] text-gray-600 bg-white border border-gray-200 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50/50 px-2 py-0.5 rounded-full transition-colors"
+              >
+                {s}
+              </button>
+            ))}
           </div>
         </section>
 
+        {askedAI && (<>
         {/* code editor */}
         <section className="space-y-2">
           <div className="flex items-center gap-2">
@@ -297,7 +299,7 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
               );
             })}
             <span className="ml-auto text-[11px] text-gray-400">
-              {status === "ok" && lastRunMs != null ? `Last run · just now · ${lastRunMs}ms` : status === "running" ? "Running…" : "Not run yet"}
+              {status === "ok" && lastRunMs != null ? `Showing data from 6h, 12:00 PM` : status === "running" ? "Testing…" : "Not tested yet"}
             </span>
           </div>
 
@@ -311,6 +313,7 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
             )}
           </div>
         </section>
+        </>)}
       </div>
 
       {/* sticky action bar */}
@@ -320,25 +323,29 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
           <a href="#" className="hover:text-gray-800 underline-offset-2 hover:underline">How to use JS Code?</a>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {askedAI && (
+            <>
+              <span className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 mr-1">
+                <Kbd>⌘</Kbd><Kbd>↵</Kbd>
+              </span>
+              <button
+                onClick={run}
+                disabled={status === "running"}
+                className="inline-flex items-center gap-1.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-60 px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
+              >
+                {status === "running" ? <Spinner /> : <IconPlay />}
+                {status === "running" ? "Testing" : "Test"}
+              </button>
+            </>
+          )}
           <span className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 mr-1">
             <Kbd>⌘</Kbd><Kbd>S</Kbd>
           </span>
           <button
             onClick={save}
-            className={`px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide border transition-colors ${savedFlash ? "border-green-500 text-green-700 bg-green-50" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`}
+            className={`px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors ${savedFlash ? "bg-green-600 hover:bg-green-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
           >
             {savedFlash ? (<span className="inline-flex items-center gap-1"><IconCheck /> Saved</span>) : "Save"}
-          </button>
-          <span className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 mr-1">
-            <Kbd>⌘</Kbd><Kbd>↵</Kbd>
-          </span>
-          <button
-            onClick={run}
-            disabled={status === "running"}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
-          >
-            {status === "running" ? <Spinner /> : <IconPlay />}
-            {status === "running" ? "Running" : "Run"}
           </button>
         </div>
       </div>
@@ -350,7 +357,7 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
 function StatusPill({ status, ms }: { status: RunStatus; ms: number | null }) {
   if (status === "idle") return null;
   const map = {
-    running: { dot: "bg-blue-500 animate-pulse", text: "text-blue-700", bg: "bg-blue-50", label: "Running" },
+    running: { dot: "bg-blue-500 animate-pulse", text: "text-blue-700", bg: "bg-blue-50", label: "Testing" },
     ok: { dot: "bg-green-500", text: "text-green-700", bg: "bg-green-50", label: ms != null ? `Passed · ${ms}ms` : "Passed" },
     error: { dot: "bg-red-500", text: "text-red-700", bg: "bg-red-50", label: "Failed" },
   } as const;
@@ -379,12 +386,12 @@ function EmptyState({ onRun }: { onRun: () => void }) {
         <IconPlay />
       </div>
       <div className="text-sm font-medium text-gray-700">No response yet</div>
-      <div className="text-[12px] text-gray-500 mt-0.5">Run your code to see the output and console logs.</div>
+      <div className="text-[12px] text-gray-500 mt-0.5">Test your code to see the output and console logs.</div>
       <button
         onClick={onRun}
         className="mt-3 inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
       >
-        <IconPlay /> Run code
+        <IconPlay /> Test code
       </button>
     </div>
   );
