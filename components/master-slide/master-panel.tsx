@@ -2,16 +2,14 @@
 
 import type { ComponentType } from "react";
 import type { MasterItem, PanelProps } from "./types";
-import { JavaScriptPanel } from "./javascript-panel";
-import { JavaScriptPanelV2 } from "./javascript-panel-v2";
+import { JavaScriptPanelV3 } from "./javascript-panel-v3";
 
 /**
  * Registry mapping a master-slide item id to its panel component.
  * Add new entries here as more languages / item types are introduced.
  */
 const PANEL_REGISTRY: Record<string, ComponentType<PanelProps>> = {
-  javascript: JavaScriptPanel,
-  "javascript-v2": JavaScriptPanelV2,
+  javascript: JavaScriptPanelV3,
 };
 
 function DefaultPanel({ item, onClose }: PanelProps) {

@@ -7,7 +7,6 @@ import { MasterPanel } from "@/components/master-slide/master-panel";
 
 const ITEMS: MasterItem[] = [
   { id: "javascript", label: "JavaScript", badge: "JS", badgeBg: "bg-yellow-400", badgeFg: "text-black" },
-  { id: "javascript-v2", label: "JavaScript (v2)", badge: "JS", badgeBg: "bg-yellow-400", badgeFg: "text-black" },
 ];
 
 export default function MasterSlidePage() {
