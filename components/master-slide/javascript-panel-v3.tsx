@@ -41,13 +41,6 @@ function IconCheck({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-function IconChat({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  );
-}
 function IconMore({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" className={className}>
@@ -86,11 +79,13 @@ const DEFAULT_CODE = [
 
 type RunStatus = "idle" | "running" | "ok" | "error";
 
-export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
+export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
   const [prompt, setPrompt] = useState("");
   const [code, setCode] = useState(DEFAULT_CODE);
   const [codeOpen, setCodeOpen] = useState(false);
   const [askedAI, setAskedAI] = useState(false);
+  const [aiStatus, setAiStatus] = useState<"idle" | "thinking">("idle");
+  const [aiStep, setAiStep] = useState(0);
   const [status, setStatus] = useState<RunStatus>("idle");
   const [lastRunMs, setLastRunMs] = useState<number | null>(null);
   const [responseTab, setResponseTab] = useState<"response" | "logs">("response");
@@ -117,8 +112,35 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
     }, 350);
   };
   const save = () => {
+    if (!askedAI) return;
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1500);
+  };
+
+  const openChat = () => onOpenChat?.(prompt);
+
+  const AI_STEPS = [
+    "Understanding your prompt\u2026",
+    "Planning the script\u2026",
+    "Writing JavaScript\u2026",
+    "Finalizing output\u2026",
+  ];
+  const askAI = () => {
+    if (!prompt.trim() || aiStatus === "thinking") return;
+    setAiStatus("thinking");
+    setAiStep(0);
+    let i = 0;
+    const tick = () => {
+      i += 1;
+      if (i >= AI_STEPS.length) {
+        setAiStatus("idle");
+        setAskedAI(true);
+        return;
+      }
+      setAiStep(i);
+      window.setTimeout(tick, 550);
+    };
+    window.setTimeout(tick, 550);
   };
   const copyCode = async () => {
     try {
@@ -166,71 +188,117 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 bg-white">
         {/* prompt — magic box */}
         <section className="space-y-2">
-          {/* header — outside the box */}
-          <div className="flex items-center gap-2 px-1">
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-sm">
-              <IconSparkle />
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[12px] font-semibold text-gray-900">Magic Box</span>
-                <span className="text-[9px] font-semibold uppercase tracking-wide text-purple-600 bg-purple-50 border border-purple-100 px-1.5 py-[1px] rounded-full">AI</span>
-              </div>
-              <div className="text-[11px] text-gray-500 leading-snug">
-                Just describe what you want in plain English — AI will write the script for you.
+          {/* header — hidden after AI generates */}
+          {!askedAI && (
+            <div className="flex items-center gap-2 px-1">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-sm">
+                <IconSparkle />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] font-semibold text-gray-900">Magic Box</span>
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-purple-600 bg-purple-50 border border-purple-100 px-1.5 py-[1px] rounded-full">AI</span>
+                </div>
+                <div className="text-[11px] text-gray-500 leading-snug">
+                  Just describe what you want in plain English — AI will write the script for you.
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* gradient frame — wraps only the input */}
-          <div className="relative rounded-lg p-[1.5px] overflow-hidden bg-[linear-gradient(135deg,#6366f1_0%,#a855f7_45%,#ec4899_100%)] shadow-[0_8px_24px_-12px_rgba(168,85,247,0.45)]">
-            <div className="relative bg-white rounded-[7px] overflow-hidden">
-              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(120%_60%_at_100%_100%,rgba(236,72,153,0.08),transparent_60%)]" />
-              <textarea
-                ref={promptRef}
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                placeholder='e.g. "Add 7 days to today and return as YYYY-MM-DD"'
-                rows={2}
-                className="relative block w-full resize-none bg-transparent px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none leading-relaxed"
-              />
+          {/* textarea (before AI) OR plain summary (after AI) */}
+          {!askedAI ? (
+            <div className="relative rounded-lg p-[1.5px] overflow-hidden bg-[linear-gradient(135deg,#6366f1_0%,#a855f7_45%,#ec4899_100%)] shadow-[0_8px_24px_-12px_rgba(168,85,247,0.45)]">
+              <div className="relative bg-white rounded-[7px] overflow-hidden">
+                <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,rgba(99,102,241,0.08),transparent_60%),radial-gradient(120%_60%_at_100%_100%,rgba(236,72,153,0.08),transparent_60%)]" />
+                <textarea
+                  ref={promptRef}
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  placeholder='e.g. "Add 7 days to today and return as YYYY-MM-DD"'
+                  rows={2}
+                  className="relative block w-full resize-none bg-transparent px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none leading-relaxed"
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1.5 px-1">
+              <span className="text-[12px] font-semibold text-gray-900">Summary</span>
+              <ul className="list-disc list-inside space-y-1 text-[12px] text-gray-700 leading-relaxed marker:text-gray-400">
+                <li className="text-[11px] text-gray-500 italic">&ldquo;{prompt}&rdquo;</li>
+                <li>
+                  Created a function <code className="font-mono text-[11px] bg-purple-50 text-purple-700 px-1 py-[1px] rounded">getTodaysDate()</code> that uses <span className="font-medium">moment.js</span> to format today&apos;s date as <code className="font-mono text-[11px] bg-gray-100 text-gray-700 px-1 py-[1px] rounded">YYYY-MM-DD</code> and returns it.
+                </li>
+              </ul>
+            </div>
+          )}
 
           {/* footer — outside the box */}
-          <div className="flex items-center justify-between px-1">
+          <div className="flex items-center px-1">
             <button
-              onClick={() => setAskedAI(true)}
-              disabled={!prompt.trim()}
+              onClick={() => (askedAI ? openChat() : askAI())}
+              disabled={(!askedAI && !prompt.trim()) || aiStatus === "thinking"}
               className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:brightness-110 disabled:bg-none disabled:bg-gray-200 disabled:text-gray-400 text-white px-3 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wide shadow-sm transition-all"
             >
-              <IconSparkle />
-              Ask AI
+              {aiStatus === "thinking" ? <Spinner /> : <IconSparkle />}
+              {aiStatus === "thinking" ? "Thinking\u2026" : "Ask AI"}
             </button>
-            <button className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-800 hover:bg-gray-50 px-2 py-1 rounded transition-colors">
-              <IconChat />
-              Chat
-            </button>            
           </div>
 
-          {/* example chips — stacked vertically */}
-          <div className="flex flex-col items-start gap-1.5 px-1 pt-1">
-            <span className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Try:</span>
-            {[
-              "Get today's date as YYYY-MM-DD",
-              "Add 7 days to today",
-              "Generate a random UUID",
-            ].map(s => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setPrompt(s)}
-                className="text-[11px] text-gray-600 bg-white border border-gray-200 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50/50 px-2 py-0.5 rounded-full transition-colors"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+          {/* example chips — hidden once AI is invoked */}
+          {!askedAI && aiStatus === "idle" && (
+            <div className="flex flex-col items-start gap-1.5 px-1 pt-1">
+              <span className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Try:</span>
+              {[
+                "Get today's date as YYYY-MM-DD",
+                "Add 7 days to today",
+                "Generate a random UUID",
+              ].map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setPrompt(s)}
+                  className="text-[11px] text-gray-600 bg-white border border-gray-200 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50/50 px-2 py-0.5 rounded-full transition-colors"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* AI thinking progress */}
+          {aiStatus === "thinking" && (
+            <div className="mt-2 mx-1 rounded-md border border-purple-100 bg-gradient-to-br from-indigo-50/60 via-purple-50/60 to-pink-50/60 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white">
+                  <IconSparkle />
+                </span>
+                <span className="text-[12px] font-semibold text-gray-800">AI is working\u2026</span>
+              </div>
+              <ul className="space-y-1">
+                {AI_STEPS.map((label, i) => {
+                  const done = i < aiStep;
+                  const active = i === aiStep;
+                  return (
+                    <li key={label} className="flex items-center gap-2 text-[11px]">
+                      <span className={`w-3.5 h-3.5 inline-flex items-center justify-center rounded-full ${done ? "bg-green-500 text-white" : active ? "bg-white border border-purple-300" : "bg-white border border-gray-200"}`}>
+                        {done ? <IconCheck className="!w-2.5 !h-2.5" /> : active ? <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" /> : null}
+                      </span>
+                      <span className={done ? "text-gray-500 line-through" : active ? "text-gray-800 font-medium" : "text-gray-400"}>
+                        {label}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="mt-2 h-1 rounded-full bg-purple-100 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-500"
+                  style={{ width: `${Math.min(100, ((aiStep + 1) / AI_STEPS.length) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
         </section>
 
         {askedAI && (<>
@@ -298,9 +366,12 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
                 </button>
               );
             })}
-            <span className="ml-auto text-[11px] text-gray-400">
+            <span className="ml-auto text-[11px] text-blue-600 cursor-pointer">
               {status === "ok" && lastRunMs != null ? `Showing data from 6h, 12:00 PM` : status === "running" ? "Testing…" : "Not tested yet"}
             </span>
+       
+       
+       
           </div>
 
           <div>
@@ -318,9 +389,13 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
 
       {/* sticky action bar */}
       <div className="border-t border-gray-200 bg-white px-4 py-2.5 flex items-center gap-3 flex-shrink-0">
-        <div className="flex items-center gap-2 text-[11px] text-gray-500">
-          <span aria-hidden>💡</span>
-          <a href="#" className="hover:text-gray-800 underline-offset-2 hover:underline">How to use JS Code?</a>
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <svg aria-hidden viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 flex-shrink-0">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <a href="#" className="underline underline-offset-2 hover:text-gray-800">How to use JS Code?</a>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {askedAI && (
@@ -331,7 +406,7 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
               <button
                 onClick={run}
                 disabled={status === "running"}
-                className="inline-flex items-center gap-1.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-60 px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
+                className="inline-flex items-center gap-1.5 border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 disabled:opacity-60 px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
               >
                 {status === "running" ? <Spinner /> : <IconPlay />}
                 {status === "running" ? "Testing" : "Test"}
@@ -343,7 +418,8 @@ export function JavaScriptPanelV3({ item, onClose }: PanelProps) {
           </span>
           <button
             onClick={save}
-            className={`px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors ${savedFlash ? "bg-green-600 hover:bg-green-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+            disabled={!askedAI}
+            className={`px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 ${savedFlash ? "bg-green-600 hover:bg-green-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
           >
             {savedFlash ? (<span className="inline-flex items-center gap-1"><IconCheck /> Saved</span>) : "Save"}
           </button>
@@ -389,7 +465,7 @@ function EmptyState({ onRun }: { onRun: () => void }) {
       <div className="text-[12px] text-gray-500 mt-0.5">Test your code to see the output and console logs.</div>
       <button
         onClick={onRun}
-        className="mt-3 inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
+        className="mt-3 inline-flex items-center gap-1.5 border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 px-3 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
       >
         <IconPlay /> Test code
       </button>

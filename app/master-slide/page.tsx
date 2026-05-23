@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { MasterItem } from "@/components/master-slide/types";
 import { MasterPanel } from "@/components/master-slide/master-panel";
+import { AIChatPanel } from "@/components/master-slide/ai-chat-panel";
 
 const ITEMS: MasterItem[] = [
   { id: "javascript", label: "JavaScript", badge: "JS", badgeBg: "bg-yellow-400", badgeFg: "text-black" },
@@ -11,10 +12,23 @@ const ITEMS: MasterItem[] = [
 
 export default function MasterSlidePage() {
   const [selected, setSelected] = useState<MasterItem | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatPrompt, setChatPrompt] = useState("");
+
+  const closePanel = () => {
+    setSelected(null);
+    setChatOpen(false);
+    setChatPrompt("");
+  };
+
+  const openChat = (prompt: string) => {
+    setChatPrompt(prompt);
+    setChatOpen(true);
+  };
 
   useEffect(() => {
     if (!selected) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSelected(null); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closePanel(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
@@ -59,9 +73,21 @@ export default function MasterSlidePage() {
       </main>
 
       {selected && (
-        <aside className="fixed right-0 top-11 bottom-0 w-[600px] max-w-[90vw] bg-white border-l border-gray-200 shadow-xl z-40 flex flex-col">
-          <MasterPanel item={selected} onClose={() => setSelected(null)} />
-        </aside>
+        <div className="fixed right-0 top-11 bottom-0 z-40 flex flex-row-reverse shadow-xl">
+          <aside className="w-[600px] max-w-[90vw] bg-white border-l border-gray-200 flex flex-col">
+            <MasterPanel
+              item={selected}
+              onClose={closePanel}
+              chatOpen={chatOpen}
+              onOpenChat={openChat}
+            />
+          </aside>
+          {chatOpen && (
+            <aside className="w-[380px] max-w-[45vw] bg-white border-l border-gray-200 flex flex-col">
+              <AIChatPanel prompt={chatPrompt} onClose={() => setChatOpen(false)} />
+            </aside>
+          )}
+        </div>
       )}
     </div>
   );

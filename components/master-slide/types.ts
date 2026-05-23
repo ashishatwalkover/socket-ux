@@ -9,4 +9,6 @@ export type MasterItem = {
 export type PanelProps = {
   item: MasterItem;
   onClose: () => void;
+  chatOpen?: boolean;
+  onOpenChat?: (prompt: string) => void;
 };

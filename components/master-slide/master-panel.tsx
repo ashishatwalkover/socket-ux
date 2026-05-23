@@ -29,7 +29,17 @@ function DefaultPanel({ item, onClose }: PanelProps) {
   );
 }
 
-export function MasterPanel({ item, onClose }: { item: MasterItem; onClose: () => void }) {
+export function MasterPanel({
+  item,
+  onClose,
+  chatOpen,
+  onOpenChat,
+}: {
+  item: MasterItem;
+  onClose: () => void;
+  chatOpen?: boolean;
+  onOpenChat?: (prompt: string) => void;
+}) {
   const Cmp = PANEL_REGISTRY[item.id] ?? DefaultPanel;
-  return <Cmp item={item} onClose={onClose} />;
+  return <Cmp item={item} onClose={onClose} chatOpen={chatOpen} onOpenChat={onOpenChat} />;
 }
