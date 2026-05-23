@@ -58,30 +58,17 @@ function IconClose({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-function Kbd({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="inline-flex items-center px-1 h-[18px] rounded border border-gray-200 bg-gray-50 text-[10px] font-medium text-gray-500 font-mono">
-      {children}
-    </kbd>
-  );
-}
-
 /* ---------------- main ---------------- */
-const DEFAULT_CODE = [
-  `const moment = require("moment");`,
-  ``,
-  `function getTodaysDate() {`,
-  `  return moment().format("YYYY-MM-DD");`,
-  `}`,
-  ``,
-  `return getTodaysDate();`,
-].join("\n");
+const STARTER_CODE = `// Your script runs in a Node 20 sandbox
+// Return a value to pass it to the next step
+
+return "";`;
 
 type RunStatus = "idle" | "running" | "ok" | "error";
 
 export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
   const [prompt, setPrompt] = useState("");
-  const [code, setCode] = useState(DEFAULT_CODE);
+  const [code, setCode] = useState(STARTER_CODE);
   const [codeOpen, setCodeOpen] = useState(false);
   const [askedAI, setAskedAI] = useState(false);
   const [aiStatus, setAiStatus] = useState<"idle" | "thinking">("idle");
@@ -112,7 +99,7 @@ export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
     }, 350);
   };
   const save = () => {
-    if (!askedAI) return;
+    if (!code.trim()) return;
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1500);
   };
@@ -135,6 +122,15 @@ export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
       if (i >= AI_STEPS.length) {
         setAiStatus("idle");
         setAskedAI(true);
+        setCode([
+          `const moment = require("moment");`,
+          ``,
+          `function getTodaysDate() {`,
+          `  return moment().format("YYYY-MM-DD");`,
+          `}`,
+          ``,
+          `return getTodaysDate();`,
+        ].join("\n"));
         return;
       }
       setAiStep(i);
@@ -301,10 +297,9 @@ export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
           )}
         </section>
 
-        {askedAI && (<>
         {/* code editor */}
         <section className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => setCodeOpen(o => !o)}
@@ -318,6 +313,11 @@ export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
               Code
               <span className="text-[10px] text-gray-400 font-normal">· {codeLines.length} lines</span>
             </button>
+            {!askedAI && (
+              <span className="text-[11px] text-gray-400 font-normal">
+                — or write your own below
+              </span>
+            )}
             <span className="ml-auto" />
             {codeOpen && (
               <button
@@ -336,55 +336,52 @@ export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
               <div className="flex items-center px-3 py-1.5 bg-gray-50 border-b border-gray-200 text-[10px] font-mono text-gray-500 uppercase tracking-wide">
                 javascript
               </div>
-              <div className="font-mono text-xs">
-                {codeLines.map((line, i) => (
-                  <div key={i} className="flex hover:bg-blue-50/30">
-                    <div className="bg-gray-50 px-3 py-0.5 text-gray-400 w-10 text-right border-r border-gray-100 select-none">{i + 1}</div>
-                    <div className="px-3 py-0.5 text-gray-800 whitespace-pre flex-1">{line || "\u00A0"}</div>
-                  </div>
-                ))}
-              </div>
+              <textarea
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                spellCheck={false}
+                rows={Math.max(6, codeLines.length)}
+                className="block w-full font-mono text-xs text-gray-800 px-3 py-2 outline-none resize-y leading-relaxed bg-white"
+                placeholder="// Write your JavaScript here"
+              />
             </div>
           )}
         </section>
 
-        {/* output */}
-        <section className="space-y-2">
-          <div className="flex items-center gap-1">
-            {([
-              { key: "response", label: "Response" },
-              { key: "logs", label: "Console" },
-            ] as const).map(t => {
-              const isActive = responseTab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setResponseTab(t.key)}
-                  className={`text-[12px] font-medium px-2.5 py-1 rounded transition-colors ${isActive ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-            <span className="ml-auto text-[11px] text-blue-600 cursor-pointer">
-              {status === "ok" && lastRunMs != null ? `Showing data from 6h, 12:00 PM` : status === "running" ? "Testing…" : "Not tested yet"}
-            </span>
-       
-       
-       
-          </div>
+        {(askedAI || codeOpen) && (
+          <section className="space-y-2">
+            <div className="flex items-center gap-1">
+              {([
+                { key: "response", label: "Response" },
+                { key: "logs", label: "Console" },
+              ] as const).map(t => {
+                const isActive = responseTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setResponseTab(t.key)}
+                    className={`text-[12px] font-medium px-2.5 py-1 rounded transition-colors ${isActive ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+              <span className="ml-auto text-[11px] text-blue-600 cursor-pointer">
+                {status === "ok" && lastRunMs != null ? `Showing data from 6h, 12:00 PM` : status === "running" ? "Testing…" : "Not tested yet"}
+              </span>
+            </div>
 
-          <div>
-            {status === "idle" ? (
-              <EmptyState onRun={run} />
-            ) : responseTab === "response" ? (
-              <ResponseView running={status === "running"} />
-            ) : (
-              <LogsView running={status === "running"} />
-            )}
-          </div>
-        </section>
-        </>)}
+            <div>
+              {status === "idle" ? (
+                <EmptyState onRun={run} />
+              ) : responseTab === "response" ? (
+                <ResponseView running={status === "running"} />
+              ) : (
+                <LogsView running={status === "running"} />
+              )}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* sticky action bar */}
@@ -398,27 +395,17 @@ export function JavaScriptPanelV3({ item, onClose, onOpenChat }: PanelProps) {
           <a href="#" className="underline underline-offset-2 hover:text-gray-800">How to use JS Code?</a>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {askedAI && (
-            <>
-              <span className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 mr-1">
-                <Kbd>⌘</Kbd><Kbd>↵</Kbd>
-              </span>
-              <button
-                onClick={run}
-                disabled={status === "running"}
-                className="inline-flex items-center gap-1.5 border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 disabled:opacity-60 px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
-              >
-                {status === "running" ? <Spinner /> : <IconPlay />}
-                {status === "running" ? "Testing" : "Test"}
-              </button>
-            </>
-          )}
-          <span className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 mr-1">
-            <Kbd>⌘</Kbd><Kbd>S</Kbd>
-          </span>
+          <button
+            onClick={run}
+            disabled={status === "running" || !code.trim()}
+            className="inline-flex items-center gap-1.5 border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 disabled:opacity-60 px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors"
+          >
+            {status === "running" ? <Spinner /> : <IconPlay />}
+            {status === "running" ? "Testing" : "Test"}
+          </button>
           <button
             onClick={save}
-            disabled={!askedAI}
+            disabled={!code.trim()}
             className={`px-4 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 ${savedFlash ? "bg-green-600 hover:bg-green-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
           >
             {savedFlash ? (<span className="inline-flex items-center gap-1"><IconCheck /> Saved</span>) : "Save"}
