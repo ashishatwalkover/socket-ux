@@ -28,6 +28,9 @@ const Icon = {
   ),
   alert: (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M10.3 3.9l-8 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.2l-8-13.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><circle cx="12" cy="17" r="1"/></svg>
+  ),
+  sparkles: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 17l.75 2.25L8 20l-2.25.75L5 23l-.75-2.25L2 20l2.25-.75L5 17z"/><path d="M19 3l.5 1.5L21 5l-1.5.5L19 7l-.5-1.5L17 5l1.5-.5L19 3z"/></svg>
   )
 };
 
@@ -155,7 +158,7 @@ export default function WorkflowsControlCenter() {
                 </td>
               </tr>
 
-              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/master-slide')}>
+              <tr className="border-b cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/master-slide')}>
                 <td className="p-4">
                   <div className="font-medium">Master Slide</div>
                   <div className="text-muted-foreground text-xs">Linear summary of all flows</div>
@@ -167,6 +170,25 @@ export default function WorkflowsControlCenter() {
                 <td className="p-4">
                   <div className="flex gap-2">
                     <Button size="icon"><Icon.play/></Button>
+                    <Button size="icon"><Icon.edit/></Button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push('/flow-by-ai')}>
+                <td className="p-4">
+                  <div className="flex items-center gap-2 font-medium">                    
+                    Flow by AI
+                  </div>
+                  <div className="text-muted-foreground text-xs">AI-generated workflow</div>
+                </td>
+                <td><Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">AI</Badge></td>
+                <td>—</td>
+                <td>0</td>
+                <td>just now</td>
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <Button size="icon"><Icon.sparkles/></Button>
                     <Button size="icon"><Icon.edit/></Button>
                   </div>
                 </td>
