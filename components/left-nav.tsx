@@ -89,6 +89,8 @@ const navigation: NavItem[] = [
 export function LeftNav() {
   const pathname = usePathname();
 
+  if (pathname === "/flow-by-ai") return null;
+
   return (
     <nav className="w-64 bg-white text-gray-800 flex flex-col h-screen border-r border-gray-200">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">

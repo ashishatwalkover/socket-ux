@@ -2,62 +2,30 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-type FlowStep = {
-  id: string;
-  kind: "trigger" | "action" | "condition";
-  title: string;
-  subtitle: string;
-  branch?: "yes" | "no";
-  depth?: number;
-};
+import type {
+  AppIntegration,
+  FlowStep,
+  InputValue,
+  VariableRef,
+} from "@/lib/flow-types";
+import { getRequiredIntegrations, getStepIntegration } from "@/lib/flow-apps";
+import {
+  EXAMPLE_WORKFLOWS,
+  resolveFlowName,
+  resolveWorkflow,
+} from "@/lib/flow-examples";
+import { buildStepTree, type FlowTreeNode } from "@/lib/flow-tree";
 
 type Message = { role: "user" | "assistant"; content: string };
-
-type ExampleWorkflow = {
-  id: string;
-  label: string;
-  prompt: string;
-  steps: FlowStep[];
-};
-
-type AppIntegration = {
-  id: string;
-  name: string;
-  icon: string;
-};
 
 type ReadinessResult = {
   flowValid: boolean;
   apps: AppIntegration[];
   message: string;
 };
-
-const INTEGRATION_RULES: { match: RegExp; app: AppIntegration }[] = [
-  { match: /sheet|spreadsheet/i, app: { id: "sheets", name: "Google Sheets", icon: "📊" } },
-  { match: /gmail|email|inbox/i, app: { id: "gmail", name: "Gmail", icon: "✉️" } },
-  { match: /slack/i, app: { id: "slack", name: "Slack", icon: "💬" } },
-  { match: /notion/i, app: { id: "notion", name: "Notion", icon: "📝" } },
-  { match: /airtable/i, app: { id: "airtable", name: "Airtable", icon: "🗂️" } },
-  { match: /shopify/i, app: { id: "shopify", name: "Shopify", icon: "🛒" } },
-  { match: /whatsapp/i, app: { id: "whatsapp", name: "WhatsApp", icon: "📱" } },
-  { match: /\bsms\b/i, app: { id: "twilio", name: "Twilio SMS", icon: "📲" } },
-  { match: /\bcrm\b/i, app: { id: "crm", name: "CRM", icon: "👥" } },
-];
-
-function getRequiredIntegrations(steps: FlowStep[]): AppIntegration[] {
-  const apps = new Map<string, AppIntegration>();
-  for (const step of steps) {
-    const text = `${step.title} ${step.subtitle}`;
-    for (const rule of INTEGRATION_RULES) {
-      if (rule.match.test(text)) apps.set(rule.app.id, rule.app);
-    }
-  }
-  return Array.from(apps.values());
-}
 
 function IconCheck({ className = "" }: { className?: string }) {
   return (
@@ -66,83 +34,6 @@ function IconCheck({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-
-const SHEETS_STEPS: FlowStep[] = [
-  { id: "1", kind: "trigger", title: "New Row in Google Sheets", subtitle: "Spreadsheet updated" },
-  { id: "2", kind: "action", title: "Format notification message", subtitle: "Transform row data" },
-  { id: "3", kind: "action", title: "Send Slack message", subtitle: "Post to #updates channel" },
-];
-
-const SHOPIFY_ORDER_STEPS: FlowStep[] = [
-  { id: "s1", kind: "trigger", title: "New Shopify Order", subtitle: "Order created in Shopify", depth: 0 },
-  { id: "s2", kind: "action", title: "Validate Payment", subtitle: "Verify payment status", depth: 0 },
-  { id: "s3", kind: "action", title: "Check Fraud Score (AI)", subtitle: "AI fraud risk analysis", depth: 0 },
-  { id: "s4", kind: "condition", title: "IF Fraud Risk High", subtitle: "Evaluate fraud score threshold", depth: 0 },
-  { id: "s5", kind: "action", title: "Hold Order", subtitle: "Pause order processing", depth: 1, branch: "yes" },
-  { id: "s6", kind: "action", title: "Notify Admin", subtitle: "Alert admin of high-risk order", depth: 1, branch: "yes" },
-  { id: "s7", kind: "action", title: "Check Inventory", subtitle: "Verify stock levels", depth: 1, branch: "no" },
-  { id: "s8", kind: "condition", title: "IF Stock Available", subtitle: "Check if items are in stock", depth: 1, branch: "no" },
-  { id: "s9", kind: "action", title: "Reserve Inventory", subtitle: "Lock stock for order", depth: 2, branch: "yes" },
-  { id: "s10", kind: "action", title: "Create Shipment", subtitle: "Generate shipping label", depth: 2, branch: "yes" },
-  { id: "s11", kind: "action", title: "Generate Invoice PDF", subtitle: "Create invoice document", depth: 2, branch: "yes" },
-  { id: "s12", kind: "action", title: "Send Order Confirmation Email", subtitle: "Email customer confirmation", depth: 2, branch: "yes" },
-  { id: "s13", kind: "action", title: "Send SMS Update", subtitle: "SMS shipment notification", depth: 2, branch: "yes" },
-  { id: "s14", kind: "action", title: "Send WhatsApp Tracking Message", subtitle: "WhatsApp delivery update", depth: 2, branch: "yes" },
-  { id: "s15", kind: "action", title: "Update CRM", subtitle: "Sync order to CRM", depth: 2, branch: "yes" },
-  { id: "s16", kind: "action", title: "Add Loyalty Points", subtitle: "Credit customer rewards", depth: 2, branch: "yes" },
-  { id: "s17", kind: "action", title: "Notify Warehouse Team", subtitle: "Alert warehouse to pack", depth: 2, branch: "yes" },
-  { id: "s18", kind: "action", title: "Track Delivery Status", subtitle: "Monitor shipment progress", depth: 2, branch: "yes" },
-  { id: "s19", kind: "condition", title: "IF Delivery Delayed", subtitle: "Check if delivery is late", depth: 2, branch: "yes" },
-  { id: "s20", kind: "action", title: "Notify Customer", subtitle: "Alert customer of delay", depth: 3, branch: "yes" },
-  { id: "s21", kind: "action", title: "Check Alternative Warehouse", subtitle: "Search other locations", depth: 2, branch: "no" },
-  { id: "s22", kind: "condition", title: "IF Available Elsewhere", subtitle: "Check alternate warehouse stock", depth: 2, branch: "no" },
-  { id: "s23", kind: "action", title: "Split Shipment", subtitle: "Ship from multiple warehouses", depth: 3, branch: "yes" },
-  { id: "s24", kind: "action", title: "Send Out-of-Stock Email", subtitle: "Notify customer of stock issue", depth: 3, branch: "no" },
-  { id: "s25", kind: "action", title: "Offer Refund OR Waitlist", subtitle: "Customer recovery options", depth: 3, branch: "no" },
-  { id: "s26", kind: "action", title: "Notify Procurement Team", subtitle: "Alert team to restock", depth: 3, branch: "no" },
-];
-
-const EXAMPLE_WORKFLOWS: ExampleWorkflow[] = [
-  {
-    id: "sheets",
-    label: "Google Sheets → Slack",
-    prompt: "When a new row is added to Google Sheets, send a Slack notification",
-    steps: SHEETS_STEPS,
-  },
-  {
-    id: "notion",
-    label: "Daily email summary in Notion",
-    prompt: "Every morning at 9am, fetch unread emails and create a summary in Notion",
-    steps: [
-      { id: "n1", kind: "trigger", title: "Daily at 9:00 AM", subtitle: "Cron schedule trigger" },
-      { id: "n2", kind: "action", title: "Fetch unread emails", subtitle: "Pull from inbox" },
-      { id: "n3", kind: "action", title: "Summarize with AI", subtitle: "Generate daily digest" },
-      { id: "n4", kind: "action", title: "Create Notion page", subtitle: "Save summary to workspace" },
-    ],
-  },
-  {
-    id: "airtable",
-    label: "Form → Airtable",
-    prompt: "When a form is submitted, validate the data and add it to Airtable",
-    steps: [
-      { id: "a1", kind: "trigger", title: "Form submitted", subtitle: "New submission received" },
-      { id: "a2", kind: "action", title: "Validate form data", subtitle: "Check required fields" },
-      { id: "a3", kind: "action", title: "Add row to Airtable", subtitle: "Insert validated record" },
-    ],
-  },
-  {
-    id: "shopify",
-    label: "New Shopify Order",
-    prompt: "When a new Shopify order arrives, validate payment, check fraud with AI, and fulfill or hold the order based on inventory",
-    steps: SHOPIFY_ORDER_STEPS,
-  },
-];
-
-const STEP_KIND_STYLES: Record<FlowStep["kind"], string> = {
-  trigger: "bg-blue-100 text-blue-700",
-  action: "bg-green-100 text-green-700",
-  condition: "bg-orange-100 text-orange-700",
-};
 
 const BRANCH_STYLES: Record<"yes" | "no", string> = {
   yes: "bg-emerald-100 text-emerald-700",
@@ -157,11 +48,6 @@ function IconSparkle({ className = "" }: { className?: string }) {
   );
 }
 
-function resolveWorkflow(prompt: string): FlowStep[] {
-  const match = EXAMPLE_WORKFLOWS.find((w) => w.prompt === prompt);
-  return match?.steps ?? SHEETS_STEPS;
-}
-
 export default function FlowByAIPage() {
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -170,17 +56,60 @@ export default function FlowByAIPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! Describe the workflow you want to build and I'll create the steps for you on the right. You can refine it anytime.",
+      content: "Hi! Describe the workflow you want to build and I'll create the steps for you on the left. You can refine it anytime.",
     },
   ]);
   const [steps, setSteps] = useState<FlowStep[]>([]);
+  const [flowName, setFlowName] = useState("");
   const [generating, setGenerating] = useState(false);
   const [buildingStepIndex, setBuildingStepIndex] = useState<number | null>(null);
   const [pendingSteps, setPendingSteps] = useState<FlowStep[]>([]);
+  const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [checkingReadiness, setCheckingReadiness] = useState(false);
   const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
   const [connectedApps, setConnectedApps] = useState<Set<string>>(new Set());
   const [connectingAppId, setConnectingAppId] = useState<string | null>(null);
+  const [configStepId, setConfigStepId] = useState<string | null>(null);
+  const [currentErrorIndex, setCurrentErrorIndex] = useState(0);
+  const stepRefs = useRef<Map<string, HTMLLIElement | null>>(new Map());
+
+  const stepTree = useMemo(() => buildStepTree(steps), [steps]);
+
+  const errorStepIds = useMemo(() => {
+    if (!readinessResult) return [];
+    return steps
+      .filter((s) => {
+        const i = getStepIntegration(s);
+        return i && !connectedApps.has(i.id);
+      })
+      .map((s) => s.id);
+  }, [readinessResult, steps, connectedApps]);
+
+  // Close config modal on Escape.
+  useEffect(() => {
+    if (!configStepId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfigStepId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [configStepId]);
+
+  // Reset error cursor whenever the error set changes shape.
+  useEffect(() => {
+    setCurrentErrorIndex(0);
+  }, [errorStepIds.length]);
+
+  const goToError = (direction: 1 | -1) => {
+    if (errorStepIds.length === 0) return;
+    const next =
+      (currentErrorIndex + direction + errorStepIds.length) % errorStepIds.length;
+    setCurrentErrorIndex(next);
+    const id = errorStepIds[next];
+    const el = stepRefs.current.get(id);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setSelectedStepId(id);
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -218,8 +147,11 @@ export default function FlowByAIPage() {
     if (!value || generating) return;
 
     const workflowSteps = resolveWorkflow(value);
+    const nextFlowName = resolveFlowName(value);
 
     setInput("");
+    setFlowName(nextFlowName);
+    setReadinessResult(null);
     setMessages((prev) => [...prev, { role: "user", content: value }]);
     setGenerating(true);
 
@@ -228,7 +160,7 @@ export default function FlowByAIPage() {
         ...prev,
         {
           role: "assistant",
-          content: "Got it — I'm building your workflow now. Watch the steps appear on the right.",
+          content: "Got it — I'm building your workflow now. Watch the steps appear on the left.",
         },
       ]);
       buildSteps(workflowSteps);
@@ -239,15 +171,18 @@ export default function FlowByAIPage() {
     setSteps([]);
     setPendingSteps([]);
     setBuildingStepIndex(null);
+    setSelectedStepId(null);
     setGenerating(false);
     setInput("");
+    setFlowName("");
     setReadinessResult(null);
     setConnectedApps(new Set());
     setConnectingAppId(null);
+    setConfigStepId(null);
     setMessages([
       {
         role: "assistant",
-        content: "Hi! Describe the workflow you want to build and I'll create the steps for you on the right. You can refine it anytime.",
+        content: "Hi! Describe the workflow you want to build and I'll create the steps for you on the left. You can refine it anytime.",
       },
     ]);
   };
@@ -293,9 +228,6 @@ export default function FlowByAIPage() {
     }, 1200);
   };
 
-  const allAppsConnected =
-    readinessResult?.apps.every((app) => connectedApps.has(app.id)) ?? false;
-
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       <header className="flex items-center justify-between h-11 px-4 border-b border-gray-200 bg-white gap-3 flex-shrink-0 shadow-sm">
@@ -307,32 +239,275 @@ export default function FlowByAIPage() {
         {steps.length > 0 && (
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={reset}>Start over</Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={checkReadiness}
-              disabled={checkingReadiness || buildingStepIndex !== null}
-              className="gap-1.5"
-            >
-              {checkingReadiness ? (
-                <>
-                  <span className="inline-block size-3 rounded-full border-2 border-gray-300 border-t-purple-500 animate-spin" />
-                  Checking...
-                </>
-              ) : (
-                <>
-                  <IconCheck />
-                  Check readiness
-                </>
-              )}
-            </Button>
             <Button size="sm" onClick={() => router.push("/flows/1/v2")}>Open in editor</Button>
           </div>
         )}
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <aside className="w-[420px] flex-shrink-0 border-r border-gray-200 bg-white flex flex-col">
+        <main className="flex-1 min-w-0 overflow-y-auto bg-gray-50">
+          <div className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/75 border-b border-gray-200">
+            <div className="max-w-2xl px-6 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="min-w-0 truncate text-lg font-semibold text-gray-800">{flowName || "Flow name"}</h2>
+                {steps.length > 0 && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {readinessResult && !checkingReadiness && (
+                      errorStepIds.length > 0 ? (
+                        <div className="inline-flex items-stretch rounded-md border border-red-200 bg-red-50 text-red-700 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => goToError(-1)}
+                            className="flex items-center justify-center px-1.5 hover:bg-red-100 transition-colors"
+                            aria-label="Previous error"
+                          >
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M18 15l-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                          <div className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold border-x border-red-200">
+                            <span className="inline-block size-1.5 rounded-full bg-red-500" />
+                            {errorStepIds.length} {errorStepIds.length === 1 ? "error" : "errors"}
+                            <span className="ml-1 text-[10px] font-normal text-red-500/80">
+                              {currentErrorIndex + 1}/{errorStepIds.length}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => goToError(1)}
+                            className="flex items-center justify-center px-1.5 hover:bg-red-100 transition-colors"
+                            aria-label="Next error"
+                          >
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">
+                          <IconCheck className="size-3" />
+                          Ready
+                        </span>
+                      )
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={checkReadiness}
+                      disabled={checkingReadiness || buildingStepIndex !== null}
+                      className="gap-1.5"
+                    >
+                      {checkingReadiness ? (
+                        <>
+                          <span className="inline-block size-3 rounded-full border-2 border-gray-300 border-t-purple-500 animate-spin" />
+                          Checking...
+                        </>
+                      ) : (
+                        <>
+                          <IconCheck />
+                          Check readiness
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {steps.length === 0
+                  ? "Steps will appear here as AI builds your flow."
+                  : `${steps.length} step${steps.length === 1 ? "" : "s"} in your workflow`}
+              </p>
+            </div>
+          </div>
+
+          <div className="max-w-2xl px-6 py-6">
+            {steps.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+                    <path d="M12 3v18M3 12h18" strokeLinecap="round" />
+                    <rect x="7" y="5" width="10" height="6" rx="1" />
+                    <rect x="7" y="13" width="10" height="6" rx="1" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-600">No steps yet</p>
+                <p className="text-xs text-gray-400 mt-1 max-w-xs">
+                  Start a conversation in the middle panel to generate your workflow.
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
+                <TreeNodes
+                  nodes={stepTree}
+                  selectedStepId={selectedStepId}
+                  setSelectedStepId={setSelectedStepId}
+                  setConfigStepId={setConfigStepId}
+                  readinessResult={readinessResult}
+                  connectedApps={connectedApps}
+                  connectingAppId={connectingAppId}
+                  connectApp={connectApp}
+                  stepRefs={stepRefs}
+                />
+
+                {buildingStepIndex !== null && buildingStepIndex < pendingSteps.length && (
+                  <div className="relative flex gap-4 pt-2">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-purple-50 border-2 border-dashed border-purple-200">
+                      <span className="inline-block size-3 rounded-full border-2 border-purple-200 border-t-purple-500 animate-spin" />
+                    </span>
+                    <div className="flex-1 rounded-xl border border-dashed border-purple-200 bg-purple-50/50 px-4 py-3">
+                      <p className="text-xs text-purple-600 font-medium">Adding next step...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {configStepId && (() => {
+          const selectedStep = steps.find((s) => s.id === configStepId);
+          if (!selectedStep) return null;
+          const integration = getStepIntegration(selectedStep);
+          const isConnected = integration ? connectedApps.has(integration.id) : false;
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              role="dialog"
+              aria-modal="true"
+            >
+              <button
+                type="button"
+                aria-label="Close configuration"
+                onClick={() => setConfigStepId(null)}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default"
+              />
+              <section className="relative z-10 w-full max-w-xl max-h-[85vh] flex flex-col rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 flex-shrink-0">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-800 truncate">Configure step</div>
+                  <div className="text-[11px] text-gray-400 truncate">{selectedStep.title}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setConfigStepId(null)}
+                  className="inline-flex items-center justify-center size-7 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                  aria-label="Close"
+                >
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+                {selectedStep.branch && (
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${BRANCH_STYLES[selectedStep.branch]}`}>
+                      {selectedStep.branch === "yes" ? "if" : "else"} branch
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Title</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedStep.title}
+                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Description</label>
+                  <textarea
+                    defaultValue={selectedStep.subtitle}
+                    rows={3}
+                    className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+                  />
+                </div>
+
+                {selectedStep.kind === "condition" && selectedStep.condition && (
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Condition</label>
+                    <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-orange-100 bg-orange-50/40 px-2.5 py-2 text-[12px]">
+                      <InputValueView value={selectedStep.condition.left} steps={steps} />
+                      <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
+                        {selectedStep.condition.operator}
+                      </span>
+                      <InputValueView value={selectedStep.condition.right} steps={steps} />
+                    </div>
+                  </div>
+                )}
+
+                {Object.keys(selectedStep.inputs).length > 0 && (
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Inputs</label>
+                    <div className="space-y-2.5">
+                      {Object.entries(selectedStep.inputs).map(([key, value]) => (
+                        <div key={key} className="rounded-md border border-gray-200 bg-gray-50/50 px-2.5 py-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[11px] font-medium text-gray-700">{key}</span>
+                            <span className="text-[10px] text-gray-400 font-mono uppercase">
+                              {value.kind}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 text-[12px]">
+                            <InputValueView value={value} steps={steps} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {integration && (
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Connection</label>
+                    <div className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base">{integration.icon}</span>
+                        <span className="text-sm text-gray-800 truncate">{integration.name}</span>
+                      </div>
+                      {isConnected ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+                          <IconCheck className="size-3" />
+                          Connected
+                        </span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => connectApp(integration.id)}
+                          disabled={connectingAppId === integration.id}
+                          className="h-7 px-2 text-[11px]"
+                        >
+                          {connectingAppId === integration.id ? "Connecting..." : "Connect"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Notes</label>
+                  <textarea
+                    placeholder="Add configuration notes..."
+                    rows={3}
+                    className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-end gap-2 flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => setConfigStepId(null)}>Cancel</Button>
+                <Button size="sm" onClick={() => setConfigStepId(null)}>Save</Button>
+              </div>
+              </section>
+            </div>
+          );
+        })()}
+
+        <aside className="w-[380px] flex-shrink-0 border-l border-gray-200 bg-white flex flex-col">
           <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-200 flex-shrink-0">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-sm">
               <IconSparkle />
@@ -369,20 +544,50 @@ export default function FlowByAIPage() {
             <div ref={bottomRef} />
           </div>
 
-          <div className="border-t border-gray-200 px-4 py-3 flex-shrink-0">
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {EXAMPLE_WORKFLOWS.map((example) => (
+          {selectedStepId && (() => {
+            const selIdx = steps.findIndex((s) => s.id === selectedStepId);
+            const sel = selIdx >= 0 ? steps[selIdx] : null;
+            if (!sel) return null;
+            return (
+              <div className="border-t border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 px-4 py-2 flex items-center gap-2 flex-shrink-0">
+                <span className="inline-block size-1.5 rounded-full bg-purple-500 animate-pulse" />
+                <span className="text-[11px] font-medium text-purple-700 min-w-0 truncate">
+                  AI will modify only:
+                  <span className="ml-1 inline-flex items-center gap-1 rounded bg-white/70 border border-purple-200 px-1.5 py-0.5 text-purple-800">
+                    <span className="font-mono text-[10px]">#{selIdx + 1}</span>
+                    <span className="truncate max-w-[160px]">{sel.title}</span>
+                  </span>
+                </span>
                 <button
-                  key={example.id}
                   type="button"
-                  onClick={() => send(example.prompt)}
-                  disabled={generating}
-                  className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] text-gray-600 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 transition-colors text-left disabled:opacity-50"
+                  onClick={() => setSelectedStepId(null)}
+                  className="ml-auto inline-flex items-center justify-center size-5 rounded text-purple-500 hover:text-purple-800 hover:bg-purple-100"
+                  aria-label="Clear selection"
                 >
-                  {example.label}
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                  </svg>
                 </button>
-              ))}
-            </div>
+              </div>
+            );
+          })()}
+
+          <div className="border-t border-gray-200 px-4 py-3 flex-shrink-0">
+            {steps.length === 0 && messages.length <= 1 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {EXAMPLE_WORKFLOWS.map((example) => (
+                  <button
+                    key={example.id}
+                    type="button"
+                    onClick={() => send(example.prompt)}
+                    disabled={generating}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] text-gray-600 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 transition-colors text-left disabled:opacity-50"
+                  >
+                    {example.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex items-end gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-purple-300 focus-within:ring-1 focus-within:ring-purple-200">
               <textarea
                 ref={inputRef}
@@ -412,162 +617,393 @@ export default function FlowByAIPage() {
             </div>
           </div>
         </aside>
-
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="max-w-2xl mx-auto py-8 px-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">Workflow steps</h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                {steps.length === 0
-                  ? "Steps will appear here as AI builds your flow."
-                  : `${steps.length} step${steps.length === 1 ? "" : "s"} in your workflow`}
-              </p>
-            </div>
-
-            {readinessResult && (
-              <div className={`mb-6 rounded-xl border px-4 py-4 space-y-4 ${
-                readinessResult.apps.length > 0 && !allAppsConnected
-                  ? "border-amber-200 bg-amber-50/60"
-                  : "border-emerald-200 bg-emerald-50/60"
-              }`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-800">Readiness check</h3>
-                    <p className="text-xs text-gray-600 mt-1">{readinessResult.message}</p>
-                  </div>
-                  <Badge className={
-                    readinessResult.apps.length === 0 || allAppsConnected
-                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                      : "bg-amber-100 text-amber-700 hover:bg-amber-100"
-                  }>
-                    {readinessResult.apps.length === 0 || allAppsConnected ? "Ready" : "Action needed"}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs">
-                  <span className={`inline-flex items-center justify-center size-5 rounded-full ${readinessResult.flowValid ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                    <IconCheck className="size-3" />
-                  </span>
-                  <span className="text-gray-700">Flow structure is valid</span>
-                </div>
-
-                {readinessResult.apps.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-700">Required app connections</p>
-                    {readinessResult.apps.map((app) => {
-                      const connected = connectedApps.has(app.id);
-                      return (
-                        <div key={app.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/80 bg-white px-3 py-2.5 shadow-sm">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-base">{app.icon}</span>
-                            <div>
-                              <p className="text-sm font-medium text-gray-800">{app.name}</p>
-                              <p className="text-[11px] text-gray-500">
-                                {connected ? "Connected and authorized" : "Authorization required"}
-                              </p>
-                            </div>
-                          </div>
-                          {connected ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
-                              <IconCheck className="size-3.5" />
-                              Connected
-                            </span>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => connectApp(app.id)}
-                              disabled={connectingAppId === app.id}
-                              className="shrink-0"
-                            >
-                              {connectingAppId === app.id ? "Connecting..." : "Connect"}
-                            </Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {allAppsConnected && readinessResult.apps.length > 0 && (
-                  <div className="flex items-center gap-2 pt-1 text-xs text-emerald-700">
-                    <IconCheck className="size-3.5" />
-                    Your flow is ready to run.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {steps.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
-                    <path d="M12 3v18M3 12h18" strokeLinecap="round" />
-                    <rect x="7" y="5" width="10" height="6" rx="1" />
-                    <rect x="7" y="13" width="10" height="6" rx="1" />
-                  </svg>
-                </div>
-                <p className="text-sm font-medium text-gray-600">No steps yet</p>
-                <p className="text-xs text-gray-400 mt-1 max-w-xs">
-                  Start a conversation on the left to generate your workflow.
-                </p>
-              </div>
-            ) : (
-              <ol className="relative space-y-0">
-                {steps.map((step, index) => {
-                  const depth = step.depth ?? 0;
-                  const branchBorder =
-                    step.branch === "yes"
-                      ? "border-l-emerald-400"
-                      : step.branch === "no"
-                        ? "border-l-red-400"
-                        : "";
-
-                  return (
-                    <li
-                      key={step.id}
-                      className="relative flex gap-4 pb-4 last:pb-0"
-                      style={{ marginLeft: depth * 24 }}
-                    >
-                      {index < steps.length - 1 && depth === (steps[index + 1]?.depth ?? 0) && (
-                        <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gray-200" />
-                      )}
-                      <span className="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full bg-white border-2 border-purple-200 text-xs font-semibold text-purple-700 shadow-sm">
-                        {index + 1}
-                      </span>
-                      <div className={`flex-1 min-w-0 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm ${branchBorder ? `border-l-4 ${branchBorder}` : ""}`}>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium text-gray-800">{step.title}</span>
-                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STEP_KIND_STYLES[step.kind]}`}>
-                            {step.kind}
-                          </span>
-                          {step.branch && (
-                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${BRANCH_STYLES[step.branch]}`}>
-                              {step.branch}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">{step.subtitle}</p>
-                      </div>
-                    </li>
-                  );
-                })}
-
-                {buildingStepIndex !== null && buildingStepIndex < pendingSteps.length && (
-                  <li className="relative flex gap-4 pb-0" style={{ marginLeft: (pendingSteps[buildingStepIndex]?.depth ?? 0) * 24 }}>
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-purple-50 border-2 border-dashed border-purple-200">
-                      <span className="inline-block size-3 rounded-full border-2 border-purple-200 border-t-purple-500 animate-spin" />
-                    </span>
-                    <div className="flex-1 rounded-xl border border-dashed border-purple-200 bg-purple-50/50 px-4 py-3">
-                      <p className="text-xs text-purple-600 font-medium">Adding next step...</p>
-                    </div>
-                  </li>
-                )}
-              </ol>
-            )}
-          </div>
-        </main>
       </div>
     </div>
+  );
+}
+
+// ---------- Variable / input rendering ----------
+
+function resolveSample(steps: FlowStep[], ref: VariableRef): unknown {
+  const s = steps.find((st) => st.id === ref.stepId);
+  if (!s) return undefined;
+  let cur: unknown = s.sampleOutput;
+  for (const p of ref.path) {
+    if (cur == null || typeof cur !== "object") return undefined;
+    cur = (cur as Record<string, unknown>)[p];
+  }
+  return cur;
+}
+
+function refStepLabel(steps: FlowStep[], stepId: string): string {
+  const idx = steps.findIndex((s) => s.id === stepId);
+  return idx >= 0 ? `#${idx + 1}` : stepId;
+}
+
+function formatSample(v: unknown): string {
+  if (v === undefined) return "—";
+  if (v === null) return "null";
+  if (typeof v === "string") return v.length > 28 ? v.slice(0, 25) + "…" : v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (Array.isArray(v)) return `[${v.length} items]`;
+  if (typeof v === "object") return "{…}";
+  return String(v);
+}
+
+function VariablePill({ refValue, steps }: { refValue: VariableRef; steps: FlowStep[] }) {
+  const sample = resolveSample(steps, refValue);
+  const path = refValue.path.join(".");
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[11px] font-mono text-purple-800"
+      title={`{{steps.${refValue.stepId}.output.${path}}} → ${String(sample)}`}
+    >
+      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <span>{refStepLabel(steps, refValue.stepId)}.{path}</span>
+      <span className="text-purple-400">·</span>
+      <span className="font-sans not-italic text-purple-600/80 normal-case">
+        {formatSample(sample)}
+      </span>
+    </span>
+  );
+}
+
+function InputValueView({ value, steps }: { value: InputValue; steps: FlowStep[] }) {
+  if (value.kind === "literal") {
+    const v = value.value;
+    if (v === "" || v === undefined || v === null) {
+      return <span className="text-[11px] italic text-gray-400">empty</span>;
+    }
+    if (typeof v === "string") {
+      return <span className="text-gray-800">&ldquo;{v}&rdquo;</span>;
+    }
+    if (Array.isArray(v)) {
+      return (
+        <span className="font-mono text-gray-700">
+          [{v.length} {v.length === 1 ? "item" : "items"}]
+        </span>
+      );
+    }
+    if (typeof v === "object") {
+      return <span className="font-mono text-gray-700">{"{…}"}</span>;
+    }
+    return <span className="font-mono text-gray-800">{String(v)}</span>;
+  }
+  if (value.kind === "ref") {
+    return <VariablePill refValue={value.ref} steps={steps} />;
+  }
+  // template
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1">
+      {value.parts.map((p, i) =>
+        typeof p === "string" ? (
+          <span key={i} className="text-gray-700 whitespace-pre-wrap">
+            {p}
+          </span>
+        ) : (
+          <VariablePill key={i} refValue={p} steps={steps} />
+        ),
+      )}
+    </span>
+  );
+}
+
+// ---------- Tree rendering ----------
+
+type TreeRenderProps = {
+  nodes: FlowTreeNode[];
+  selectedStepId: string | null;
+  setSelectedStepId: (id: string | null) => void;
+  setConfigStepId: (id: string | null) => void;
+  readinessResult: ReadinessResult | null;
+  connectedApps: Set<string>;
+  connectingAppId: string | null;
+  connectApp: (appId: string) => void;
+  stepRefs: React.RefObject<Map<string, HTMLLIElement | null>>;
+};
+
+function TreeNodes(props: TreeRenderProps) {
+  const { nodes } = props;
+  if (nodes.length === 0) return null;
+  return (
+    <ul className="relative space-y-1">
+      {nodes.map((node, i) => (
+        <TreeNodeView
+          key={node.step.id}
+          node={node}
+          isLast={i === nodes.length - 1}
+          parent={props}
+        />
+      ))}
+    </ul>
+  );
+}
+
+function TreeNodeView({
+  node,
+  isLast,
+  parent,
+}: {
+  node: FlowTreeNode;
+  isLast: boolean;
+  parent: TreeRenderProps;
+}) {
+  const { step } = node;
+  const hasBranches = step.kind === "condition" && (node.yes || node.no);
+  const [ifCollapsed, setIfCollapsed] = useState(false);
+  const [elseCollapsed, setElseCollapsed] = useState(false);
+
+  const yesCount = node.yes?.length ?? 0;
+  const noCount = node.no?.length ?? 0;
+
+  return (
+    <li
+      ref={(el) => {
+        const map = parent.stepRefs.current;
+        if (!map) return;
+        if (el) map.set(step.id, el);
+        else map.delete(step.id);
+      }}
+      className="relative scroll-mt-24"
+    >
+      <div className="relative">
+        {/* vertical connector down to the next sibling (non-condition) */}
+        {!isLast && !hasBranches && (
+          <div className="absolute left-[15px] top-9 bottom-0 w-px bg-gray-200" />
+        )}
+        <StepRow
+          node={node}
+          parent={parent}
+          collapseToggle={
+            hasBranches
+              ? {
+                  collapsed: ifCollapsed,
+                  toggle: () => setIfCollapsed((c) => !c),
+                  count: yesCount,
+                }
+              : undefined
+          }
+        />
+      </div>
+
+      {hasBranches && (
+        <>
+          {/* IF body — no label, step rows are the body */}
+          {!ifCollapsed && (
+            <div className="mt-1 ml-[15px] border-l border-gray-200 pl-4 pb-1">
+              {yesCount === 0 ? (
+                <p className="text-[11px] text-gray-400 italic">no steps</p>
+              ) : (
+                <TreeNodes
+                  nodes={node.yes!}
+                  selectedStepId={parent.selectedStepId}
+                  setSelectedStepId={parent.setSelectedStepId}
+                  setConfigStepId={parent.setConfigStepId}
+                  readinessResult={parent.readinessResult}
+                  connectedApps={parent.connectedApps}
+                  connectingAppId={parent.connectingAppId}
+                  connectApp={parent.connectApp}
+                  stepRefs={parent.stepRefs}
+                />
+              )}
+            </div>
+          )}
+
+          {/* ELSE divider — at the SAME indent as the IF step (parallel) */}
+          {noCount > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setElseCollapsed((c) => !c)}
+                className="flex w-full items-center gap-2 mt-2 mb-1 group"
+                aria-expanded={!elseCollapsed}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  className={`text-gray-400 group-hover:text-gray-600 transition-transform ${elseCollapsed ? "-rotate-90" : ""}`}
+                >
+                  <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${BRANCH_STYLES.no}`}>
+                  else
+                </span>
+                <span className="text-[10px] text-gray-400 font-medium">
+                  {noCount} {noCount === 1 ? "step" : "steps"}
+                </span>
+                <span className="h-px flex-1 bg-gray-200" />
+              </button>
+              {!elseCollapsed && (
+                <div className="ml-[15px] border-l border-gray-200 pl-4 pb-1">
+                  <TreeNodes
+                    nodes={node.no!}
+                    selectedStepId={parent.selectedStepId}
+                    setSelectedStepId={parent.setSelectedStepId}
+                    setConfigStepId={parent.setConfigStepId}
+                    readinessResult={parent.readinessResult}
+                    connectedApps={parent.connectedApps}
+                    connectingAppId={parent.connectingAppId}
+                    connectApp={parent.connectApp}
+                    stepRefs={parent.stepRefs}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </li>
+  );
+}
+
+function StepRow({
+  node,
+  parent,
+  collapseToggle,
+}: {
+  node: FlowTreeNode;
+  parent: TreeRenderProps;
+  collapseToggle?: { collapsed: boolean; toggle: () => void; count: number };
+}) {
+  const { step, index } = node;
+  const {
+    selectedStepId,
+    setSelectedStepId,
+    readinessResult,
+    connectedApps,
+    connectingAppId,
+    connectApp,
+  } = parent;
+
+  const isSelected = selectedStepId === step.id;
+  const stepIntegration = readinessResult ? getStepIntegration(step) : null;
+  const hasMissingConnection = Boolean(
+    stepIntegration && !connectedApps.has(stepIntegration.id),
+  );
+  const showReadyCheck = Boolean(readinessResult && !hasMissingConnection);
+  const isCondition = step.kind === "condition";
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        setSelectedStepId(step.id);
+        collapseToggle?.toggle();
+      }}
+      className={`group relative z-10 flex w-full items-center gap-3 rounded-lg border px-2 py-2 text-left transition-colors ${
+        hasMissingConnection
+          ? isSelected
+            ? "border-red-400 bg-red-100/70 ring-2 ring-red-300"
+            : "border-red-300 bg-red-50/40 hover:bg-red-50"
+          : isSelected
+            ? "border-purple-200 bg-purple-50 ring-2 ring-purple-300"
+            : isCondition
+              ? "border-orange-200 bg-orange-50/60 hover:bg-orange-50"
+              : "border-transparent hover:bg-gray-100"
+      }`}
+    >
+      <span
+        className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+          isCondition
+            ? "bg-orange-100 text-orange-700"
+            : "text-purple-700"
+        }`}
+      >
+        {isCondition ? (
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" strokeLinecap="round" />
+          </svg>
+        ) : (
+          index
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="min-w-0 truncate text-sm font-medium text-gray-800">{step.title}</span>
+        <span className="min-w-0 truncate text-xs text-gray-500">{step.subtitle}</span>
+      </span>
+      <span className="ml-auto flex shrink-0 items-center gap-2">
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            parent.setConfigStepId(step.id);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              parent.setConfigStepId(step.id);
+            }
+          }}
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-700 cursor-pointer transition-opacity"
+          aria-label="Edit step"
+          title="Edit step"
+        >
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        {hasMissingConnection && stepIntegration && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              connectApp(stepIntegration.id);
+            }}
+            disabled={connectingAppId === stepIntegration.id}
+            className="h-6 px-2 text-[11px] border-red-200 text-red-700 hover:bg-red-50"
+          >
+            {connectingAppId === stepIntegration.id ? "Connecting..." : `Connect ${stepIntegration.name}`}
+          </Button>
+        )}
+        {showReadyCheck && (
+          <span className="inline-flex size-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+            <IconCheck className="size-3" />
+          </span>
+        )}
+        {collapseToggle && (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              collapseToggle.toggle();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                collapseToggle.toggle();
+              }
+            }}
+            className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+            aria-expanded={!collapseToggle.collapsed}
+            aria-label={collapseToggle.collapsed ? "Expand if body" : "Collapse if body"}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="11"
+              height="11"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className={`transition-transform ${collapseToggle.collapsed ? "-rotate-90" : ""}`}
+            >
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {collapseToggle.count}
+          </span>
+        )}
+      </span>
+    </button>
   );
 }
