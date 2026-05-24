@@ -18,14 +18,27 @@ import {
   resolveWorkflow,
 } from "@/lib/flow-examples";
 import { buildStepTree, type FlowTreeNode } from "@/lib/flow-tree";
+import { MapVariablesCard } from "@/components/chat/map-variables-card";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  node?: React.ReactNode; // optional rich content rendered in place of `content`
+};
 
 type ReadinessResult = {
   flowValid: boolean;
   apps: AppIntegration[];
   message: string;
 };
+
+// Loose keyword matcher for chat commands. Normalizes whitespace + case so the
+// user can type "Map Variables", "  map  variables ", "/map variables", etc.
+function matchesCommand(input: string, keyword: string): boolean {
+  const norm = input.trim().toLowerCase().replace(/^[/!]+/, "").replace(/\s+/g, " ");
+  const target = keyword.toLowerCase().replace(/\s+/g, " ");
+  return norm === target || norm.startsWith(target + " ") || norm.includes(" " + target);
+}
 
 function IconCheck({ className = "" }: { className?: string }) {
   return (
@@ -145,6 +158,46 @@ export default function FlowByAIPage() {
   const send = (text?: string) => {
     const value = (text ?? input).trim();
     if (!value || generating) return;
+
+    // ----- Keyword commands (intercepted before normal flow generation) -----
+    if (matchesCommand(value, "map variables")) {
+      setInput("");
+      setMessages((prev) => [...prev, { role: "user", content: value }]);
+
+      if (!selectedStepId) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content:
+              "Pick a step first — click any step in the canvas, then say “map variables” again.",
+          },
+        ]);
+        return;
+      }
+
+      // Acknowledge with a short streaming-feel message, then drop the rich card.
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Scanning upstream outputs and matching them against this step's inputs…",
+        },
+      ]);
+      const targetStepId = selectedStepId;
+      window.setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "",
+            node: <MapVariablesCard stepId={targetStepId} steps={steps} />,
+          },
+        ]);
+      }, 600);
+      return;
+    }
+    // ----- end commands -----
 
     const workflowSteps = resolveWorkflow(value);
     const nextFlowName = resolveFlowName(value);
@@ -520,19 +573,29 @@ export default function FlowByAIPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[90%] rounded-lg px-3 py-2 text-[13px] leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white"
-                      : "bg-gray-50 border border-gray-200 text-gray-700"
-                  }`}
-                >
-                  {m.content}
+            {messages.map((m, i) => {
+              const isUser = m.role === "user";
+              if (m.node) {
+                return (
+                  <div key={i} className="flex justify-start">
+                    <div className="w-full max-w-[95%]">{m.node}</div>
+                  </div>
+                );
+              }
+              return (
+                <div key={i} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[90%] rounded-lg px-3 py-2 text-[13px] leading-relaxed ${
+                      isUser
+                        ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white"
+                        : "bg-gray-50 border border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {m.content}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {generating && (
               <div className="flex justify-start">
                 <div className="rounded-lg px-3 py-2 bg-gray-50 border border-gray-200 text-gray-500 text-[13px] flex items-center gap-2">
