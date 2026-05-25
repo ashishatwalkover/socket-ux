@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { APP_BASE } from "@/lib/app-routes";
 import { useEffect, useState } from "react";
 import type { MasterItem } from "@/components/master-slide/types";
 import { MasterPanel } from "@/components/master-slide/master-panel";
@@ -37,7 +38,7 @@ export default function MasterSlidePage() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       <header className="flex items-center h-11 px-4 border-b border-gray-200 bg-white gap-3 flex-shrink-0 shadow-sm">
         <nav className="flex items-center gap-1 text-sm text-gray-500">
-          <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
+          <Link href={APP_BASE} className="hover:text-gray-700 transition-colors">Home</Link>
           <span className="text-gray-300">/</span>
           <span className="text-gray-800 font-medium">Master Slide</span>
         </nav>

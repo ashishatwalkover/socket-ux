@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { APP_BASE } from "@/lib/app-routes";
 
 type Version = {
   id: string;
@@ -18,7 +19,7 @@ const versions: Version[] = [
     short: "Focus on flows",
     description:
       "Original Workflows Control Center layout focused entirely on listing and managing flows. Folders appear as a horizontal scrollable row at the top.",
-    href: "/",
+    href: APP_BASE,
   },
   {
     id: "v2",
@@ -26,7 +27,7 @@ const versions: Version[] = [
     short: "Collection in left nav",
     description:
       "Folder/collection navigation moved into the left navigation panel for persistent access. The main canvas focuses on flow content with two dedicated search inputs.",
-    href: "/focus",
+    href: `${APP_BASE}/focus`,
   },
 ];
 

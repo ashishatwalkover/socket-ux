@@ -1,3 +1,5 @@
+import { AI_BASE, APP_BASE } from "./app-routes";
+
 export type CommandKind = "action" | "navigation" | "flow" | "collection" | "log" | "help";
 
 export type CommandItem = {
@@ -36,18 +38,19 @@ export const actionItems: CommandItem[] = [
     kind: "action",
     name: "Create New Flow",
     description: "Start building a new workflow from scratch",
-    href: "/?new=1",
+    href: `${APP_BASE}?new=1`,
     shortcut: "C",
   },
 ];
 
 export const navigationItems: CommandItem[] = [
-  { id: "nav-home", kind: "navigation", name: "Home", href: "/" },
+  { id: "nav-home", kind: "navigation", name: "Home", href: APP_BASE },
+  { id: "nav-ai", kind: "navigation", name: "AI", href: AI_BASE },
   { id: "nav-metrics", kind: "navigation", name: "Metrics", href: "/metrics" },
   { id: "nav-templates", kind: "navigation", name: "Templates", href: "/templates" },
   { id: "nav-connections", kind: "navigation", name: "Connections", href: "/connections" },
   { id: "nav-mcp", kind: "navigation", name: "MCP Server", href: "/mcp-server" },
-  { id: "nav-ai", kind: "navigation", name: "AI Agents", href: "/ai-agents" },
+  { id: "nav-ai-agents", kind: "navigation", name: "AI Agents", href: "/ai-agents" },
   { id: "nav-memory", kind: "navigation", name: "Memory", href: "/memory" },
 ];
 

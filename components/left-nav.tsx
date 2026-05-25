@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AI_BASE, APP_BASE, isAiRoute, isAppRoute } from "@/lib/app-routes";
 import { cn } from "@/lib/utils";
+
+const FULL_BLEED_ROUTES = [`${APP_BASE}/flow-by-ai`];
+
+function isNavActive(pathname: string, href: string): boolean {
+  if (href === APP_BASE) return isAppRoute(pathname);
+  if (href === AI_BASE) return isAiRoute(pathname);
+  return pathname === href;
+}
 
 const NavIcon = {
   home: (props: React.SVGProps<SVGSVGElement>) => (
@@ -77,7 +86,8 @@ type NavItem = {
 
 const navigation: NavItem[] = [
   { name: "Search (Cmd+K)", href: "#search", icon: NavIcon.search, action: "command-palette" },
-  { name: "Workflows", href: "/", icon: NavIcon.home, divider: true },
+  { name: "Workflows", href: APP_BASE, icon: NavIcon.home, divider: true },
+  { name: "AI", href: AI_BASE, icon: NavIcon.ai },
   { name: "Metrics", href: "/metrics", icon: NavIcon.metrics },
   { name: "Templates", href: "/templates", icon: NavIcon.templates },
   { name: "Connections", href: "/connections", icon: NavIcon.connections, dot: true },
@@ -89,7 +99,7 @@ const navigation: NavItem[] = [
 export function LeftNav() {
   const pathname = usePathname();
 
-  if (pathname === "/flow-by-ai") return null;
+  if (FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname)) return null;
 
   return (
     <nav className="w-64 bg-white text-gray-800 flex flex-col h-screen border-r border-gray-200">
@@ -112,7 +122,7 @@ export function LeftNav() {
       <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
         <div className="mt-2"></div>
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = isNavActive(pathname, item.href);
           const Icon = item.icon;
           const itemClass = cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors relative w-full text-left",

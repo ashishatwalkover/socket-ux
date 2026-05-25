@@ -29,6 +29,7 @@ import {
   type ReadinessCardResult,
 } from "@/components/chat/readiness-card";
 import { ConfigureStepDialog } from "@/components/flow/configure-step-dialog";
+import { APP_BASE } from "@/lib/app-routes";
 
 type Message =
   | { role: "user"; content: string }
@@ -411,14 +412,14 @@ export default function FlowByAIPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       <header className="flex items-center justify-between h-11 px-4 border-b border-gray-200 bg-white gap-3 flex-shrink-0 shadow-sm">
         <nav className="flex items-center gap-1 text-sm text-gray-500">
-          <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
+          <Link href={APP_BASE} className="hover:text-gray-700 transition-colors">Home</Link>
           <span className="text-gray-300">/</span>
           <span className="text-gray-800 font-medium">Flow by AI</span>
         </nav>
         {steps.length > 0 && (
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={reset}>Start over</Button>
-            <Button size="sm" onClick={() => router.push("/flows/1/v2")}>Open in editor</Button>
+            <Button size="sm" onClick={() => router.push(`${APP_BASE}/flows/1/v2`)}>Open in editor</Button>
           </div>
         )}
       </header>

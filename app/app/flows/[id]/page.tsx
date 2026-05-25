@@ -404,7 +404,7 @@ function FlowHeader({ currentVersion }: { currentVersion: string }) {
   return (
     <header className="flex items-center h-11 px-4 border-b border-gray-200 bg-white gap-3 flex-shrink-0 shadow-sm z-10">
       <nav className="flex items-center gap-1 text-sm text-gray-500">
-        <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
+        <Link href="/app" className="hover:text-gray-700 transition-colors">Home</Link>
         <span className="text-gray-300">/</span>
         <span className="cursor-pointer hover:text-gray-700 transition-colors">Client Flows</span>
         <span className="text-gray-300">/</span>
