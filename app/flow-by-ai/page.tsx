@@ -18,26 +18,38 @@ import {
   resolveWorkflow,
 } from "@/lib/flow-examples";
 import { buildStepTree, type FlowTreeNode } from "@/lib/flow-tree";
-import { MapVariablesCard } from "@/components/chat/map-variables-card";
+import {
+  countLiteralInputs,
+  getStepsNeedingVariableMap,
+  MapVariablesCard,
+  MapVariablesGuidedFlow,
+} from "@/components/chat/map-variables-card";
+import {
+  ReadinessCard,
+  type ReadinessCardResult,
+} from "@/components/chat/readiness-card";
+import { ConfigureStepDialog } from "@/components/flow/configure-step-dialog";
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  node?: React.ReactNode; // optional rich content rendered in place of `content`
-};
+type Message =
+  | { role: "user"; content: string }
+  | { role: "assistant"; type: "text"; content: string }
+  | { role: "assistant"; type: "map-card"; mode: "single"; stepId: string }
+  | { role: "assistant"; type: "map-card"; mode: "guided" }
+  | { role: "assistant"; type: "readiness-card" };
 
-type ReadinessResult = {
-  flowValid: boolean;
-  apps: AppIntegration[];
-  message: string;
-};
-
-// Loose keyword matcher for chat commands. Normalizes whitespace + case so the
-// user can type "Map Variables", "  map  variables ", "/map variables", etc.
-function matchesCommand(input: string, keyword: string): boolean {
+// Loose keyword matcher for chat commands. Normalizes whitespace, case, and
+// optional leading / or !. Pass one alias or many — e.g. "map", "map variables".
+function matchesCommand(input: string, keywords: string | string[]): boolean {
   const norm = input.trim().toLowerCase().replace(/^[/!]+/, "").replace(/\s+/g, " ");
-  const target = keyword.toLowerCase().replace(/\s+/g, " ");
-  return norm === target || norm.startsWith(target + " ") || norm.includes(" " + target);
+  const targets = (Array.isArray(keywords) ? keywords : [keywords]).map((k) =>
+    k.toLowerCase().replace(/\s+/g, " "),
+  );
+  return targets.some((target) => {
+    if (norm === target || norm.startsWith(target + " ")) return true;
+    // Phrase match only for multi-word aliases (avoids "road map" → "map").
+    if (target.includes(" ")) return norm.includes(" " + target);
+    return false;
+  });
 }
 
 function IconCheck({ className = "" }: { className?: string }) {
@@ -69,7 +81,9 @@ export default function FlowByAIPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! Describe the workflow you want to build and I'll create the steps for you on the left. You can refine it anytime.",
+      type: "text",
+      content:
+        "Hi! Describe the workflow you want to build and I'll create the steps for you on the left. You can refine it anytime.",
     },
   ]);
   const [steps, setSteps] = useState<FlowStep[]>([]);
@@ -79,10 +93,11 @@ export default function FlowByAIPage() {
   const [pendingSteps, setPendingSteps] = useState<FlowStep[]>([]);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [checkingReadiness, setCheckingReadiness] = useState(false);
-  const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
+  const [readinessResult, setReadinessResult] = useState<ReadinessCardResult | null>(null);
   const [connectedApps, setConnectedApps] = useState<Set<string>>(new Set());
   const [connectingAppId, setConnectingAppId] = useState<string | null>(null);
   const [configStepId, setConfigStepId] = useState<string | null>(null);
+  const [configMappingInputKey, setConfigMappingInputKey] = useState<string | null>(null);
   const [currentErrorIndex, setCurrentErrorIndex] = useState(0);
   const stepRefs = useRef<Map<string, HTMLLIElement | null>>(new Map());
 
@@ -98,11 +113,24 @@ export default function FlowByAIPage() {
       .map((s) => s.id);
   }, [readinessResult, steps, connectedApps]);
 
+  const closeConfigureStep = () => {
+    setConfigStepId(null);
+    setConfigMappingInputKey(null);
+  };
+
+  const openConfigureForMapping = (stepId: string, inputKey: string) => {
+    setConfigStepId(stepId);
+    setConfigMappingInputKey(inputKey);
+    setSelectedStepId(stepId);
+    const el = stepRefs.current.get(stepId);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   // Close config modal on Escape.
   useEffect(() => {
     if (!configStepId) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setConfigStepId(null);
+      if (e.key === "Escape") closeConfigureStep();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -155,46 +183,122 @@ export default function FlowByAIPage() {
     }, stepsToBuild.length * interval + 200);
   };
 
+  const applyStepInputMapping = (
+    stepId: string,
+    inputKey: string,
+    ref: VariableRef,
+  ) => {
+    setSteps((prev) =>
+      prev.map((s) =>
+        s.id !== stepId
+          ? s
+          : {
+              ...s,
+              inputs: {
+                ...s.inputs,
+                [inputKey]: { kind: "ref", ref },
+              },
+            },
+      ),
+    );
+  };
+
   const send = (text?: string) => {
     const value = (text ?? input).trim();
     if (!value || generating) return;
 
     // ----- Keyword commands (intercepted before normal flow generation) -----
-    if (matchesCommand(value, "map variables")) {
+    if (matchesCommand(value, ["map", "map variables"])) {
       setInput("");
       setMessages((prev) => [...prev, { role: "user", content: value }]);
 
       if (!selectedStepId) {
+        if (steps.length === 0) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              type: "text",
+              content:
+                "There are no steps yet — describe a workflow first, then say “map” to wire inputs across steps.",
+            },
+          ]);
+          return;
+        }
+
+        const stepsNeedingMap = getStepsNeedingVariableMap(steps);
+        const stepsWithInputs = steps.filter((s) => Object.keys(s.inputs).length > 0);
+        const walkthroughSteps =
+          stepsNeedingMap.length > 0 ? stepsNeedingMap : stepsWithInputs;
+
+        if (walkthroughSteps.length === 0) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              type: "text",
+              content: "Your flow has no step inputs to map yet.",
+            },
+          ]);
+          return;
+        }
+
+        const literalCount = walkthroughSteps.reduce(
+          (n, s) => n + countLiteralInputs(s),
+          0,
+        );
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
+            type: "text",
             content:
-              "Pick a step first — click any step in the canvas, then say “map variables” again.",
+              literalCount > 0
+                ? `I found ${walkthroughSteps.length} step${walkthroughSteps.length === 1 ? "" : "s"} with ${literalCount} literal input${literalCount === 1 ? "" : "s"} to map. Use the card below — pick variables manually or use AI.`
+                : `Reviewing ${walkthroughSteps.length} step${walkthroughSteps.length === 1 ? "" : "s"} — use the card below to adjust variable links.`,
+          },
+          {
+            role: "assistant",
+            type: "map-card",
+            mode: "guided",
           },
         ]);
         return;
       }
 
-      // Acknowledge with a short streaming-feel message, then drop the rich card.
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Scanning upstream outputs and matching them against this step's inputs…",
-        },
-      ]);
-      const targetStepId = selectedStepId;
-      window.setTimeout(() => {
+      const targetStep = steps.find((s) => s.id === selectedStepId);
+      if (!targetStep || Object.keys(targetStep.inputs).length === 0) {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "",
-            node: <MapVariablesCard stepId={targetStepId} steps={steps} />,
+            type: "text",
+            content: "This step has no inputs to map. Select a different step or add inputs first.",
           },
         ]);
-      }, 600);
+        return;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          type: "text",
+          content: `Map inputs for step #${steps.findIndex((s) => s.id === selectedStepId) + 1} — choose upstream variables in the card below.`,
+        },
+        {
+          role: "assistant",
+          type: "map-card",
+          mode: "single",
+          stepId: selectedStepId,
+        },
+      ]);
+      return;
+    }
+
+    if (matchesCommand(value, ["check readiness", "check"])) {
+      setInput("");
+      runReadinessCheck({ addToChat: true, userText: value });
       return;
     }
     // ----- end commands -----
@@ -213,6 +317,7 @@ export default function FlowByAIPage() {
         ...prev,
         {
           role: "assistant",
+          type: "text",
           content: "Got it — I'm building your workflow now. Watch the steps appear on the left.",
         },
       ]);
@@ -231,17 +336,37 @@ export default function FlowByAIPage() {
     setReadinessResult(null);
     setConnectedApps(new Set());
     setConnectingAppId(null);
-    setConfigStepId(null);
+    closeConfigureStep();
     setMessages([
       {
         role: "assistant",
-        content: "Hi! Describe the workflow you want to build and I'll create the steps for you on the left. You can refine it anytime.",
+        type: "text",
+        content:
+          "Hi! Describe the workflow you want to build and I'll create the steps for you on the left. You can refine it anytime.",
       },
     ]);
   };
 
-  const checkReadiness = () => {
+  const runReadinessCheck = (options?: { addToChat?: boolean; userText?: string }) => {
     if (steps.length === 0 || checkingReadiness) return;
+
+    if (options?.addToChat) {
+      const userText = options.userText?.trim();
+      if (userText) {
+        setMessages((prev) => [...prev, { role: "user", content: userText }]);
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          type: "text",
+          content:
+            "Checking your flow — reviewing structure and app connections. See the card below.",
+        },
+        { role: "assistant", type: "readiness-card" },
+      ]);
+    }
+
     setCheckingReadiness(true);
     setReadinessResult(null);
 
@@ -251,11 +376,12 @@ export default function FlowByAIPage() {
       setReadinessResult({
         flowValid: true,
         apps,
-        message: apps.length === 0
-          ? "Flow structure looks good. No external app connections required."
-          : allConnected
-            ? "All required apps are connected. Your flow is ready to run."
-            : "Flow structure is valid, but some apps still need to be connected.",
+        message:
+          apps.length === 0
+            ? "Flow structure looks good. No external app connections required."
+            : allConnected
+              ? "All required apps are connected. Your flow is ready to run."
+              : "Flow structure is valid, but some apps still need to be connected.",
       });
       setCheckingReadiness(false);
     }, 900);
@@ -298,7 +424,7 @@ export default function FlowByAIPage() {
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <main className="flex-1 min-w-0 overflow-y-auto bg-gray-50">
+        <main className="flex flex-1 min-w-0 flex-col overflow-y-auto bg-gray-50">
           <div className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/75 border-b border-gray-200">
             <div className="max-w-2xl px-6 py-4">
               <div className="flex items-center justify-between gap-3">
@@ -308,33 +434,35 @@ export default function FlowByAIPage() {
                     {readinessResult && !checkingReadiness && (
                       errorStepIds.length > 0 ? (
                         <div className="inline-flex items-stretch rounded-md border border-red-200 bg-red-50 text-red-700 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => goToError(-1)}
-                            className="flex items-center justify-center px-1.5 hover:bg-red-100 transition-colors"
-                            aria-label="Previous error"
-                          >
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <path d="M18 15l-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
-                          <div className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold border-x border-red-200">
+                          <div className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold">
                             <span className="inline-block size-1.5 rounded-full bg-red-500" />
                             {errorStepIds.length} {errorStepIds.length === 1 ? "error" : "errors"}
                             <span className="ml-1 text-[10px] font-normal text-red-500/80">
                               {currentErrorIndex + 1}/{errorStepIds.length}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => goToError(1)}
-                            className="flex items-center justify-center px-1.5 hover:bg-red-100 transition-colors"
-                            aria-label="Next error"
-                          >
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
+                          <div className="inline-flex items-stretch border-l border-red-200">
+                            <button
+                              type="button"
+                              onClick={() => goToError(-1)}
+                              className="flex items-center justify-center px-1.5 hover:bg-red-100 transition-colors"
+                              aria-label="Previous error"
+                            >
+                              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M18 15l-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => goToError(1)}
+                              className="flex items-center justify-center px-1.5 border-l border-red-200 hover:bg-red-100 transition-colors"
+                              aria-label="Next error"
+                            >
+                              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">
@@ -346,7 +474,12 @@ export default function FlowByAIPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={checkReadiness}
+                      onClick={() =>
+                        runReadinessCheck({
+                          addToChat: true,
+                          userText: "check readiness",
+                        })
+                      }
                       disabled={checkingReadiness || buildingStepIndex !== null}
                       className="gap-1.5"
                     >
@@ -373,28 +506,46 @@ export default function FlowByAIPage() {
             </div>
           </div>
 
-          <div className="max-w-2xl px-6 py-6">
-            {steps.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+          {steps.length === 0 ? (
+            <div className="flex flex-1 min-h-[calc(100vh-8rem)] items-center justify-center px-6">
+              <div className="flex flex-col items-center text-center max-w-md">
+                <div className="mb-6 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
+                  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
                     <path d="M12 3v18M3 12h18" strokeLinecap="round" />
                     <rect x="7" y="5" width="10" height="6" rx="1" />
                     <rect x="7" y="13" width="10" height="6" rx="1" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-600">No steps yet</p>
-                <p className="text-xs text-gray-400 mt-1 max-w-xs">
-                  Start a conversation in the middle panel to generate your workflow.
+                <p className="text-2xl font-semibold text-gray-700">No steps yet</p>
+                <p className="mt-3 text-base text-gray-500 leading-relaxed">
+                  Start a conversation with AI to generate your flow.
                 </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-2 max-w-lg">
+                  {EXAMPLE_WORKFLOWS.map((example) => (
+                    <button
+                      key={example.id}
+                      type="button"
+                      onClick={() => send(example.prompt)}
+                      disabled={generating}
+                      className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-600 shadow-sm hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 transition-colors disabled:opacity-50"
+                    >
+                      {example.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="max-w-2xl px-6 py-6">
               <div className="relative">
                 <TreeNodes
                   nodes={stepTree}
                   selectedStepId={selectedStepId}
                   setSelectedStepId={setSelectedStepId}
-                  setConfigStepId={setConfigStepId}
+                  onOpenConfigureStep={(id) => {
+                    setConfigStepId(id);
+                    setConfigMappingInputKey(null);
+                  }}
                   readinessResult={readinessResult}
                   connectedApps={connectedApps}
                   connectingAppId={connectingAppId}
@@ -413,150 +564,36 @@ export default function FlowByAIPage() {
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </main>
 
         {configStepId && (() => {
           const selectedStep = steps.find((s) => s.id === configStepId);
           if (!selectedStep) return null;
+          const stepIndex = steps.findIndex((s) => s.id === configStepId);
           const integration = getStepIntegration(selectedStep);
           const isConnected = integration ? connectedApps.has(integration.id) : false;
           return (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              role="dialog"
-              aria-modal="true"
-            >
-              <button
-                type="button"
-                aria-label="Close configuration"
-                onClick={() => setConfigStepId(null)}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default"
-              />
-              <section className="relative z-10 w-full max-w-xl max-h-[85vh] flex flex-col rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 flex-shrink-0">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">Configure step</div>
-                  <div className="text-[11px] text-gray-400 truncate">{selectedStep.title}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setConfigStepId(null)}
-                  className="inline-flex items-center justify-center size-7 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-                {selectedStep.branch && (
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${BRANCH_STYLES[selectedStep.branch]}`}>
-                      {selectedStep.branch === "yes" ? "if" : "else"} branch
-                    </span>
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Title</label>
-                  <input
-                    type="text"
-                    defaultValue={selectedStep.title}
-                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Description</label>
-                  <textarea
-                    defaultValue={selectedStep.subtitle}
-                    rows={3}
-                    className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
-                  />
-                </div>
-
-                {selectedStep.kind === "condition" && selectedStep.condition && (
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Condition</label>
-                    <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-orange-100 bg-orange-50/40 px-2.5 py-2 text-[12px]">
-                      <InputValueView value={selectedStep.condition.left} steps={steps} />
-                      <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
-                        {selectedStep.condition.operator}
-                      </span>
-                      <InputValueView value={selectedStep.condition.right} steps={steps} />
-                    </div>
-                  </div>
-                )}
-
-                {Object.keys(selectedStep.inputs).length > 0 && (
-                  <div className="space-y-2">
-                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Inputs</label>
-                    <div className="space-y-2.5">
-                      {Object.entries(selectedStep.inputs).map(([key, value]) => (
-                        <div key={key} className="rounded-md border border-gray-200 bg-gray-50/50 px-2.5 py-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[11px] font-medium text-gray-700">{key}</span>
-                            <span className="text-[10px] text-gray-400 font-mono uppercase">
-                              {value.kind}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1 text-[12px]">
-                            <InputValueView value={value} steps={steps} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {integration && (
-                  <div className="space-y-2">
-                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Connection</label>
-                    <div className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base">{integration.icon}</span>
-                        <span className="text-sm text-gray-800 truncate">{integration.name}</span>
-                      </div>
-                      {isConnected ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-                          <IconCheck className="size-3" />
-                          Connected
-                        </span>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => connectApp(integration.id)}
-                          disabled={connectingAppId === integration.id}
-                          className="h-7 px-2 text-[11px]"
-                        >
-                          {connectingAppId === integration.id ? "Connecting..." : "Connect"}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">Notes</label>
-                  <textarea
-                    placeholder="Add configuration notes..."
-                    rows={3}
-                    className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-end gap-2 flex-shrink-0">
-                <Button variant="outline" size="sm" onClick={() => setConfigStepId(null)}>Cancel</Button>
-                <Button size="sm" onClick={() => setConfigStepId(null)}>Save</Button>
-              </div>
-              </section>
-            </div>
+            <ConfigureStepDialog
+              step={selectedStep}
+              stepIndex={stepIndex}
+              steps={steps}
+              mappingInputKey={configMappingInputKey}
+              onMappingInputKeyChange={setConfigMappingInputKey}
+              onClose={closeConfigureStep}
+              onApplyMapping={(inputKey, ref) => {
+                applyStepInputMapping(configStepId, inputKey, ref);
+              }}
+              renderInputValue={(value) => (
+                <InputValueView value={value} steps={steps} />
+              )}
+              integration={integration}
+              isConnected={isConnected}
+              connectingAppId={connectingAppId}
+              onConnectApp={connectApp}
+              checkIcon={<IconCheck className="size-3" />}
+            />
           );
         })()}
 
@@ -574,23 +611,65 @@ export default function FlowByAIPage() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             {messages.map((m, i) => {
-              const isUser = m.role === "user";
-              if (m.node) {
+              if (m.role === "user") {
                 return (
-                  <div key={i} className="flex justify-start">
-                    <div className="w-full max-w-[95%]">{m.node}</div>
+                  <div key={i} className="flex justify-end">
+                    <div className="max-w-[90%] rounded-lg px-3 py-2 text-[13px] leading-relaxed bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
+                      {m.content}
+                    </div>
+                  </div>
+                );
+              }
+              if (m.type === "readiness-card") {
+                return (
+                  <div key={i} className="flex justify-start w-full min-w-0">
+                    <div className="w-full min-w-0">
+                      <ReadinessCard
+                        steps={steps}
+                        checking={checkingReadiness}
+                        result={readinessResult}
+                        connectedApps={connectedApps}
+                        connectingAppId={connectingAppId}
+                        onConnectApp={connectApp}
+                      />
+                    </div>
+                  </div>
+                );
+              }
+              if (m.type === "map-card") {
+                return (
+                  <div key={i} className="flex justify-start w-full min-w-0">
+                    <div className="w-full min-w-0">
+                      {m.mode === "guided" ? (
+                        <MapVariablesGuidedFlow
+                          steps={steps}
+                          onFocusStep={(id) => {
+                            setSelectedStepId(id);
+                            const el = stepRefs.current.get(id);
+                            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }}
+                          onApplyMapping={applyStepInputMapping}
+                          onOpenManualMap={openConfigureForMapping}
+                        />
+                      ) : (
+                        <MapVariablesCard
+                          stepId={m.stepId}
+                          steps={steps}
+                          onApplyMapping={(inputKey, ref) =>
+                            applyStepInputMapping(m.stepId, inputKey, ref)
+                          }
+                          onOpenManualMap={(inputKey) =>
+                            openConfigureForMapping(m.stepId, inputKey)
+                          }
+                        />
+                      )}
+                    </div>
                   </div>
                 );
               }
               return (
-                <div key={i} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[90%] rounded-lg px-3 py-2 text-[13px] leading-relaxed ${
-                      isUser
-                        ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white"
-                        : "bg-gray-50 border border-gray-200 text-gray-700"
-                    }`}
-                  >
+                <div key={i} className="flex justify-start">
+                  <div className="max-w-[90%] rounded-lg px-3 py-2 text-[13px] leading-relaxed bg-gray-50 border border-gray-200 text-gray-700">
                     {m.content}
                   </div>
                 </div>
@@ -779,8 +858,8 @@ type TreeRenderProps = {
   nodes: FlowTreeNode[];
   selectedStepId: string | null;
   setSelectedStepId: (id: string | null) => void;
-  setConfigStepId: (id: string | null) => void;
-  readinessResult: ReadinessResult | null;
+  onOpenConfigureStep: (stepId: string) => void;
+  readinessResult: ReadinessCardResult | null;
   connectedApps: Set<string>;
   connectingAppId: string | null;
   connectApp: (appId: string) => void;
@@ -863,7 +942,7 @@ function TreeNodeView({
                   nodes={node.yes!}
                   selectedStepId={parent.selectedStepId}
                   setSelectedStepId={parent.setSelectedStepId}
-                  setConfigStepId={parent.setConfigStepId}
+                  onOpenConfigureStep={parent.onOpenConfigureStep}
                   readinessResult={parent.readinessResult}
                   connectedApps={parent.connectedApps}
                   connectingAppId={parent.connectingAppId}
@@ -908,7 +987,7 @@ function TreeNodeView({
                     nodes={node.no!}
                     selectedStepId={parent.selectedStepId}
                     setSelectedStepId={parent.setSelectedStepId}
-                    setConfigStepId={parent.setConfigStepId}
+                    onOpenConfigureStep={parent.onOpenConfigureStep}
                     readinessResult={parent.readinessResult}
                     connectedApps={parent.connectedApps}
                     connectingAppId={parent.connectingAppId}
@@ -996,13 +1075,13 @@ function StepRow({
           tabIndex={0}
           onClick={(e) => {
             e.stopPropagation();
-            parent.setConfigStepId(step.id);
+            parent.onOpenConfigureStep(step.id);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               e.stopPropagation();
-              parent.setConfigStepId(step.id);
+              parent.onOpenConfigureStep(step.id);
             }
           }}
           className="opacity-0 group-hover:opacity-100 focus:opacity-100 inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-700 cursor-pointer transition-opacity"
