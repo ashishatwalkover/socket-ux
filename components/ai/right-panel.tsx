@@ -15,7 +15,7 @@ type FlowDef = {
   steps: string[];
 };
 
-const FLOWS: FlowDef[] = [
+const FLOWS_BASE: FlowDef[] = [
   {
     id: "cart-recovery",
     name: "Abandoned cart recovery",
@@ -62,6 +62,32 @@ const FLOWS: FlowDef[] = [
   },
 ];
 
+// Get flows with optional extended version for cart-recovery
+function getFlows(extendedFlowId?: string): FlowDef[] {
+  return FLOWS_BASE.map(f => {
+    if (f.id === "cart-recovery" && extendedFlowId === "cart-recovery") {
+      return {
+        ...f,
+        summary: "Watch for abandoned carts on Shopify, wait 2 hours, then send a reminder email. If customer still hasn't checked out 24 hours after the email, send a WhatsApp follow-up. Retry once on failure.",
+        steps: [
+          "Trigger: Shopify cart abandoned",
+          "Wait 2 hours",
+          "Check if order was completed — if yes, stop",
+          "Send reminder email via Gmail",
+          "Retry once if email fails",
+          "Wait 24 hours",
+          "Check if order was completed — if yes, stop",
+          "Send WhatsApp follow-up",
+          "Log outcome",
+        ],
+      };
+    }
+    return f;
+  });
+}
+
+const FLOWS = FLOWS_BASE;
+
 const statusStyle: Record<FlowDef["status"], string> = {
   running: "bg-emerald-500",
   paused: "bg-amber-500",
@@ -85,7 +111,13 @@ const META: Record<string, { title: string; description: string }> = {
 export function RightPanel({ panel }: Props) {
   const searchParams = useSearchParams();
   const flowId = searchParams.get("flow");
-  const flow = panel === "flows" && flowId ? FLOWS.find((f) => f.id === flowId) : null;
+  const extended = searchParams.get("extended");
+  
+  let flow = null;
+  if (panel === "flows" && flowId) {
+    const flows = getFlows(extended ? flowId : undefined);
+    flow = flows.find((f) => f.id === flowId);
+  }
 
   if (flow) {
     return <FlowDetail flow={flow} />;
@@ -100,13 +132,13 @@ export function RightPanel({ panel }: Props) {
           <h2 className="text-sm font-semibold tracking-tight">{meta.title}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">{meta.description}</p>
         </div>
-        <Link
+        <a
           href="/ai"
           aria-label="Close panel"
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
         >
           <CloseIcon />
-        </Link>
+        </a>
       </div>
       <div className="flex-1 overflow-y-auto p-5">
         {panel === "flows" ? <FlowList /> : <PanelPlaceholder panel={panel} />}
@@ -152,13 +184,13 @@ function FlowDetail({ flow }: { flow: FlowDef }) {
           <span className="text-muted-foreground/60">/</span>
           <span className="truncate text-foreground">{flow.name}</span>
         </nav>
-        <Link
+        <a
           href="/ai"
           aria-label="Close panel"
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
         >
           <CloseIcon />
-        </Link>
+        </a>
       </div>
 
       {/* Header: icon + name + Test action */}

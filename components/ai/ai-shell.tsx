@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "./chat-thread";
 import { Composer } from "./composer";
 import { RightPanel } from "./right-panel";
@@ -94,12 +94,49 @@ export function AiShell() {
   const [turn, setTurn] = useState(0);
   const [pending, setPending] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const panel = searchParams.get("panel");
   const flowId = searchParams.get("flow");
+  const prompt = searchParams.get("prompt");
   const hasPanel = !!panel;
 
   // Get flow info if viewing a flow detail
   const flowInfo = panel === "flows" && flowId ? getFlowInfo(flowId) : null;
+
+  // Auto-submit prompt from home page
+  useEffect(() => {
+    if (prompt && messages.length === 0) {
+      const userMsg: ChatMessage = { id: nextId(), role: "user", text: prompt };
+      const pendingId = nextId();
+      setMessages([userMsg, { id: pendingId, role: "assistant", pending: true }]);
+      setPending(true);
+
+      const assistantTurn = ASSISTANT_SCRIPT[0];
+
+      window.setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === pendingId
+              ? {
+                  id: pendingId,
+                  role: "assistant" as const,
+                  blocks: assistantTurn.blocks,
+                }
+              : m
+          )
+        );
+        setPending(false);
+        setTurn(1);
+      }, 700);
+    }
+  }, [prompt]);
+
+  // Auto-open flows panel when flow is created (turn 2 - after plan shown)
+  useEffect(() => {
+    if (turn === 2 && !panel) {
+      router.push("/ai?panel=flows&flow=cart-recovery");
+    }
+  }, [turn, panel, router]);
 
   const submitText = useCallback(
     (text: string) => {
@@ -139,10 +176,14 @@ export function AiShell() {
 
   const handleAction = useCallback(
     (label: string) => {
+      // Handle "Add it" action to show extended flow
+      if (label === "Add it" && flowId === "cart-recovery" && panel === "flows") {
+        router.push("/ai?panel=flows&flow=cart-recovery&extended=true");
+      }
       // Treat inline action clicks as synthetic user messages so the script advances naturally.
       submitText(label);
     },
-    [submitText]
+    [submitText, flowId, panel, router]
   );
 
   const handleNewChat = useCallback(() => {

@@ -86,7 +86,8 @@ type NavItem = {
 
 const navigation: NavItem[] = [
   { name: "Search (Cmd+K)", href: "#search", icon: NavIcon.search, action: "command-palette" },
-  { name: "Workflows", href: APP_BASE, icon: NavIcon.home, divider: true },
+  { name: "Home", href: APP_BASE, icon: NavIcon.home, divider: true },
+  { name: "Workflows", href: `${APP_BASE}/workflows`, icon: NavIcon.templates},
   { name: "AI", href: AI_BASE, icon: NavIcon.ai },
   { name: "Metrics", href: "/metrics", icon: NavIcon.metrics },
   { name: "Templates", href: "/templates", icon: NavIcon.templates },
