@@ -1,0 +1,129 @@
+<svg viewBox="0 0 560 720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="8" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="560" height="720" fill="#ffffff"/>
+  
+  <!-- Main card background -->
+  <rect x="20" y="20" width="520" height="680" rx="24" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow)"/>
+  
+  <!-- Header text -->
+  <text x="40" y="60" font-size="16" font-weight="600" fill="#1f2937" font-family="system-ui, -apple-system, sans-serif">Describe what you want to automate</text>
+  
+  <!-- Input box -->
+  <rect x="40" y="80" width="480" height="110" rx="14" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="56" y="110" font-size="14" fill="#374151" font-family="system-ui, -apple-system, sans-serif">When a new Shopify order comes in,</text>
+  <text x="56" y="130" font-size="14" fill="#374151" font-family="system-ui, -apple-system, sans-serif">send WhatsApp message to customer,</text>
+  <text x="56" y="150" font-size="14" fill="#374151" font-family="system-ui, -apple-system, sans-serif">create shipment and update the CRM.</text>
+  
+  <!-- Generate button -->
+  <rect x="56" y="160" width="220" height="44" rx="10" fill="#1e5542"/>
+  <text x="76" y="190" font-size="15" font-weight="600" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif">Generate Workflow</text>
+  <!-- Sparkle icon in button -->
+  <g transform="translate(240, 182)">
+    <path d="M0 -6l1.5 4.5L6 0l-4.5 1.5L0 6l-1.5-4.5L-6 0l4.5-1.5L0 -6z" fill="#fbbf24"/>
+  </g>
+  
+  <!-- Workflow steps section -->
+  <!-- Step 1: Shopify -->
+  <g>
+    <rect x="80" y="240" width="400" height="60" rx="12" fill="#ffffff" stroke="#f3f4f6" stroke-width="1" filter="url(#shadow)"/>
+    <!-- Shopify icon -->
+    <rect x="100" y="255" width="40" height="40" rx="8" fill="#96bf48"/>
+    <g transform="translate(120, 275)">
+      <path d="M-8 -6c-0.3 0-1.1-0.1-1.1-0.1s-0.9-0.9-1-1c-0.1-0.1-0.3-0.1-0.4-0.1l-0.5 0.1c-0.5-0.1-1.3-0.3-2.1-0.3-1.4 0-2.1 0.7-2.1 2 0 0.2 0 0.4 0.1 0.5-1.4 0.4-2.4 0.7-2.5 0.7-0.4 0.1-0.4 0.1-0.4 0.5-0.1 0.2-0.5 4.2-0.5 4.2l8.5 1.5 4.1-1s-1.9-7.4-2-7.5c-0.1-0.1-0.2-0.1-0.3-0.1h0.3z" fill="#ffffff" transform="scale(1.2)"/>
+    </g>
+    <!-- Text -->
+    <text x="160" y="275" font-size="15" font-weight="600" fill="#111827" font-family="system-ui, -apple-system, sans-serif">Shopify</text>
+    <text x="160" y="295" font-size="12" fill="#6b7280" font-family="system-ui, -apple-system, sans-serif">New Order</text>
+  </g>
+  
+  <!-- Arrow down -->
+  <g transform="translate(280, 310)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-6 14 L0 20 L6 14" stroke="#d1d5db" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Step 2: WhatsApp -->
+  <g>
+    <rect x="80" y="340" width="400" height="60" rx="12" fill="#ffffff" stroke="#f3f4f6" stroke-width="1" filter="url(#shadow)"/>
+    <!-- WhatsApp icon -->
+    <rect x="100" y="355" width="40" height="40" rx="8" fill="#25d366"/>
+    <g transform="translate(120, 375)">
+      <path d="M-2 -8c-4.4 0-8 3.6-8 8 0 1.4 0.4 2.8 1.1 4L-8 8l4.2-1.1c1.2 0.7 2.5 1 3.8 1 4.4 0 8-3.6 8-8s-3.6-8-8-8zm4.5 11.3c-0.2 0.5-1.1 1-1.5 1.1-0.4 0.1-0.9 0.2-2.9-0.6-2.4-1-4-3.4-4.1-3.6-0.1-0.2-1-1.2-1-2.3s0.6-1.7 0.9-1.9c0.2-0.2 0.5-0.3 0.7-0.3h0.5c0.2 0 0.4 0 0.6 0.5 0.2 0.5 0.7 1.7 0.8 1.8 0.1 0.1 0.1 0.3 0 0.4-0.1 0.2-0.2 0.2-0.4 0.4-0.2 0.2-0.4 0.3-0.6 0.5-0.2 0.2-0.4 0.3-0.2 0.6 0.2 0.3 0.9 1.5 2 2.4 1.4 1.2 2.5 1.5 2.9 1.7 0.4 0.2 0.6 0.1 0.8-0.1 0.2-0.2 0.9-1.1 1.1-1.4 0.2-0.4 0.5-0.3 0.8-0.2 0.3 0.1 2 0.9 2.3 1.1 0.3 0.1 0.5 0.2 0.6 0.3 0.1 0.2 0.1 1-0.1 1.5z" fill="#ffffff" transform="scale(1.1)"/>
+    </g>
+    <!-- Text -->
+    <text x="160" y="375" font-size="15" font-weight="600" fill="#111827" font-family="system-ui, -apple-system, sans-serif">WhatsApp</text>
+    <text x="160" y="395" font-size="12" fill="#6b7280" font-family="system-ui, -apple-system, sans-serif">Send Message</text>
+  </g>
+  
+  <!-- Arrow down -->
+  <g transform="translate(280, 410)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-6 14 L0 20 L6 14" stroke="#d1d5db" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Step 3: Shiprocket -->
+  <g>
+    <rect x="80" y="440" width="400" height="60" rx="12" fill="#ffffff" stroke="#f3f4f6" stroke-width="1" filter="url(#shadow)"/>
+    <!-- Shiprocket icon -->
+    <rect x="100" y="455" width="40" height="40" rx="8" fill="#7c3aed"/>
+    <g transform="translate(120, 475)">
+      <path d="M-6 -4 L0 -1 L6 -4 L6 4 L0 7 L-6 4 Z" fill="#ffffff" opacity="0.95"/>
+      <path d="M0 -1 V3 M-6 -4 L0 0 M6 -4 L0 0" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Text -->
+    <text x="160" y="475" font-size="15" font-weight="600" fill="#111827" font-family="system-ui, -apple-system, sans-serif">Shiprocket</text>
+    <text x="160" y="495" font-size="12" fill="#6b7280" font-family="system-ui, -apple-system, sans-serif">Create Shipment</text>
+  </g>
+  
+  <!-- Arrow down -->
+  <g transform="translate(280, 510)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-6 14 L0 20 L6 14" stroke="#d1d5db" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Step 4: HubSpot -->
+  <g>
+    <rect x="80" y="540" width="400" height="60" rx="12" fill="#ffffff" stroke="#f3f4f6" stroke-width="1" filter="url(#shadow)"/>
+    <!-- HubSpot icon -->
+    <rect x="100" y="555" width="40" height="40" rx="8" fill="#ff7a59"/>
+    <g transform="translate(120, 575)">
+      <circle cx="-4" cy="-4" r="2" fill="#ffffff"/>
+      <circle cx="4" cy="4" r="2" fill="#ffffff"/>
+      <path d="M-2 -2 L2 2" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="1.2" fill="#ffffff"/>
+    </g>
+    <!-- Text -->
+    <text x="160" y="575" font-size="15" font-weight="600" fill="#111827" font-family="system-ui, -apple-system, sans-serif">HubSpot</text>
+    <text x="160" y="595" font-size="12" fill="#6b7280" font-family="system-ui, -apple-system, sans-serif">Update Contact</text>
+  </g>
+  
+  <!-- Floating decorative elements -->
+  <!-- Green plus -->
+  <g transform="translate(50, 220)">
+    <circle cx="0" cy="0" r="14" fill="#10b981"/>
+    <line x1="-6" y1="0" x2="6" y2="0" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="0" y1="-6" x2="0" y2="6" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Blue plus -->
+  <g transform="translate(50, 280)">
+    <circle cx="0" cy="0" r="14" fill="#3b82f6"/>
+    <line x1="-6" y1="0" x2="6" y2="0" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="0" y1="-6" x2="0" y2="6" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Orange star -->
+  <g transform="translate(500, 280)">
+    <path d="M0 -8 L2.4 -2.4 L8 -1 L3 3 L4.8 8 L0 4.8 L-4.8 8 L-3 3 L-8 -1 L-2.4 -2.4 Z" fill="#f59e0b"/>
+  </g>
+  
+  <!-- Purple star -->
+  <g transform="translate(480, 380)">
+    <path d="M0 -6 L1.8 -1.8 L6 -0.8 L2.2 2.2 L3.6 6 L0 3.6 L-3.6 6 L-2.2 2.2 L-6 -0.8 L-1.8 -1.8 Z" fill="#a78bfa"/>
+  </g>
+</svg>

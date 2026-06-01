@@ -39,6 +39,16 @@ const Icon = {
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
   ),
+  wand: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M15 4V2m0 2a10 10 0 1 1-20 0 10 10 0 0 1 20 0z"/><path d="M12 9v6m3-3H9"/>
+    </svg>
+  ),
+  grid: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+  ),
 };
 
 const RECENT_FLOWS = [
@@ -140,53 +150,57 @@ export default function WorkflowsControlCenter() {
         </div>
 
         {/* Flow Type Cards */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-2 gap-4 pt-4">
           {/* AI Flows Card */}
-          <div className="relative rounded-xl border border-violet-200/60 bg-gradient-to-br from-violet-500/5 via-violet-50/40 to-indigo-50/30 p-4">
-            <div className="relative space-y-2.5">
-              <div className="flex items-start justify-between">
-                <div>
+          <div className="relative rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-teal-50/20 p-5 shadow-sm shadow-emerald-500/5">
+            <div className="relative space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-slate-900">AI Flows</h3>
-                  <p className="text-xs text-slate-600 mt-0.5 leading-snug">
-                    Describe in natural language, AI builds it
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
+                    Chat with AI to build your automation instantly
                   </p>
                 </div>
-                <div className="inline-flex items-center justify-center size-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-white flex-shrink-0">
-                  <Icon.sparkles className="size-4" />
+                <div className="inline-flex items-center justify-center size-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex-shrink-0 shadow-md shadow-emerald-500/30">
+                  <Icon.sparkles className="size-5" />
                 </div>
               </div>
-              <div className="flex gap-1.5 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-violet-100/60 text-violet-700 text-[10px] font-medium">
-                  ✓ No drag-drop
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-violet-100/60 text-violet-700 text-[10px] font-medium">
-                  ✓ Fastest
-                </span>
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-600 text-sm">✓</span>
+                  <span className="text-xs text-slate-700">No drag-drop needed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-600 text-sm">✓</span>
+                  <span className="text-xs text-slate-700">Fastest setup</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Basic Flows Card */}
-          <div className="relative rounded-xl border border-blue-200/60 bg-gradient-to-br from-blue-500/5 via-blue-50/40 to-cyan-50/30 p-4">
-            <div className="relative space-y-2.5">
-              <div className="flex items-start justify-between">
-                <div>
+          <div className="relative rounded-2xl border border-indigo-200/50 bg-gradient-to-br from-indigo-50/60 via-indigo-50/30 to-blue-50/20 p-5 shadow-sm shadow-indigo-500/5">
+            <div className="relative space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-slate-900">Basic Flows</h3>
-                  <p className="text-xs text-slate-600 mt-0.5 leading-snug">
-                    Visual canvas with full control
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
+                    Visual canvas with full control & flexibility
                   </p>
                 </div>
-                <div className="inline-flex items-center justify-center size-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex-shrink-0">
-                  <Icon.edit className="size-4" />
+                <div className="inline-flex items-center justify-center size-9 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex-shrink-0 shadow-md shadow-indigo-500/30">
+                  <Icon.grid className="size-5" />
                 </div>
               </div>
-              <div className="flex gap-1.5 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100/60 text-blue-700 text-[10px] font-medium">
-                  ✓ Canvas editor
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100/60 text-blue-700 text-[10px] font-medium">
-                  ✓ If/else
-                </span>
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-indigo-600 text-sm">✓</span>
+                  <span className="text-xs text-slate-700">Drag-drop editor</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-indigo-600 text-sm">✓</span>
+                  <span className="text-xs text-slate-700">If/else conditions</span>
+                </div>
               </div>
             </div>
           </div>

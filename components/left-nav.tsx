@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AI_BASE, APP_BASE, isAiRoute, isAppRoute } from "@/lib/app-routes";
+import { AI_BASE, APP_BASE, isAiRoute, isAppRoute, isWebRoute } from "@/lib/app-routes";
 import { cn } from "@/lib/utils";
 
 const FULL_BLEED_ROUTES = [`${APP_BASE}/flow-by-ai`];
@@ -100,7 +100,7 @@ const navigation: NavItem[] = [
 export function LeftNav() {
   const pathname = usePathname();
 
-  if (FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname)) return null;
+  if (FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname)) return null;
 
   return (
     <nav className="w-64 bg-white text-gray-800 flex flex-col h-screen border-r border-gray-200">
