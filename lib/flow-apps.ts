@@ -44,3 +44,9 @@ export function getRequiredIntegrations(steps: FlowStep[]): AppIntegration[] {
   }
   return Array.from(seen.values());
 }
+
+export function getConnectableApps(): AppIntegration[] {
+  return Array.from(CONNECTABLE_APPS)
+    .map((id) => APPS[id])
+    .filter((app): app is AppIntegration => Boolean(app));
+}

@@ -176,7 +176,7 @@ export default function WorkflowsControlCenter() {
                 </td>
               </tr>
 
-              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`${APP_BASE}/flow-by-ai`)}>
+              <tr className="border-b cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`${APP_BASE}/flow-by-ai`)}>
                 <td className="p-4">
                   <div className="flex items-center gap-2 font-medium">
                     Flow by AI
@@ -190,6 +190,23 @@ export default function WorkflowsControlCenter() {
                 <td className="p-4">
                   <div className="flex gap-2">
                     <Button size="icon"><Icon.sparkles/></Button>
+                    <Button size="icon"><Icon.edit/></Button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => router.push(`${APP_BASE}/flows/loop/v2`)}>
+                <td className="p-4">
+                  <div className="font-medium">Loop</div>
+                  <div className="text-muted-foreground text-xs">Iterative workflow loop</div>
+                </td>
+                <td><Badge>Active</Badge></td>
+                <td>—</td>
+                <td>0</td>
+                <td>just now</td>
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <Button size="icon"><Icon.play/></Button>
                     <Button size="icon"><Icon.edit/></Button>
                   </div>
                 </td>
