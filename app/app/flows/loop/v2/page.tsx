@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, createContext, useContext } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
-import LoopIcon from "@mui/icons-material/Loop";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import AddIcon from "@mui/icons-material/Add";
@@ -16,13 +15,16 @@ import CheckIcon from "@mui/icons-material/Check";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ViewListIcon from "@mui/icons-material/ViewList";
-import { Popover, Typography, Box, Button, Drawer, IconButton, Divider } from "@mui/material";
+import LoopIcon from "@mui/icons-material/Loop";
+import { Drawer, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { AddStepDrawer, type AddStepItem } from "@/components/flow/add-step-drawer";
+import LoopIconWithPopover from "@/components/flow/loop-icon-with-popover";
 
 const CW = 2120;
 const CH = 1660;
 
-type NK = "trigger" | "action" | "condition" | "empty" | "group";
+type NK = "trigger" | "action" | "condition" | "empty" | "group" | "add";
 interface NF { k: string; v: string }
 interface FN {
   id: string; kind: NK;
@@ -34,9 +36,26 @@ interface FN {
 }
 interface FE { id: string; from: string; to: string; v?: "true" | "false"; side?: "left" | "right" }
 
-const NODES: FN[] = [
+const STATIC_NODES: FN[] = [
+  { id: "trigger", kind: "trigger", x: 866, y: 40, w: 280, h: 160,
+    title: "New Email Matching Search - three", subtitle: "Every 5 minutes",
+    badge: "In Sync", bc: "green", icon: "gmail" },
+  { id: "check-email", kind: "action", x: 751, y: 230, w: 510, h: 158,
+    title: "check team member email", icon: "robot",
+    fields: [
+      { k: "email", v: "susan@y...   cc: Susan-side...   check: 0x7f1ca1b0913..." },
+      { k: "subject", v: "date: 6 May 2026   n-out: Finance Inbox   id: 0x6f7f7m4b0705..." },
+      { k: "sections", v: "Subject: alehod   In-teamManager" },
+    ] },
+];
+
+const STATIC_EDGES: FE[] = [
+  { id: "e1", from: "trigger", to: "check-email" },
+];
+
+const LOOP_STATIC_NODES: FN[] = [
   { id: "trigger", kind: "trigger", x: 866, y: 40, w: 280, h: 100,
-    title: "New Email Matching Search", subtitle: "Every 5 minutes",
+    title: "New Email Matching Search - four", subtitle: "Every 5 minutes",
     badge: "In Sync", bc: "green", icon: "gmail" },
   { id: "check-email", kind: "action", x: 751, y: 150, w: 510, h: 158,
     title: "check team member email", icon: "robot",
@@ -45,104 +64,77 @@ const NODES: FN[] = [
       { k: "subject", v: "date: 6 May 2026   n-out: Finance Inbox   id: 0x6f7f7m4b0705..." },
       { k: "sections", v: "Subject: alehod   In-teamManager" },
     ] },
-  { id: "if-main", kind: "condition", x: 990, y: 363, w: 32, h: 32 },
-
-  { id: "grp-left", kind: "group", x: 40, y: 450, w: 742, h: 620,
-    gl: "is team member replied?", gv: "false", badge: "False" },
-  { id: "lookup-2", kind: "action", x: 231, y: 504, w: 360, h: 92,
-    title: "Lookup Spreadsheet Rows 2", icon: "sheets",
-    badge: "In Sync", bc: "green",
-    fields: [
-      { k: "With statusQueue", v: "169378e8b30138..." },
-      { k: "Output", v: "Lookup_Sp-erch... length" },
-    ] },
-  { id: "if-left", kind: "condition", x: 395, y: 651, w: 32, h: 32 },
-  { id: "grp-rows", kind: "group", x: 55, y: 738, w: 342, h: 280,
-    gl: "rows found", gv: "false", badge: "False" },
-  { id: "get-row", kind: "action", x: 72, y: 784, w: 308, h: 80,
-    title: "get row number", icon: "sheets",
-    fields: [
-      { k: "With", v: "Lookup_Spreadshe..." },
-      { k: "Output", v: "get_row_number" },
-    ] },
-  { id: "update-row", kind: "action", x: 72, y: 891, w: 308, h: 80,
-    title: "Update Spreadsheet row", icon: "sheets",
-    badge: "In Sync", bc: "green",
-    fields: [{ k: "With record", v: "get_row_number" }] },
-  { id: "grp-else-left", kind: "group", x: 417, y: 738, w: 342, h: 280,
-    gl: "Else", gv: "true", badge: "True" },
-  { id: "empty-else-left", kind: "empty", x: 432, y: 784, w: 310, h: 56,
-    title: "Add or drag step here" },
-
-  { id: "grp-right", kind: "group", x: 822, y: 450, w: 1258, h: 860,
-    gl: "Flow", gv: "true", badge: "True" },
-  { id: "lookup-1", kind: "action", x: 1271, y: 504, w: 360, h: 92,
-    title: "Lookup Spreadsheet Rows 1", icon: "sheets",
-    badge: "In Sync", bc: "green",
-    fields: [
-      { k: "With statusQueue", v: "169378..." },
-      { k: "Output", v: "Lookup_Spreadshe... data  length" },
-    ] },
-  { id: "if-right", kind: "condition", x: 1435, y: 651, w: 32, h: 32 },
-
-  { id: "grp-thread", kind: "group", x: 847, y: 738, w: 630, h: 520,
-    gl: "Thread exists", gv: "false", badge: "False" },
-  { id: "lookup-1b", kind: "action", x: 982, y: 784, w: 360, h: 80,
-    title: "Lookup Spreadsheet Rows 1", icon: "sheets",
-    badge: "In Sync", bc: "green",
-    fields: [{ k: "Output", v: "done" }] },
-  { id: "if-thread", kind: "condition", x: 1146, y: 919, w: 32, h: 32 },
-  { id: "grp-awaiting", kind: "group", x: 855, y: 1006, w: 328, h: 210,
-    gl: "awaiting reply", gv: "false", badge: "False" },
-  { id: "send-msg-1", kind: "action", x: 869, y: 1052, w: 300, h: 118,
-    title: "Send Message 1", icon: "message",
-    badge: "In Sync", bc: "green",
-    fields: [
-      { k: "With", v: "content: memberName + la-oom: outlook..." },
-      { k: "subject", v: "Problem in Work...   date: 9 May 2023..." },
-    ] },
-  { id: "grp-foo", kind: "group", x: 1204, y: 1006, w: 258, h: 210,
-    gl: "Foo", gv: "true", badge: "True" },
-  { id: "empty-foo", kind: "empty", x: 1216, y: 1052, w: 230, h: 56,
-    title: "Add or drag step here" },
-
-  { id: "grp-else-right", kind: "group", x: 1499, y: 738, w: 556, h: 390,
-    gl: "Else", gv: "true", badge: "True" },
-  { id: "add-new-row", kind: "action", x: 1597, y: 784, w: 360, h: 80,
-    title: "Add New Row to Sheet", icon: "sheets",
-    badge: "In Sync", bc: "green",
-    fields: [{ k: "With rowContent", v: "Table... 6 May 2023..." }] },
-  { id: "send-message", kind: "action", x: 1597, y: 891, w: 360, h: 80,
-    title: "Send Message", icon: "message",
-    badge: "In Sync", bc: "green",
-    fields: [
-      { k: "With", v: "content: SusanmcN-ss: — SusanmcN-d..." },
-      { k: "subject", v: "Problem in Work...   date: 9 May 2023..." },
-    ] },
-  { id: "update-sheet-1", kind: "action", x: 1597, y: 998, w: 360, h: 80,
-    title: "Update Spreadsheet Row 1", icon: "sheets",
-    badge: "In Sync", bc: "green",
-    fields: [] },
 ];
 
-const EDGES: FE[] = [
-  { id: "e1",  from: "trigger",    to: "check-email"    },
-  { id: "e2",  from: "check-email", to: "if-main"       },
-  { id: "e3",  from: "if-main",    to: "grp-left",       v: "true",  side: "left"  },
-  { id: "e4",  from: "if-main",    to: "grp-right",      v: "true",  side: "right" },
-  { id: "e5",  from: "lookup-2",   to: "if-left"         },
-  { id: "e6",  from: "if-left",    to: "grp-rows",       v: "true",  side: "left"  },
-  { id: "e7",  from: "if-left",    to: "grp-else-left",  v: "false", side: "right" },
-  { id: "e8",  from: "get-row",    to: "update-row"      },
-  { id: "e9",  from: "lookup-1",   to: "if-right"        },
-  { id: "e10", from: "if-right",   to: "grp-thread",     v: "false", side: "left"  },
-  { id: "e11", from: "if-right",   to: "grp-else-right", v: "true",  side: "right" },
-  { id: "e12", from: "lookup-1b",  to: "if-thread"       },
-  { id: "e13", from: "if-thread",  to: "grp-awaiting",   v: "false", side: "left"  },
-  { id: "e14", from: "if-thread",  to: "grp-foo",        v: "false", side: "right" },
-  { id: "e15", from: "add-new-row", to: "send-message"   },
-  { id: "e16", from: "send-message", to: "update-sheet-1" },
-];
+const STEP_W = 360;
+const STEP_H = 80;
+const STEP_GAP = 30;
+const STEP_START_Y = 438;
+const STEP_CENTER_X = 1006;
+const ADD_STEP_GAP = 30;
+
+function buildFlow(extras: FN[]): { nodes: FN[]; edges: FE[] } {
+  const nodes: FN[] = STATIC_NODES.map((n) => ({ ...n }));
+  const edges: FE[] = STATIC_EDGES.map((e) => ({ ...e }));
+
+  const placed = extras.map((step, i) => ({
+    ...step,
+    x: STEP_CENTER_X - STEP_W / 2,
+    y: STEP_START_Y + i * (STEP_H + STEP_GAP),
+    w: step.w ?? STEP_W,
+    h: step.h ?? STEP_H,
+  }));
+
+  let prevId = "check-email";
+  placed.forEach((step) => {
+    nodes.push(step);
+    edges.push({ id: `e-${prevId}-${step.id}`, from: prevId, to: step.id });
+    prevId = step.id;
+  });
+
+  const lastBottom = placed.length > 0
+    ? placed[placed.length - 1].y + (placed[placed.length - 1].h ?? STEP_H)
+    : STEP_START_Y - ADD_STEP_GAP;
+  const addY = lastBottom + ADD_STEP_GAP;
+
+  nodes.push({ id: "add-step", kind: "add", x: STEP_CENTER_X - 16, y: addY, w: 32, h: 32 });
+  edges.push({ id: "e-add-step", from: prevId, to: "add-step" });
+
+  return { nodes, edges };
+}
+
+function buildLoopFlow(extras: FN[]): { nodes: FN[]; edges: FE[] } {
+  const nodes: FN[] = LOOP_STATIC_NODES.map((n) => ({ ...n }));
+  const edges: FE[] = STATIC_EDGES.map((e) => ({ ...e }));
+
+  const placed = extras.map((step, i) => ({
+    ...step,
+    x: STEP_CENTER_X - STEP_W / 2,
+    y: STEP_START_Y + i * (STEP_H + STEP_GAP),
+    w: step.w ?? STEP_W,
+    h: step.h ?? STEP_H,
+  }));
+
+  let prevId = "check-email";
+  placed.forEach((step) => {
+    nodes.push(step);
+    edges.push({ id: `e-${prevId}-${step.id}`, from: prevId, to: step.id });
+    prevId = step.id;
+  });
+
+  const lastBottom = placed.length > 0
+    ? placed[placed.length - 1].y + (placed[placed.length - 1].h ?? STEP_H)
+    : STEP_START_Y - ADD_STEP_GAP;
+  const addY = lastBottom + ADD_STEP_GAP;
+
+  nodes.push({ id: "add-step", kind: "add", x: STEP_CENTER_X - 16, y: addY, w: 32, h: 32 });
+  edges.push({ id: "e-add-step", from: prevId, to: "add-step" });
+
+  return { nodes, edges };
+}
+
+const AddStepContext = createContext<((tool: AddStepItem) => void) | null>(null);
+const LoopOpenContext = createContext<((nodeId: string) => void) | null>(null);
 
 function edgePath(a: FN, b: FN, side?: "left" | "right"): string {
   const ex = b.x + b.w / 2, ey = b.kind === "condition" ? b.y + b.h : b.y;
@@ -180,6 +172,7 @@ function AIc({ k }: { k?: string }) {
     sheets:  ["bg-green-600",  "S"],
     robot:   ["bg-violet-600", "R"],
     message: ["bg-blue-500",   "✉"],
+    loop:    ["bg-teal-500",   "↻"],
   };
   const [bg, lbl] = map[k ?? ""] ?? ["bg-gray-400", "?"];
   return (
@@ -224,319 +217,105 @@ function MoreMenu() {
   );
 }
 
-function LoopIconWithPopover() {
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const open = Boolean(anchorEl);
+function ParentTriggerEl({ n }: { n: FN }) {
+  const [loopConfigOpen, setLoopConfigOpen] = useState(false);
 
   return (
     <>
-      <button
-        type="button"
-        className="hover:text-gray-900"
-        title="Refresh"
-        onMouseEnter={(e) => setAnchorEl(e.currentTarget)}
-        onMouseLeave={() => setAnchorEl(null)}
-      >
-        <LoopIcon sx={{ fontSize: 16 }} />
-      </button>
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        transformOrigin={{ vertical: "top", horizontal: "center" }}
-        onMouseEnter={() => setAnchorEl(anchorEl)}
-        onMouseLeave={() => setAnchorEl(null)}
-      >
-        <Box sx={{ p: 2, width: 320 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, textAlign: "center" }}>
-            How a Loop Works
-          </Typography>
-          <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
-            <svg width="300" height="210" viewBox="0 0 320 210" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
-                </marker>
-                <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1" />
-                </marker>
-                {/* Linear motion path: Trigger -> Step -> Complete (top to bottom) */}
-                <path id="loopMotion" d="M 195 28 L 195 172" fill="none" />
-              </defs>
-
-              {/* Trigger box */}
-              <rect x="140" y="10" width="110" height="36" rx="8" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
-              <text x="195" y="33" textAnchor="middle" fontSize="13" fontWeight="600" fill="#065f46">Trigger</text>
-
-              {/* Step box */}
-              <rect x="140" y="82" width="110" height="36" rx="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5" />
-              <text x="195" y="105" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1e3a8a">Step</text>
-
-              {/* Complete box */}
-              <rect x="140" y="154" width="110" height="36" rx="8" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5" />
-              <text x="195" y="177" textAnchor="middle" fontSize="13" fontWeight="600" fill="#78350f">Complete</text>
-
-              {/* Forward arrows */}
-              <line x1="195" y1="46" x2="195" y2="78" stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowGreen)" />
-              <line x1="195" y1="118" x2="195" y2="150" stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowGreen)" />
-
-              {/* Sample data array on the left */}
-              <text x="50" y="14" textAnchor="middle" fontSize="11" fontWeight="600" fill="#6b7280">Data</text>
-              <rect x="15" y="20" width="70" height="172" rx="8" fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeDasharray="3 3" />
-
-              {/* Feeder arrow from array to Trigger */}
-              <path d="M 85 28 Q 110 28 140 28" fill="none" stroke="#9ca3af" strokeWidth="1.5" markerEnd="url(#arrowGreen)" />
-
-              {(() => {
-                const items = [
-                  { letter: "A", color: "#ef4444" },
-                  { letter: "B", color: "#f59e0b" },
-                  { letter: "C", color: "#10b981" },
-                  { letter: "D", color: "#6366f1" },
-                ];
-                const total = 12;
-                return items.map(({ letter, color }, i) => {
-                  const start = i * 3;
-                  const end = start + 3;
-                  const k0 = (start / total).toFixed(4);
-                  const k1 = (end / total).toFixed(4);
-                  const fillKeyTimes =
-                    i === 0 ? `0;${k1};${k1};1` : i === 3 ? `0;${k0};${k0};1` : `0;${k0};${k1};1`;
-                  const fillVals =
-                    i === 0
-                      ? `${color};${color};#f9fafb;#f9fafb`
-                      : i === 3
-                      ? `#f9fafb;#f9fafb;${color};${color}`
-                      : `#f9fafb;${color};#f9fafb;#f9fafb`;
-                  const textVals =
-                    i === 0
-                      ? "#ffffff;#ffffff;#374151;#374151"
-                      : i === 3
-                      ? "#374151;#374151;#ffffff;#ffffff"
-                      : "#374151;#ffffff;#374151;#374151";
-                  const y = 28 + i * 40;
-                  return (
-                    <g key={`arr-${letter}`}>
-                      <rect x="25" y={y} width="50" height="32" rx="6" fill="#f9fafb" stroke={color} strokeWidth="1.5">
-                        <animate
-                          attributeName="fill"
-                          dur={`${total}s`}
-                          repeatCount="indefinite"
-                          calcMode="discrete"
-                          keyTimes={fillKeyTimes}
-                          values={fillVals}
-                        />
-                      </rect>
-                      <text x="50" y={y + 21} textAnchor="middle" fontSize="14" fontWeight="700" fill="#374151">
-                        {letter}
-                        <animate
-                          attributeName="fill"
-                          dur={`${total}s`}
-                          repeatCount="indefinite"
-                          calcMode="discrete"
-                          keyTimes={fillKeyTimes}
-                          values={textVals}
-                        />
-                      </text>
-                    </g>
-                  );
-                });
-              })()}
-
-              {/* Animated data items A, B, C, D — each completes the flow sequentially */}
-              {[
-                { letter: "A", color: "#ef4444" },
-                { letter: "B", color: "#f59e0b" },
-                { letter: "C", color: "#10b981" },
-                { letter: "D", color: "#6366f1" },
-              ].map(({ letter, color }, i) => {
-                const total = 12; // total cycle in seconds (4 letters × 3s each)
-                const start = i * 3;
-                const end = start + 3;
-                const k0 = (start / total).toFixed(4);
-                const k1 = (end / total).toFixed(4);
-                // keyTimes: hidden before window, move during, hidden after
-                const keyTimes = `0;${k0};${k1};1`;
-                const keyPoints = "0;0;1;1";
-                // opacity discrete: 1 only during window
-                const opacityValues =
-                  i === 0
-                    ? "1;1;0;0"
-                    : i === 3
-                    ? "0;0;1;1"
-                    : "0;1;0;0";
-                const opacityKeyTimes =
-                  i === 0
-                    ? `0;${k1};${k1};1`
-                    : i === 3
-                    ? `0;${k0};${k0};1`
-                    : `0;${k0};${k1};1`;
-                return (
-                  <g key={letter}>
-                    <circle r="11" fill={color} stroke="#fff" strokeWidth="2" opacity="0">
-                      <animateMotion
-                        dur={`${total}s`}
-                        repeatCount="indefinite"
-                        keyTimes={keyTimes}
-                        keyPoints={keyPoints}
-                      >
-                        <mpath href="#loopMotion" />
-                      </animateMotion>
-                      <animate
-                        attributeName="opacity"
-                        dur={`${total}s`}
-                        repeatCount="indefinite"
-                        calcMode="discrete"
-                        keyTimes={opacityKeyTimes}
-                        values={opacityValues}
-                      />
-                    </circle>
-                    <text textAnchor="middle" dy="4" fontSize="11" fontWeight="700" fill="#fff" opacity="0">
-                      {letter}
-                      <animateMotion
-                        dur={`${total}s`}
-                        repeatCount="indefinite"
-                        keyTimes={keyTimes}
-                        keyPoints={keyPoints}
-                      >
-                        <mpath href="#loopMotion" />
-                      </animateMotion>
-                      <animate
-                        attributeName="opacity"
-                        dur={`${total}s`}
-                        repeatCount="indefinite"
-                        calcMode="discrete"
-                        keyTimes={opacityKeyTimes}
-                        values={opacityValues}
-                      />
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </Box>
-          <Typography variant="body2" sx={{ color: "text.secondary", lineHeight: 1.5, textAlign: "center" }}>
-            Repeats the flow for every item in your data, then stops.
-          </Typography>
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={() => {
-                setDrawerOpen(true);
-                setAnchorEl(null);
-              }}
-            >
-              Enable
-            </Button>
-          </Box>
-        </Box>
-      </Popover>
-
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        slotProps={{ paper: { sx: { width: 400 } } }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Enable Loop
-          </Typography>
-          <IconButton size="small" onClick={() => setDrawerOpen(false)}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <Divider />
-        <Box sx={{ p: 3 }}>
-          <Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>
-            Configure how this trigger iterates over your data. The flow will run once for each item in the source array.
-          </Typography>
-
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-            Data Source
-          </Typography>
-          <Box
-            component="pre"
-            sx={{
-              bgcolor: "#f9fafb",
-              border: "1px solid #e5e7eb",
-              borderRadius: 1,
-              p: 1.5,
-              fontSize: 12,
-              fontFamily: "monospace",
-              mb: 3,
-            }}
-          >
-{`[
-  { "id": "A" },
-  { "id": "B" },
-  { "id": "C" },
-  { "id": "D" }
-]`}
-          </Box>
-
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-            Settings
-          </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 3 }}>
-            <Typography variant="body2">• Run mode: <strong>Sequential</strong></Typography>
-            <Typography variant="body2">• Stop on error: <strong>Yes</strong></Typography>
-            <Typography variant="body2">• Max iterations: <strong>1000</strong></Typography>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1, mt: 4 }}>
-            <Button variant="outlined" fullWidth onClick={() => setDrawerOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="contained" fullWidth onClick={() => setDrawerOpen(false)}>
-              Save & Enable
-            </Button>
-          </Box>
-        </Box>
-      </Drawer>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+        {/* Trigger header bar */}
+        <div className="flex items-center justify-between bg-gray-100 px-3 py-1.5 border-b border-gray-200">
+          <span className="text-xs font-bold text-gray-800">Trigger</span>
+          <div className="flex items-center gap-2 text-gray-600">
+            <button type="button" className="hover:text-gray-900" title="Download">
+              <DownloadIcon sx={{ fontSize: 16 }} />
+            </button>
+            <LoopIconWithPopover />
+            <button type="button" className="hover:text-gray-900" title="Branch">
+              <CallSplitIcon sx={{ fontSize: 16 }} />
+            </button>
+            <button type="button" className="hover:text-gray-900" title="Run">
+              <PlayArrowIcon sx={{ fontSize: 16 }} />
+            </button>
+          </div>
+        </div>
+        {/* Trigger content */}
+        <div className="px-3 py-2 flex flex-col justify-center gap-1.5">
+          <div className="flex items-center gap-2">
+            <AIc k={n.icon} />
+            <span className="text-xs font-semibold text-gray-800 leading-tight flex-1">{n.title}</span>
+            <MoreMenu />
+          </div>
+          {n.subtitle && <span className="text-[10px] text-gray-400">{n.subtitle}</span>}
+        </div>
+        {/* Loop step */}
+        <button
+          onClick={() => setLoopConfigOpen(true)}
+          className="px-3 py-2 border-t border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-between flex-1 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <LoopIcon sx={{ fontSize: 18 }} className="text-gray-700" />
+            <span className="text-xs font-semibold text-gray-800">Loop</span>
+          </div>
+          <MoreMenu />
+        </button>
+      </div>
+      <LoopConfigPanel open={loopConfigOpen} onClose={() => setLoopConfigOpen(false)} />
     </>
   );
 }
 
-function TriggerEl({ n }: { n: FN }) {
+function ChildTriggerEl({ n }: { n: FN }) {
+  const [loopConfigOpen, setLoopConfigOpen] = useState(false);
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
-      {/* Trigger header bar */}
-      <div className="flex items-center justify-between bg-gray-100 px-3 py-1.5 border-b border-gray-200">
-        <span className="text-xs font-bold text-gray-800">Trigger</span>
-        <div className="flex items-center gap-2 text-gray-600">
-          <button type="button" className="hover:text-gray-900" title="Download">
-            <DownloadIcon sx={{ fontSize: 16 }} />
-          </button>
-          <LoopIconWithPopover />
-          <button type="button" className="hover:text-gray-900" title="Branch">
-            <CallSplitIcon sx={{ fontSize: 16 }} />
-          </button>
-          <button type="button" className="hover:text-gray-900" title="Run">
-            <PlayArrowIcon sx={{ fontSize: 16 }} />
-          </button>
+    <>
+      <button
+        onClick={() => setLoopConfigOpen(true)}
+        className="w-full h-full bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      >
+        {/* Trigger header bar - child flow */}
+        <div className="flex items-center justify-between bg-blue-100 px-3 py-1.5 border-b border-blue-200">
+          <span className="text-xs font-bold text-blue-800">Child Trigger</span>
+          <div className="flex items-center gap-2 text-blue-600">
+            <button type="button" className="hover:text-blue-900" title="Download" onClick={(e) => e.stopPropagation()}>
+              <DownloadIcon sx={{ fontSize: 16 }} />
+            </button>
+            <button type="button" className="hover:text-blue-900" title="Branch" onClick={(e) => e.stopPropagation()}>
+              <CallSplitIcon sx={{ fontSize: 16 }} />
+            </button>
+            <button type="button" className="hover:text-blue-900" title="Run" onClick={(e) => e.stopPropagation()}>
+              <PlayArrowIcon sx={{ fontSize: 16 }} />
+            </button>
+          </div>
         </div>
-      </div>
-      {/* Trigger content */}
-      <div className="px-3 py-2 flex flex-col justify-center gap-1.5 flex-1">
-        <div className="flex items-center gap-2">
-          <AIc k={n.icon} />
-          <span className="text-xs font-semibold text-gray-800 leading-tight flex-1">{n.title}</span>
-          <MoreMenu />
+        {/* Trigger content - child flow */}
+        <div className="px-3 py-2 flex flex-col justify-center gap-1.5 flex-1 bg-blue-50">
+          <div className="flex items-center gap-2">
+            <LoopIconWithPopover />
+            <span className="text-xs font-semibold text-blue-800 leading-tight flex-1">{n.title}</span>
+            <MoreMenu />
+          </div>
+          {n.subtitle && <span className="text-[10px] text-blue-600">{n.subtitle}</span>}
         </div>
-        {n.subtitle && <span className="text-[10px] text-gray-400">{n.subtitle}</span>}
-      </div>
-    </div>
+      </button>
+      <ChildLoopConfigPanel open={loopConfigOpen} onClose={() => setLoopConfigOpen(false)} />
+    </>
   );
 }
 
 function ActionEl({ n }: { n: FN }) {
+  const openLoop = useContext(LoopOpenContext);
+  const isLoop = n.icon === "loop";
+  const handleClick = isLoop && openLoop
+    ? (e: React.MouseEvent) => { e.stopPropagation(); openLoop(n.id); }
+    : undefined;
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+    <div
+      onClick={handleClick}
+      onMouseDown={isLoop ? (e) => e.stopPropagation() : undefined}
+      className={`bg-white rounded-lg border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden ${isLoop ? "cursor-pointer hover:border-teal-400 hover:shadow-md transition-all" : ""}`}
+    >
       <div className="flex items-center gap-2 px-3 py-2">
         <AIc k={n.icon} />
         <span className="text-xs font-semibold text-gray-800 flex-1 leading-tight">{n.title}</span>
@@ -645,11 +424,11 @@ function smallestEnclosingGroup(node: FN, groups: FN[]): FN | null {
   return best;
 }
 
-function buildSummary(): SummaryItem[] {
-  const groups = NODES.filter(n => n.kind === "group");
+function buildSummary(nodes: FN[], edges: FE[]): SummaryItem[] {
+  const groups = nodes.filter(n => n.kind === "group");
   let counter = 1;
   const visit = (parentId: string | null): SummaryItem[] => {
-    const direct = NODES.filter(n => {
+    const direct = nodes.filter(n => {
       if (n.id === parentId) return false;
       if (n.kind === "group") return false;
       const enc = smallestEnclosingGroup(n, groups);
@@ -659,16 +438,16 @@ function buildSummary(): SummaryItem[] {
     for (const node of direct) {
       if (node.kind === "condition") {
         const n = counter++;
-        const outgoing = EDGES.filter(e => e.from === node.id && e.side);
+        const outgoing = edges.filter(e => e.from === node.id && e.side);
         const branches = outgoing
           .map(e => {
-            const grp = NODES.find(g => g.id === e.to && g.kind === "group");
+            const grp = nodes.find(g => g.id === e.to && g.kind === "group");
             if (!grp) return null;
             return { group: grp, items: visit(grp.id) };
           })
           .filter((x): x is { group: FN; items: SummaryItem[] } => Boolean(x));
         out.push({ type: "branch", condition: node, n, branches });
-      } else if (node.kind === "empty") {
+      } else if (node.kind === "empty" || node.kind === "add") {
         // skip placeholders in summary
       } else {
         out.push({ type: "step", node, n: counter++ });
@@ -735,8 +514,8 @@ function SummaryBranchRow({ item }: { item: SummaryBranchItem }) {
   );
 }
 
-function FlowSummary({ variant }: { variant: "page" | "drawer" }) {
-  const items = useMemo(() => buildSummary(), []);
+function FlowSummary({ variant, nodes, edges }: { variant: "page" | "drawer"; nodes: FN[]; edges: FE[] }) {
+  const items = useMemo(() => buildSummary(nodes, edges), [nodes, edges]);
   const isDrawer = variant === "drawer";
   return (
     <div className={isDrawer ? "p-3" : "max-w-[760px] mx-auto py-8 px-6"}>
@@ -757,14 +536,38 @@ function FlowSummary({ variant }: { variant: "page" | "drawer" }) {
   );
 }
 
-function NodeEl({ n, collapsed, onToggle }: { n: FN; collapsed?: boolean; onToggle?: () => void }) {
+function NodeEl({ n, collapsed, onToggle, isChild }: { n: FN; collapsed?: boolean; onToggle?: () => void; isChild?: boolean }) {
   switch (n.kind) {
-    case "trigger":   return <TriggerEl n={n} />;
+    case "trigger":   return isChild ? <ChildTriggerEl n={n} /> : <ParentTriggerEl n={n} />;
     case "action":    return <ActionEl n={n} />;
     case "condition": return <ConditionEl />;
     case "empty":     return <EmptyEl n={n} />;
     case "group":     return <GroupEl n={n} collapsed={collapsed} onToggle={onToggle} />;
+    case "add":       return <AddEl />;
   }
+}
+
+function AddEl() {
+  const [open, setOpen] = useState(false);
+  const onAddStep = useContext(AddStepContext);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="w-8 h-8 rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-colors shadow-sm"
+        title="Add step"
+      >
+        <AddIcon sx={{ fontSize: 18 }} />
+      </button>
+      <AddStepDrawer
+        open={open}
+        onClose={() => setOpen(false)}
+        onSelect={(item) => { onAddStep?.(item); setOpen(false); }}
+      />
+    </>
+  );
 }
 
 const VERSIONS = [
@@ -857,20 +660,20 @@ function FlowHeader({ currentVersion, onToggleSummary, summaryOpen }: { currentV
   );
 }
 
-export default function FlowPageV2() {
-  const [tf, setTf] = useState({ x: 20, y: 16, scale: 0.58 });
+function FlowCanvas({
+  initialTransform = { x: 20, y: 16, scale: 0.58 },
+  onLoopClick,
+}: {
+  initialTransform?: { x: number; y: number; scale: number };
+  onLoopClick?: (nodeId: string) => void;
+}) {
+  const [tf, setTf] = useState(initialTransform);
   const [isPanning, setIsPanning] = useState(false);
   const lastMouse = useRef({ x: 0, y: 0 });
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"diagram" | "summary">("diagram");
-  const [summaryOpen, setSummaryOpen] = useState(false);
-
-  useEffect(() => {
-    if (!summaryOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSummaryOpen(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [summaryOpen]);
+  const [extraSteps, setExtraSteps] = useState<FN[]>([]);
+  const { nodes: NODES, edges: EDGES } = useMemo(() => buildFlow(extraSteps), [extraSteps]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -919,6 +722,27 @@ export default function FlowPageV2() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+
+  const handleAddStep = (tool: AddStepItem) => {
+    if (tool.name !== "Loop") return;
+    setExtraSteps(prev => {
+      const lastY = prev.length > 0
+        ? prev[prev.length - 1].y + (prev[prev.length - 1].h ?? STEP_H) + STEP_GAP
+        : STEP_START_Y;
+      const newNode: FN = {
+        id: `loop-${Date.now()}`,
+        kind: "action",
+        x: STEP_CENTER_X - STEP_W / 2,
+        y: lastY,
+        w: STEP_W,
+        h: STEP_H,
+        title: "Loop",
+        icon: "loop",
+      };
+      return [...prev, newNode];
+    });
+  };
+
   const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
   const groups  = NODES.filter(n => n.kind === "group");
   const rest    = NODES.filter(n => n.kind !== "group");
@@ -954,8 +778,8 @@ export default function FlowPageV2() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <FlowHeader currentVersion="v2" onToggleSummary={() => setSummaryOpen(o => !o)} summaryOpen={summaryOpen} />
+    <AddStepContext.Provider value={handleAddStep}>
+    <LoopOpenContext.Provider value={onLoopClick ?? null}>
       <div
         ref={viewportRef}
         className={`flex-1 relative ${viewMode === "summary" ? "overflow-auto bg-gray-50" : "overflow-hidden bg-[#f4f4f4]"}`}
@@ -966,10 +790,10 @@ export default function FlowPageV2() {
           <button onClick={() => setViewMode("diagram")} className={`px-2.5 py-1 transition-colors ${viewMode === "diagram" ? "bg-gray-100 text-gray-800 font-medium" : "text-gray-500 hover:bg-gray-50"}`}>Diagram</button>
           <button onClick={() => setViewMode("summary")} className={`px-2.5 py-1 transition-colors ${viewMode === "summary" ? "bg-gray-100 text-gray-800 font-medium" : "text-gray-500 hover:bg-gray-50"}`}>Summary</button>
         </div>
-        {viewMode === "summary" && <FlowSummary variant="page" />}
+        {viewMode === "summary" && <FlowSummary variant="page" nodes={NODES} edges={EDGES} />}
         {viewMode === "diagram" && (<>
         <div className="absolute bottom-5 left-5 z-20 flex flex-col gap-1">
-          {([{ lbl: "+", fn: () => zoomBy(0.1) }, { lbl: "−", fn: () => zoomBy(-0.1) }, { lbl: "↺", fn: () => setTf({ x: 20, y: 16, scale: 0.58 }) }] as { lbl: string; fn: () => void }[]).map(b => (
+          {([{ lbl: "+", fn: () => zoomBy(0.1) }, { lbl: "−", fn: () => zoomBy(-0.1) }, { lbl: "↺", fn: () => setTf(initialTransform) }] as { lbl: string; fn: () => void }[]).map(b => (
             <button key={b.lbl} onClick={b.fn} className="w-8 h-8 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 flex items-center justify-center text-gray-600 text-sm font-medium transition-colors">{b.lbl}</button>
           ))}
         </div>
@@ -1054,6 +878,273 @@ export default function FlowPageV2() {
         </div>
         </>)}
       </div>
+    </LoopOpenContext.Provider>
+    </AddStepContext.Provider>
+  );
+}
+
+function LoopFlowCanvas({
+  initialTransform = { x: 20, y: 16, scale: 0.58 },
+}: {
+  initialTransform?: { x: number; y: number; scale: number };
+}) {
+  const [tf, setTf] = useState(initialTransform);
+  const [isPanning, setIsPanning] = useState(false);
+  const lastMouse = useRef({ x: 0, y: 0 });
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"diagram" | "summary">("diagram");
+  const [extraSteps, setExtraSteps] = useState<FN[]>([]);
+  const { nodes: NODES, edges: EDGES } = useMemo(() => buildLoopFlow(extraSteps), [extraSteps]);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (viewMode === "summary") return;
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      setTf(t => {
+        const next = Math.min(2, Math.max(0.15, +(t.scale + delta).toFixed(2)));
+        return { scale: next, x: mx - (mx - t.x) * (next / t.scale), y: my - (my - t.y) * (next / t.scale) };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [viewMode]);
+
+  const zoomBy = (d: number) =>
+    setTf(t => ({ ...t, scale: Math.min(2, Math.max(0.15, +(t.scale + d).toFixed(2))) }));
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if (viewMode === "summary") return;
+    setIsPanning(true);
+    lastMouse.current.x = e.clientX;
+    lastMouse.current.y = e.clientY;
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning) return;
+    const dx = e.clientX - lastMouse.current.x;
+    const dy = e.clientY - lastMouse.current.y;
+    lastMouse.current.x = e.clientX;
+    lastMouse.current.y = e.clientY;
+    setTf(t => ({ ...t, x: t.x + dx, y: t.y + dy }));
+  };
+
+  const stopPan = () => setIsPanning(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const toggleCollapse = (id: string) =>
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const handleAddStep = (tool: AddStepItem) => {
+    if (tool.name !== "Loop") return;
+    setExtraSteps(prev => {
+      const lastY = prev.length > 0
+        ? prev[prev.length - 1].y + (prev[prev.length - 1].h ?? STEP_H) + STEP_GAP
+        : STEP_START_Y;
+      const newNode: FN = {
+        id: `loop-${Date.now()}`,
+        kind: "action",
+        x: STEP_CENTER_X - STEP_W / 2,
+        y: lastY,
+        w: STEP_W,
+        h: STEP_H,
+        title: "Loop",
+        icon: "loop",
+      };
+      return [...prev, newNode];
+    });
+  };
+
+  const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
+  const groups  = NODES.filter(n => n.kind === "group");
+  const rest    = NODES.filter(n => n.kind !== "group");
+
+  const hiddenIds = new Set<string>();
+  groups.forEach(g => {
+    if (!collapsed.has(g.id)) return;
+    NODES.forEach(c => {
+      if (c.id === g.id) return;
+      const fullyInside =
+        c.x >= g.x &&
+        c.y >= g.y &&
+        c.x + c.w <= g.x + g.w &&
+        c.y + c.h <= g.y + g.h;
+      if (fullyInside) hiddenIds.add(c.id);
+    });
+  });
+  const COLLAPSED_H = 28;
+
+  const INACTIVE_ID = "grp-thread";
+  const inactiveGroup = nodeMap[INACTIVE_ID];
+  const inactiveChildIds = new Set<string>();
+  if (inactiveGroup) {
+    NODES.forEach(c => {
+      if (c.id === INACTIVE_ID) return;
+      if (
+        c.x >= inactiveGroup.x &&
+        c.y >= inactiveGroup.y &&
+        c.x + c.w <= inactiveGroup.x + inactiveGroup.w &&
+        c.y + c.h <= inactiveGroup.y + inactiveGroup.h
+      ) inactiveChildIds.add(c.id);
+    });
+  }
+
+  return (
+    <AddStepContext.Provider value={handleAddStep}>
+    <LoopOpenContext.Provider value={null}>
+      <div
+        ref={viewportRef}
+        className={`flex-1 relative ${viewMode === "summary" ? "overflow-auto bg-gray-50" : "overflow-hidden bg-[#f4f4f4]"}`}
+        style={viewMode === "summary" ? undefined : { backgroundImage: "radial-gradient(circle, #c8c8c8 1px, transparent 1px)", backgroundSize: "28px 28px", cursor: isPanning ? "grabbing" : "grab" }}
+        onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={stopPan} onMouseLeave={stopPan}
+      >
+        <div className="absolute top-3 left-3 z-20 flex bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden text-[11px]">
+          <button onClick={() => setViewMode("diagram")} className={`px-2.5 py-1 transition-colors ${viewMode === "diagram" ? "bg-gray-100 text-gray-800 font-medium" : "text-gray-500 hover:bg-gray-50"}`}>Diagram</button>
+          <button onClick={() => setViewMode("summary")} className={`px-2.5 py-1 transition-colors ${viewMode === "summary" ? "bg-gray-100 text-gray-800 font-medium" : "text-gray-500 hover:bg-gray-50"}`}>Summary</button>
+        </div>
+        {viewMode === "summary" && <FlowSummary variant="page" nodes={NODES} edges={EDGES} />}
+        {viewMode === "diagram" && (<>
+        <div className="absolute bottom-5 left-5 z-20 flex flex-col gap-1">
+          {([{ lbl: "+", fn: () => zoomBy(0.1) }, { lbl: "−", fn: () => zoomBy(-0.1) }, { lbl: "↺", fn: () => setTf(initialTransform) }] as { lbl: string; fn: () => void }[]).map(b => (
+            <button key={b.lbl} onClick={b.fn} className="w-8 h-8 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 flex items-center justify-center text-gray-600 text-sm font-medium transition-colors">{b.lbl}</button>
+          ))}
+        </div>
+        <div className="absolute bottom-5 left-[3.75rem] z-20 bg-white/90 border border-gray-200 rounded-md shadow-sm px-2 py-1 text-[10px] text-gray-500 font-medium pointer-events-none">{Math.round(tf.scale * 100)}%</div>
+        <div style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.scale})`, transformOrigin: "0 0", width: CW, height: CH, position: "absolute" }}>
+          <svg className="absolute top-0 left-0 overflow-visible pointer-events-none" width={CW} height={CH}>
+            {EDGES.map(e => {
+              const a = nodeMap[e.from], b = nodeMap[e.to];
+              if (!a || !b) return null;
+              if (hiddenIds.has(e.from) || hiddenIds.has(e.to)) return null;
+              const isSide = e.side === "left" || e.side === "right";
+              const sx = a.x + a.w / 2, sy = a.y + a.h;
+              const ex = b.x + b.w / 2, ey = b.kind === "condition" ? b.y + b.h : b.y;
+              const lx = (sx + ex) / 2, mid = (sy + ey) / 2;
+              const ly = isSide ? mid - 5 : (sy + b.y) / 2 - 6;
+              return (
+                <g key={e.id}>
+                  <path d={edgePath(a, b, e.side)} stroke="#000000" strokeWidth={2} fill="none" />
+                  {e.v && <text x={lx} y={ly} textAnchor="middle" fontSize="9" fontWeight="600" fill="#64748b">{e.v === "true" ? "True" : "False"}</text>}
+                </g>
+              );
+            })}
+          </svg>
+          {groups.map(n => {
+            if (hiddenIds.has(n.id)) return null;
+            if (inactiveChildIds.has(n.id)) return null;
+            const isCollapsed = collapsed.has(n.id);
+            const h = isCollapsed ? COLLAPSED_H : n.h;
+
+            if (n.id === INACTIVE_ID) {
+              return (
+                <div
+                  key={n.id}
+                  data-node-id={n.id}
+                  className="absolute grayscale hover:grayscale-0 hover:opacity-100 transition-[filter,opacity] duration-200"
+                  style={{ left: n.x, top: n.y, width: n.w, height: h }}
+                >
+                  <GroupEl n={n} collapsed={isCollapsed} onToggle={() => toggleCollapse(n.id)} />
+                  {!isCollapsed && Array.from(inactiveChildIds).map(id => {
+                    const c = nodeMap[id];
+                    if (!c) return null;
+                    if (hiddenIds.has(c.id)) return null;
+                    const cIsCollapsed = collapsed.has(c.id);
+                    const ch = c.kind === "group" && cIsCollapsed ? COLLAPSED_H : c.h;
+                    return (
+                      <div
+                        key={c.id}
+                        data-node-id={c.id}
+                        style={{ position: "absolute", left: c.x - n.x, top: c.y - n.y, width: c.w, height: ch }}
+                      >
+                        <NodeEl n={c} collapsed={cIsCollapsed} onToggle={() => toggleCollapse(c.id)} isChild={true} />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={n.id}
+                data-node-id={n.id}
+                style={{ position: "absolute", left: n.x, top: n.y, width: n.w, height: h }}
+              >
+                <GroupEl n={n} collapsed={isCollapsed} onToggle={() => toggleCollapse(n.id)} />
+              </div>
+            );
+          })}
+          {rest.map(n => {
+            if (hiddenIds.has(n.id)) return null;
+            if (inactiveChildIds.has(n.id)) return null;
+            return (
+              <div
+                key={n.id}
+                data-node-id={n.id}
+                style={{ position: "absolute", left: n.x, top: n.y, width: n.w, height: n.h }}
+              >
+                <NodeEl n={n} isChild={true} />
+              </div>
+            );
+          })}
+        </div>
+        </>)}
+      </div>
+    </LoopOpenContext.Provider>
+    </AddStepContext.Provider>
+  );
+}
+
+function LoopFlowDrawer({ open, onClose, nodeId }: { open: boolean; onClose: () => void; nodeId: string | null }) {
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      slotProps={{ paper: { sx: { width: "75vw" } } }}
+    >
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 bg-white flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="w-6 h-6 rounded bg-teal-500 flex items-center justify-center text-white text-sm font-bold">↻</span>
+          <span className="text-sm font-semibold text-gray-800">Loop Flow</span>
+          {nodeId && <span className="text-[10px] text-gray-400 font-mono">{nodeId}</span>}
+        </div>
+        <IconButton size="small" onClick={onClose}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <LoopFlowCanvas />
+      </div>
+    </Drawer>
+  );
+}
+
+export default function FlowPageV2() {
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [loopOpenId, setLoopOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!summaryOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSummaryOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [summaryOpen]);
+
+  return (
+    <div className="h-screen flex flex-col overflow-hidden">
+      <FlowHeader currentVersion="v2" onToggleSummary={() => setSummaryOpen(o => !o)} summaryOpen={summaryOpen} />
+      <FlowCanvas onLoopClick={(id) => setLoopOpenId(id)} />
+      <LoopFlowDrawer open={loopOpenId !== null} onClose={() => setLoopOpenId(null)} nodeId={loopOpenId} />
       {summaryOpen && (
         <>
           <div className="fixed inset-0 top-11 bg-black/10 z-30" onClick={() => setSummaryOpen(false)} />
@@ -1064,10 +1155,536 @@ export default function FlowPageV2() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <FlowSummary variant="drawer" />
+            <FlowSummaryStandalone />
           </aside>
         </>
       )}
     </div>
   );
 }
+
+function FlowSummaryStandalone() {
+  const { nodes, edges } = useMemo(() => buildFlow([]), []);
+  return <FlowSummary variant="drawer" nodes={nodes} edges={edges} />;
+}
+
+function ChildLoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const responseData = {
+    order_id: "ORD-1001",
+    customer: "John Doe",
+    items: [
+      {
+        userId: 101,
+        name: "Alice",
+        isActive: true,
+        score: 95.5,
+        tags: ["premium", "beta-user"],
+      },
+      {
+        userId: 102,
+        name: "Bob",
+        isActive: false,
+        score: 82.3,
+        tags: ["free"],
+      },
+      {
+        userId: 103,
+        name: "Charlie",
+        isActive: true,
+        score: null,
+        tags: [],
+      },
+    ],
+  };
+
+  const renderJsonLines = (value: any, lineNum: { current: number }): JSX.Element[] => {
+    const lines: JSX.Element[] = [];
+
+    const renderJsonRecursive = (val: any, indent: number) => {
+      const indentStr = "  ".repeat(indent);
+
+      if (val === null) {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-blue-600">null</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (typeof val === "boolean") {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-blue-600">{String(val)}</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (typeof val === "number") {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-orange-600">{val}</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (typeof val === "string") {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-red-600">"{val}"</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (Array.isArray(val)) {
+        if (val.length === 0) {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>[]</span>
+            </div>
+          );
+          lineNum.current++;
+        } else {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>[</span>
+            </div>
+          );
+          lineNum.current++;
+          val.forEach((item, idx) => {
+            renderJsonRecursive(item, indent + 1);
+            if (idx < val.length - 1) {
+              const lastLine = lines[lines.length - 1];
+              lines[lines.length - 1] = (
+                <div key={lineNum.current - 1} className="flex gap-2">
+                  {lastLine.props.children}
+                  <span>,</span>
+                </div>
+              );
+            }
+          });
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{indentStr}]</span>
+            </div>
+          );
+          lineNum.current++;
+        }
+      } else if (typeof val === "object") {
+        const keys = Object.keys(val);
+        if (keys.length === 0) {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{"{}"}</span>
+            </div>
+          );
+          lineNum.current++;
+        } else {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{indentStr}{"{"}</span>
+            </div>
+          );
+          lineNum.current++;
+          keys.forEach((key, idx) => {
+            lines.push(
+              <div key={lineNum.current} className="flex gap-2">
+                <span className="text-gray-400 select-none">{lineNum.current}</span>
+                <div style={{ marginLeft: `${(indent + 1) * 12}px` }}>
+                  <span className="text-red-600">"{key}"</span>
+                  <span>: </span>
+                  {typeof val[key] === "object" && val[key] !== null ? (
+                    ""
+                  ) : val[key] === null ? (
+                    <span className="text-blue-600">null</span>
+                  ) : typeof val[key] === "boolean" ? (
+                    <span className="text-blue-600">{String(val[key])}</span>
+                  ) : typeof val[key] === "number" ? (
+                    <span className="text-orange-600">{val[key]}</span>
+                  ) : typeof val[key] === "string" ? (
+                    <span className="text-red-600">"{val[key]}"</span>
+                  ) : (
+                    ""
+                  )}
+                  {typeof val[key] !== "object" || val[key] === null ? (
+                    <span>{idx < keys.length - 1 ? "," : ""}</span>
+                  ) : (
+                    ""
+                  )}
+                </div>
+              </div>
+            );
+            lineNum.current++;
+            if (typeof val[key] === "object" && val[key] !== null) {
+              renderJsonRecursive(val[key], indent + 1);
+              const lastIdx = lines.length - 1;
+              const lastLineDiv = lines[lastIdx];
+              if (idx < keys.length - 1) {
+                lines[lastIdx] = (
+                  <div key={lastIdx} className="flex gap-2">
+                    {lastLineDiv.props.children}
+                    <span>,</span>
+                  </div>
+                );
+              }
+            }
+          });
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{indentStr}{"}"}</span>
+            </div>
+          );
+          lineNum.current++;
+        }
+      }
+    };
+
+    renderJsonRecursive(value, 0);
+    return lines;
+  };
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      slotProps={{ paper: { sx: { width: 500 } } }}
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-2">
+          <LoopIcon sx={{ fontSize: 24 }} className="text-blue-700" />
+          <span className="text-lg font-semibold text-gray-800">Response Data</span>
+        </div>
+        <IconButton size="small" onClick={onClose}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4">
+        {/* Response section */}
+        <div>
+          <div className="flex gap-4 mb-4 border-b border-gray-200">
+            <span className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 px-4 py-2">
+              RESPONSE
+            </span>
+          </div>
+
+          {/* Code block */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs text-gray-700 overflow-auto max-h-[500px] leading-relaxed">
+            {renderJsonLines(responseData, { current: 1 })}
+          </div>
+        </div>
+      </div>
+    </Drawer>
+  );
+}
+
+function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [runIndividually, setRunIndividually] = useState(true);
+  const [selectedKey, setSelectedKey] = useState("Root (No key selected)");
+  const [responseTab, setResponseTab] = useState(0);
+
+  const responseData = {
+    order_id: "ORD-1001",
+    customer: "John Doe",
+    items: [
+      {
+        userId: 101,
+        name: "Alice",
+        isActive: true,
+        score: 95.5,
+        tags: ["premium", "beta-user"],
+      },
+      {
+        userId: 102,
+        name: "Bob",
+        isActive: false,
+        score: 82.3,
+        tags: ["free"],
+      },
+      {
+        userId: 103,
+        name: "Charlie",
+        isActive: true,
+        score: null,
+        tags: [],
+      },
+    ],
+  };
+
+  const dropdownOptions = [
+    "Root (No key selected)",
+    "items",
+    "items[0].tags",
+    "items[1].tags",
+    "items[2].tags",
+  ];
+
+  const getSelectedData = () => {
+    if (selectedKey === "Root (No key selected)") {
+      return responseData;
+    } else if (selectedKey === "items") {
+      return responseData.items;
+    } else if (selectedKey === "items[0].tags") {
+      return responseData.items[0].tags;
+    } else if (selectedKey === "items[1].tags") {
+      return responseData.items[1].tags;
+    } else if (selectedKey === "items[2].tags") {
+      return responseData.items[2].tags;
+    }
+    return responseData;
+  };
+
+  const renderJsonLines = (value: any, lineNum: { current: number }): JSX.Element[] => {
+    const lines: JSX.Element[] = [];
+
+    const renderJsonRecursive = (val: any, indent: number) => {
+      const indentStr = "  ".repeat(indent);
+
+      if (val === null) {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-blue-600">null</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (typeof val === "boolean") {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-blue-600">{String(val)}</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (typeof val === "number") {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-orange-600">{val}</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (typeof val === "string") {
+        lines.push(
+          <div key={lineNum.current} className="flex gap-2">
+            <span className="text-gray-400 select-none">{lineNum.current}</span>
+            <span className="text-red-600">"{val}"</span>
+          </div>
+        );
+        lineNum.current++;
+      } else if (Array.isArray(val)) {
+        if (val.length === 0) {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>[]</span>
+            </div>
+          );
+          lineNum.current++;
+        } else {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>[</span>
+            </div>
+          );
+          lineNum.current++;
+          val.forEach((item, idx) => {
+            renderJsonRecursive(item, indent + 1);
+            if (idx < val.length - 1) {
+              const lastLine = lines[lines.length - 1];
+              lines[lines.length - 1] = (
+                <div key={lineNum.current - 1} className="flex gap-2">
+                  {lastLine.props.children}
+                  <span>,</span>
+                </div>
+              );
+            }
+          });
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{indentStr}]</span>
+            </div>
+          );
+          lineNum.current++;
+        }
+      } else if (typeof val === "object") {
+        const keys = Object.keys(val);
+        if (keys.length === 0) {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{"{}"}</span>
+            </div>
+          );
+          lineNum.current++;
+        } else {
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{indentStr}{"{"}</span>
+            </div>
+          );
+          lineNum.current++;
+          keys.forEach((key, idx) => {
+            lines.push(
+              <div key={lineNum.current} className="flex gap-2">
+                <span className="text-gray-400 select-none">{lineNum.current}</span>
+                <div style={{ marginLeft: `${(indent + 1) * 12}px` }}>
+                  <span className="text-red-600">"{key}"</span>
+                  <span>: </span>
+                  {typeof val[key] === "object" && val[key] !== null ? (
+                    ""
+                  ) : val[key] === null ? (
+                    <span className="text-blue-600">null</span>
+                  ) : typeof val[key] === "boolean" ? (
+                    <span className="text-blue-600">{String(val[key])}</span>
+                  ) : typeof val[key] === "number" ? (
+                    <span className="text-orange-600">{val[key]}</span>
+                  ) : typeof val[key] === "string" ? (
+                    <span className="text-red-600">"{val[key]}"</span>
+                  ) : (
+                    ""
+                  )}
+                  {typeof val[key] !== "object" || val[key] === null ? (
+                    <span>{idx < keys.length - 1 ? "," : ""}</span>
+                  ) : (
+                    ""
+                  )}
+                </div>
+              </div>
+            );
+            lineNum.current++;
+            if (typeof val[key] === "object" && val[key] !== null) {
+              renderJsonRecursive(val[key], indent + 1);
+              const lastIdx = lines.length - 1;
+              const lastLineDiv = lines[lastIdx];
+              if (idx < keys.length - 1) {
+                lines[lastIdx] = (
+                  <div key={lastIdx} className="flex gap-2">
+                    {lastLineDiv.props.children}
+                    <span>,</span>
+                  </div>
+                );
+              }
+            }
+          });
+          lines.push(
+            <div key={lineNum.current} className="flex gap-2">
+              <span className="text-gray-400 select-none">{lineNum.current}</span>
+              <span>{indentStr}{"}"}</span>
+            </div>
+          );
+          lineNum.current++;
+        }
+      }
+    };
+
+    renderJsonRecursive(value, 0);
+    return lines;
+  };
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      slotProps={{ paper: { sx: { width: 500 } } }}
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-2">
+          <LoopIcon sx={{ fontSize: 24 }} className="text-gray-700" />
+          <span className="text-lg font-semibold text-gray-800">Advance Configuration</span>
+        </div>
+        <IconButton size="small" onClick={onClose}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4">
+        {/* Run flow individually section */}
+        <div className="mb-6">
+          <h3 className="text-base font-semibold text-gray-800 mb-3">Run flow individually</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            <span className="font-semibold">Note:</span> The flow executes a maximum of 1000 times, with a 1-sec delay between each run.
+          </p>
+
+          {/* Toggle */}
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="checkbox"
+              checked={runIndividually}
+              onChange={(e) => setRunIndividually(e.target.checked)}
+              className="w-10 h-6 rounded-full appearance-none bg-gray-300 checked:bg-blue-500 cursor-pointer transition-colors"
+              style={{
+                backgroundImage: runIndividually
+                  ? "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"white\"><circle cx=\"18\" cy=\"12\" r=\"5\"/></svg>')"
+                  : "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"white\"><circle cx=\"6\" cy=\"12\" r=\"5\"/></svg>')",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+            <span className="text-sm font-medium text-gray-800">Run flow one by one</span>
+          </div>
+
+          {/* Dropdown */}
+          <select
+            value={selectedKey}
+            onChange={(e) => setSelectedKey(e.target.value)}
+            className={`w-full px-4 py-3 border-2 rounded-lg text-gray-700 focus:outline-none text-sm bg-white ${
+              selectedKey === "Root (No key selected)" ? "border-red-500" : "border-blue-500"
+            }`}
+          >
+            {dropdownOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+
+          {selectedKey === "Root (No key selected)" ? (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-700 mb-1">⚠️ Invalid Selection</p>
+              <p className="text-sm text-red-600">
+                The loop cannot execute over an object. The selected key must be an array to iterate through items. Please select a valid array path like "items", "items[0].tags", etc.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600 mt-4">
+              Flow will execute <span className="font-semibold">{Array.isArray(getSelectedData()) ? getSelectedData().length : 0}</span> item{Array.isArray(getSelectedData()) && getSelectedData().length !== 1 ? "s" : ""} for this data.
+            </p>
+          )}
+        </div>
+
+        {/* Response section with tabs */}
+        <div className="border-t border-gray-200 pt-4">
+          <div className="flex gap-4 mb-4 border-b border-gray-200">
+            <button
+              onClick={() => setResponseTab(0)}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                responseTab === 0
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              RESPONSE
+            </button>
+          </div>
+
+          {/* Code block */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs text-gray-700 overflow-auto max-h-[500px] leading-relaxed">
+            {renderJsonLines(getSelectedData(), { current: 1 })}
+          </div>
+        </div>
+      </div>
+    </Drawer>
+  );
+}
+

@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 
 const FULL_BLEED_ROUTES = [`${APP_BASE}/flow-by-ai`];
 
+function isFlowRoute(pathname: string): boolean {
+  return pathname.startsWith(`${APP_BASE}/flows/`);
+}
+
 function isNavActive(pathname: string, href: string): boolean {
   if (href === APP_BASE) return isAppRoute(pathname);
   if (href === AI_BASE) return isAiRoute(pathname);
@@ -100,7 +104,7 @@ const navigation: NavItem[] = [
 export function LeftNav() {
   const pathname = usePathname();
 
-  if (FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname)) return null;
+  if (FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname) || isFlowRoute(pathname)) return null;
 
   return (
     <nav className="w-64 bg-white text-gray-800 flex flex-col h-screen border-r border-gray-200">

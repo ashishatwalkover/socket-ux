@@ -43,7 +43,7 @@ function ScopeOptionIcon({ scopeId }: { scopeId: string }) {
 
 const FLOW_SCOPE_DESCRIPTION = "Only available within this flow";
 
-const ORG_SCOPE_DESCRIPTION = "Available to all flow this this organization";
+const ORG_SCOPE_DESCRIPTION = "Available to all flows in this organization";
 
 const ACCESS_SCOPES = [
   { id: "org", name: "Acme Corporation", description: ORG_SCOPE_DESCRIPTION },
