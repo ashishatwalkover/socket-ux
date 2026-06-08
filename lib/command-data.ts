@@ -1,6 +1,7 @@
 import { AI_BASE, APP_BASE } from "./app-routes";
+import { designComponents } from "./design-components";
 
-export type CommandKind = "action" | "navigation" | "flow" | "collection" | "log" | "help";
+export type CommandKind = "action" | "navigation" | "flow" | "collection" | "log" | "help" | "component";
 
 export type CommandItem = {
   id: string;
@@ -19,6 +20,8 @@ export type CommandItem = {
   description?: string;
   // collection fields
   flowCount?: number;
+  // component fields
+  componentStatus?: "WIP" | "Ready" | "Draft";
 };
 
 export const collectionItems: CommandItem[] = [
@@ -77,6 +80,15 @@ export const logItems: CommandItem[] = [
   { id: "l10", kind: "log", name: "Collect MSG91 user data", time: "08/05/2026, 13:18:28" },
 ];
 
+export const componentItems: CommandItem[] = designComponents.map((c) => ({
+  id: c.id,
+  kind: "component",
+  name: c.name,
+  description: c.description,
+  href: c.href,
+  componentStatus: c.status,
+}));
+
 export const helpItems: CommandItem[] = [
   { id: "h1", kind: "help", name: "Getting started with Workflows", description: "Learn the basics of creating your first flow", href: "https://docs.msg91.com/workflows" },
   { id: "h2", kind: "help", name: "How to use MCP Server", description: "Connect external tools via MCP", href: "https://docs.msg91.com/mcp" },
@@ -85,6 +97,7 @@ export const helpItems: CommandItem[] = [
 
 export const allCommandItems: CommandItem[] = [
   ...navigationItems,
+  ...componentItems,
   ...flowItems,
   ...logItems,
   ...helpItems,

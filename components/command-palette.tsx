@@ -9,6 +9,7 @@ import {
   collectionItems,
   logItems,
   helpItems,
+  componentItems,
   type CommandItem,
   type CommandKind,
 } from "@/lib/command-data";
@@ -52,6 +53,14 @@ const KindIcon = {
       <circle cx="12" cy="12" r="10" />
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  component: () => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
     </svg>
   ),
   search: () => (
@@ -129,8 +138,10 @@ export function CommandPalette() {
     const filteredCollection = collectionItems.filter((i) => fuzzy(query, i));
     const filteredLog = logItems.filter((i) => fuzzy(query, i));
     const filteredHelp = helpItems.filter((i) => fuzzy(query, i));
+    const filteredComponent = componentItems.filter((i) => fuzzy(query, i));
     const out: Section[] = [];
     if (filteredAction.length) out.push({ kind: "action", title: "Actions", items: filteredAction });
+    if (filteredComponent.length) out.push({ kind: "component", title: "Components", items: filteredComponent });
     if (filteredFlow.length) out.push({ kind: "flow", title: "Flows", items: filteredFlow });
     if (filteredCollection.length) out.push({ kind: "collection", title: "Collections", items: filteredCollection });
     if (filteredLog.length) out.push({ kind: "log", title: "Logs", items: filteredLog });
@@ -216,7 +227,7 @@ export function CommandPalette() {
                 setQuery(e.target.value);
                 setActiveIndex(0);
               }}
-              placeholder="Search flows, logs, navigation, docs..."
+              placeholder="Search components, flows, logs, navigation..."
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40"
             />
             <kbd className="text-[11px] bg-white/10 text-white/70 px-2 py-0.5 rounded">
@@ -267,6 +278,12 @@ export function CommandPalette() {
                 )}
                 {section.kind === "collection" && (
                   <div className="col-span-6">Flows</div>
+                )}
+                {section.kind === "component" && (
+                  <>
+                    <div className="col-span-3">Description</div>
+                    <div className="col-span-3">Status</div>
+                  </>
                 )}
               </div>
 
@@ -335,6 +352,19 @@ export function CommandPalette() {
                       <div className="col-span-6 text-white/60">
                         {item.flowCount} {item.flowCount === 1 ? "flow" : "flows"}
                       </div>
+                    )}
+
+                    {section.kind === "component" && (
+                      <>
+                        <div className="col-span-3 text-white/60 truncate">{item.description}</div>
+                        <div className="col-span-3">
+                          {item.componentStatus && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                              {item.componentStatus}
+                            </span>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 );
