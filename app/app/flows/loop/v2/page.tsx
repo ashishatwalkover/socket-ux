@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState, useRef, useEffect, useMemo, createContext, useContext } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  createContext,
+  useContext,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -20,6 +29,8 @@ import { Drawer, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { AddStepDrawer, type AddStepItem } from "@/components/flow/add-step-drawer";
 import LoopIconWithPopover from "@/components/flow/loop-icon-with-popover";
+
+type JsonLineProps = { children?: ReactNode };
 
 const CW = 2120;
 const CH = 1660;
@@ -1197,8 +1208,8 @@ function ChildLoopConfigPanel({ open, onClose }: { open: boolean; onClose: () =>
     ],
   };
 
-  const renderJsonLines = (value: any, lineNum: { current: number }): JSX.Element[] => {
-    const lines: JSX.Element[] = [];
+  const renderJsonLines = (value: any, lineNum: { current: number }): ReactElement[] => {
+    const lines: ReactElement[] = [];
 
     const renderJsonRecursive = (val: any, indent: number) => {
       const indentStr = "  ".repeat(indent);
@@ -1255,7 +1266,7 @@ function ChildLoopConfigPanel({ open, onClose }: { open: boolean; onClose: () =>
           val.forEach((item, idx) => {
             renderJsonRecursive(item, indent + 1);
             if (idx < val.length - 1) {
-              const lastLine = lines[lines.length - 1];
+              const lastLine = lines[lines.length - 1] as ReactElement<JsonLineProps>;
               lines[lines.length - 1] = (
                 <div key={lineNum.current - 1} className="flex gap-2">
                   {lastLine.props.children}
@@ -1322,7 +1333,7 @@ function ChildLoopConfigPanel({ open, onClose }: { open: boolean; onClose: () =>
             if (typeof val[key] === "object" && val[key] !== null) {
               renderJsonRecursive(val[key], indent + 1);
               const lastIdx = lines.length - 1;
-              const lastLineDiv = lines[lastIdx];
+              const lastLineDiv = lines[lastIdx] as ReactElement<JsonLineProps>;
               if (idx < keys.length - 1) {
                 lines[lastIdx] = (
                   <div key={lastIdx} className="flex gap-2">
@@ -1440,8 +1451,8 @@ function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void
     return responseData;
   };
 
-  const renderJsonLines = (value: any, lineNum: { current: number }): JSX.Element[] => {
-    const lines: JSX.Element[] = [];
+  const renderJsonLines = (value: any, lineNum: { current: number }): ReactElement[] => {
+    const lines: ReactElement[] = [];
 
     const renderJsonRecursive = (val: any, indent: number) => {
       const indentStr = "  ".repeat(indent);
@@ -1498,7 +1509,7 @@ function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void
           val.forEach((item, idx) => {
             renderJsonRecursive(item, indent + 1);
             if (idx < val.length - 1) {
-              const lastLine = lines[lines.length - 1];
+              const lastLine = lines[lines.length - 1] as ReactElement<JsonLineProps>;
               lines[lines.length - 1] = (
                 <div key={lineNum.current - 1} className="flex gap-2">
                   {lastLine.props.children}
@@ -1565,7 +1576,7 @@ function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void
             if (typeof val[key] === "object" && val[key] !== null) {
               renderJsonRecursive(val[key], indent + 1);
               const lastIdx = lines.length - 1;
-              const lastLineDiv = lines[lastIdx];
+              const lastLineDiv = lines[lastIdx] as ReactElement<JsonLineProps>;
               if (idx < keys.length - 1) {
                 lines[lastIdx] = (
                   <div key={lastIdx} className="flex gap-2">
@@ -1590,6 +1601,9 @@ function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void
     renderJsonRecursive(value, 0);
     return lines;
   };
+
+  const selectedData = getSelectedData();
+  const selectedItemCount = Array.isArray(selectedData) ? selectedData.length : 0;
 
   return (
     <Drawer
@@ -1658,7 +1672,7 @@ function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void
             </div>
           ) : (
             <p className="text-sm text-gray-600 mt-4">
-              Flow will execute <span className="font-semibold">{Array.isArray(getSelectedData()) ? getSelectedData().length : 0}</span> item{Array.isArray(getSelectedData()) && getSelectedData().length !== 1 ? "s" : ""} for this data.
+              Flow will execute <span className="font-semibold">{selectedItemCount}</span> item{selectedItemCount !== 1 ? "s" : ""} for this data.
             </p>
           )}
         </div>
@@ -1680,7 +1694,7 @@ function LoopConfigPanel({ open, onClose }: { open: boolean; onClose: () => void
 
           {/* Code block */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs text-gray-700 overflow-auto max-h-[500px] leading-relaxed">
-            {renderJsonLines(getSelectedData(), { current: 1 })}
+            {renderJsonLines(selectedData, { current: 1 })}
           </div>
         </div>
       </div>
