@@ -76,9 +76,14 @@ function MessageRow({
 }) {
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-foreground px-4 py-2.5 text-sm text-background">
-          {message.text}
+      <div className="flex justify-end gap-3">
+        <div className="min-w-0 flex-1 flex flex-col items-end space-y-3">
+          <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-foreground px-4 py-2.5 text-sm text-background">
+            {message.text}
+          </div>
+        </div>
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+          <UserIcon className="size-3.5" />
         </div>
       </div>
     );
@@ -86,9 +91,6 @@ function MessageRow({
 
   return (
     <div className="flex gap-3">
-      <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-white">
-        <SparkIcon className="size-3.5" />
-      </div>
       <div className="min-w-0 flex-1 space-y-3">
         {"pending" in message ? (
           <PendingBubble />
@@ -122,6 +124,15 @@ function SparkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+    </svg>
+  );
+}
+
+function UserIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }

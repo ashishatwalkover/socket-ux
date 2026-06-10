@@ -21,7 +21,7 @@ interface FE { id: string; from: string; to: string; v?: "true" | "false"; side?
 
 const NODES: FN[] = [
   { id: "trigger", kind: "trigger", x: 866, y: 40, w: 280, h: 68,
-    title: "New Email Matching Search", subtitle: "Every 5 minutes",
+    title: "New Email Matching Search - two", subtitle: "Every 5 minutes",
     icon: "gmail" },
   { id: "check-email", kind: "action", x: 751, y: 150, w: 510, h: 110,
     title: "check team member email", icon: "robot",

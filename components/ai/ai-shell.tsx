@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "./chat-thread";
 import { Composer } from "./composer";
@@ -10,30 +11,6 @@ import { cn } from "@/lib/utils";
 
 let idCounter = 0;
 const nextId = () => `m-${++idCounter}`;
-
-function ChatHeader({ onNewChat }: { onNewChat: () => void }) {
-  return (
-    <header className="flex items-center justify-between gap-3 px-5 py-3">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm shadow-violet-500/20">
-          <SparkIcon className="size-3.5" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="truncate text-sm font-semibold tracking-tight">FlowMind</h1>
-          <p className="text-[11px] text-muted-foreground">AI automation chat</p>
-        </div>
-      </div>
-      <button
-        onClick={onNewChat}
-        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        aria-label="New chat"
-      >
-        <PlusIcon className="size-3.5" />
-        New chat
-      </button>
-    </header>
-  );
-}
 
 function SparkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -101,7 +78,7 @@ export function AiShell() {
   const hasPanel = !!panel;
 
   // Get flow info if viewing a flow detail
-  const flowInfo = panel === "flows" && flowId ? getFlowInfo(flowId) : null;
+  const flowInfo = panel === "home" && flowId ? getFlowInfo(flowId) : null;
 
   // Auto-submit prompt from home page
   useEffect(() => {
@@ -134,7 +111,7 @@ export function AiShell() {
   // Auto-open flows panel when flow is created (turn 2 - after plan shown)
   useEffect(() => {
     if (turn === 2 && !panel) {
-      router.push("/ai?panel=flows&flow=cart-recovery");
+      router.push("/ai?panel=home&flow=cart-recovery");
     }
   }, [turn, panel, router]);
 
@@ -177,8 +154,8 @@ export function AiShell() {
   const handleAction = useCallback(
     (label: string) => {
       // Handle "Add it" action to show extended flow
-      if (label === "Add it" && flowId === "cart-recovery" && panel === "flows") {
-        router.push("/ai?panel=flows&flow=cart-recovery&extended=true");
+      if (label === "Add it" && flowId === "cart-recovery" && panel === "home") {
+        router.push("/ai?panel=home&flow=cart-recovery&extended=true");
       }
       // Treat inline action clicks as synthetic user messages so the script advances naturally.
       submitText(label);
@@ -193,37 +170,89 @@ export function AiShell() {
   }, []);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-      <div
-        className={cn(
-          "flex min-w-0 flex-col transition-[width] duration-300 ease-out",
-          hasPanel ? "w-[42%]" : "w-full"
-        )}
-      >
-        <ChatHeader onNewChat={handleNewChat} />
-        <ChatThread
-          messages={messages}
-          empty={messages.length === 0}
-          onPickStarter={(p) => submitText(p)}
-          onAction={handleAction}
-        />
-        <Composer
-          value={draft}
-          onChange={setDraft}
-          onSend={() => submitText(draft)}
-          disabled={pending}
-          flowName={flowInfo?.name}
-          flowIcon={flowInfo?.icon}
-        />
-      </div>
-      {hasPanel && (
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
+      <TopHeader
+        onNewChat={handleNewChat}
+        hasPanel={hasPanel}
+        panel={panel}
+        flowName={flowInfo?.name}
+        flowIcon={flowInfo?.icon}
+      />
+      <div className="flex min-h-0 flex-1 w-full overflow-hidden">
         <div
-          key={panel}
-          className="flex min-w-0 flex-1 border-l border-border/70 animate-in slide-in-from-right-8 fade-in duration-300"
+          className={cn(
+            "flex min-w-0 flex-col transition-[width] duration-300 ease-out",
+            hasPanel ? "w-[42%]" : "w-full"
+          )}
         >
-          <RightPanel panel={panel!} />
+          <ChatThread
+            messages={messages}
+            empty={messages.length === 0}
+            onPickStarter={(p) => submitText(p)}
+            onAction={handleAction}
+          />
+          <Composer
+            value={draft}
+            onChange={setDraft}
+            onSend={() => submitText(draft)}
+            disabled={pending}
+            flowName={flowInfo?.name}
+            flowIcon={flowInfo?.icon}
+          />
         </div>
-      )}
+        {hasPanel && (
+          <div
+            key={panel}
+            className="flex min-w-0 flex-1 border-l border-border/70 animate-in slide-in-from-right-8 fade-in duration-300"
+          >
+            <RightPanel panel={panel!} />
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+function TopHeader({
+  hasPanel,
+  panel,
+  flowName,
+  flowIcon,
+}: {
+  onNewChat: () => void;
+  hasPanel: boolean;
+  panel: string | null;
+  flowName?: string;
+  flowIcon?: React.ReactNode;
+}) {
+  const panelLabel = panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : "";
+  return (
+    <header className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-2">
+      <nav className="flex min-w-0 items-center gap-1.5 text-xs">
+        {hasPanel ? (
+          <>
+            <Link
+              href={`/ai?panel=${panel}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {panelLabel}
+            </Link>
+            {flowName && (
+              <>
+                <span className="text-muted-foreground/60">/</span>
+                {flowIcon && (
+                  <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-violet-500 to-indigo-500 text-white">
+                    {flowIcon}
+                  </span>
+                )}
+                <span className="truncate text-foreground">{flowName}</span>
+              </>
+            )}
+          </>
+        ) : (
+          <span className="text-muted-foreground">FlowMind</span>
+        )}
+      </nav>
+    </header>
   );
 }
