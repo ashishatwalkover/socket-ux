@@ -54,6 +54,13 @@ const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
 const ChevronDown = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <polyline points="6 9 12 15 18 9" />
@@ -546,14 +553,16 @@ export default function TemplatesPage() {
             Discover and install ready-made automations
           </p>
         </div>
-        <Button variant="default" size="sm">
-          Create New Flow
+        
+        <Button variant="default" size="sm" className="flex items-center gap-2">
+          <PlusIcon className="size-4" />
+          Create New Template
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="mb-5">
-        <div className="relative max-w-lg">
+      {/* Search + Tabs */}
+      <div className="mb-5 flex items-center gap-3">
+        <div className="relative flex-1 max-w-lg">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
           <Input
             value={search}
@@ -561,6 +570,32 @@ export default function TemplatesPage() {
             placeholder="Search templates, apps, use cases..."
             className="h-12 pl-12 pr-4 text-base border-2 border-black focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/20"
           />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex items-center bg-muted rounded-lg p-1">
+          <button
+            onClick={() => setShowMyTemplates(false)}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-md transition-colors",
+              !showMyTemplates
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            All templates
+          </button>
+          <button
+            onClick={() => setShowMyTemplates(true)}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-md transition-colors",
+              showMyTemplates
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            My templates
+          </button>
         </div>
       </div>      
 
@@ -731,7 +766,8 @@ export default function TemplatesPage() {
               ? `Results (${filtered.length})`
               : `Templates (${filtered.length})`}
           </h2>
-          <div className="relative">
+          <div className="relative flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">Sort by: </span>
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
