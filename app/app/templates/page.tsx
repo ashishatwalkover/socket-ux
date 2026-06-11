@@ -383,7 +383,7 @@ function TemplateCard({ template, onClick }: { template: Template; onClick: () =
       {/* Footer */}
       <div className="mt-auto flex items-center gap-2 pt-3 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">{template.installs}</span>
-        <span>users</span>
+        <span>installs</span>
         <button
           onClick={onClick}
           className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 cursor-pointer"
@@ -542,16 +542,14 @@ export default function TemplatesPage() {
 
   const featured = useMemo(() => ALL_TEMPLATES.find((t) => t.featured), []);
   const recommended = useMemo(() => ALL_TEMPLATES.filter((t) => t.recommended), []);
+  const myTemplatesCount = 0; // Mock: no templates for demo to show empty state
 
   return (
     <div className="min-h-full bg-background p-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Templates</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Discover and install ready-made automations
-          </p>
+          <h1 className="text-xl font-semibold text-foreground">Templates</h1>          
         </div>
         
         <Button variant="default" size="sm" className="flex items-center gap-2">
@@ -560,9 +558,9 @@ export default function TemplatesPage() {
         </Button>
       </div>
 
-      {/* Search + Tabs */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="relative flex-1 max-w-lg">
+      {/* Search */}
+      <div className="mb-5">
+        <div className="relative max-w-lg">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
           <Input
             value={search}
@@ -570,32 +568,6 @@ export default function TemplatesPage() {
             placeholder="Search templates, apps, use cases..."
             className="h-12 pl-12 pr-4 text-base border-2 border-black focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/20"
           />
-        </div>
-
-        {/* Tabs */}
-        <div className="flex items-center bg-muted rounded-lg p-1">
-          <button
-            onClick={() => setShowMyTemplates(false)}
-            className={cn(
-              "px-4 py-2 text-sm font-medium rounded-md transition-colors",
-              !showMyTemplates
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            All templates
-          </button>
-          <button
-            onClick={() => setShowMyTemplates(true)}
-            className={cn(
-              "px-4 py-2 text-sm font-medium rounded-md transition-colors",
-              showMyTemplates
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            My templates
-          </button>
         </div>
       </div>      
 
@@ -759,18 +731,36 @@ export default function TemplatesPage() {
       {/* Grid */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-foreground">
-            {showMyTemplates
-              ? `My Templates (${filtered.length})`
-              : search || useCases.size > 0 || apps.size > 0 || products.size > 0
-              ? `Results (${filtered.length})`
-              : `Templates (${filtered.length})`}
-          </h2>
+          {/* Tabs */}
+          <div className="flex items-center bg-muted rounded-md p-0.5">
+            <button
+              onClick={() => setShowMyTemplates(false)}
+              className={cn(
+                "px-2.5 py-1 text-sm font-medium rounded-sm transition-colors",
+                !showMyTemplates
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              All Templates ({filtered.length})
+            </button>
+            <button
+              onClick={() => setShowMyTemplates(true)}
+              className={cn(
+                "px-2.5 py-1 text-sm font-medium rounded-sm transition-colors",
+                showMyTemplates
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              My Templates ({myTemplatesCount})
+            </button>
+          </div>
           <div className="relative flex items-center gap-1">
             <span className="text-xs text-muted-foreground">Sort by: </span>
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-sm hover:text-foreground transition-colors"
             >
               {sortBy === "popularity" ? "Popularity" : sortBy === "newest" ? "Newest" : "Name"}
               <ChevronDown className="size-3" />
@@ -785,7 +775,7 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => { setSortBy("popularity"); setShowSortDropdown(false); }}
                     className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors",
+                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
                       sortBy === "popularity" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
                     )}
                   >
@@ -794,7 +784,7 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => { setSortBy("newest"); setShowSortDropdown(false); }}
                     className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors",
+                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
                       sortBy === "newest" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
                     )}
                   >
@@ -803,7 +793,7 @@ export default function TemplatesPage() {
                   <button
                     onClick={() => { setSortBy("name"); setShowSortDropdown(false); }}
                     className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors",
+                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
                       sortBy === "name" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
                     )}
                   >
@@ -814,7 +804,40 @@ export default function TemplatesPage() {
             )}
           </div>
         </div>
-        {filtered.length === 0 ? (
+        {showMyTemplates && myTemplatesCount === 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filtered.map((t) => (
+                <TemplateCard key={t.id} template={t} onClick={() => handleOpenTemplate(t.id)} />
+              ))}
+            </div>
+            <div className="mt-8 rounded-xl border border-border/70 bg-muted/30 p-6">
+              <h3 className="text-sm font-semibold text-foreground mb-4">How to create your first template</h3>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</div>
+                  <p className="text-sm text-muted-foreground">Click "Create New Template" to start building your automation</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</div>
+                  <p className="text-sm text-muted-foreground">Choose your trigger app and action</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</div>
+                  <p className="text-sm text-muted-foreground">Add steps to define your workflow</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">4</div>
+                  <p className="text-sm text-muted-foreground">Test and activate your template</p>
+                </div>
+              </div>
+              <Button variant="default" size="sm" className="mt-6 flex items-center gap-2">
+                <PlusIcon className="size-4" />
+                Create New Template
+              </Button>
+            </div>
+          </>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <SearchIcon className="size-10 text-muted-foreground/40 mb-3" />
             <p className="text-sm text-muted-foreground">No templates match your search</p>
@@ -837,22 +860,6 @@ export default function TemplatesPage() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Pagination placeholder */}
-      <div className="mt-8 flex items-center justify-center gap-1">
-        <Button variant="outline" size="icon" className="size-8">
-          <ChevronDown className="size-4 rotate-90" />
-        </Button>
-        <Button variant="secondary" size="sm" className="h-8 w-8 p-0 text-xs">
-          1
-        </Button>
-        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
-          2
-        </Button>
-        <Button variant="outline" size="icon" className="size-8">
-          <ChevronDown className="size-4 -rotate-90" />
-        </Button>
       </div>
     </div>
   );
