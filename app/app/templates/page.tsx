@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Tooltip } from "@mui/material";
 
 /* ─── Types ─── */
 type TemplateApp = { name: string; color: string; letter: string };
@@ -36,6 +37,23 @@ const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const ShareIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
+const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12 5 19 12 12 19" />
+  </svg>
+);
+
 const ChevronDown = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <polyline points="6 9 12 15 18 9" />
@@ -53,6 +71,32 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
 /* ─── Sample Data ─── */
 const USE_CASES = ["All", "Sales", "Marketing", "Support", "Operations", "HR", "Finance", "IT"];
 const APPS = ["All", "Shopify", "Gmail", "Slack", "HubSpot", "Google Sheets", "WhatsApp", "Airtable"];
+
+const APP_IMAGES: Record<string, string> = {
+  "Google Sheets": "https://stuff.thingsofbrand.com/google.com/images/img4_googlesheet.png",
+  "Google Forms": "https://stuff.thingsofbrand.com/google.com/images/imgb_Google_Forms_Logo.png",
+  "Gmail": "https://mailmeteor.com/logos/assets/PNG/Gmail_Logo_512px.png",
+  "Zoho": "https://stuff.thingsofbrand.com/zoho.com/images/imgb_ZohoCRM.jpeg",
+  "LinkedIn": "https://stuff.thingsofbrand.com/linkedin.com/images/img60aec4bbba_linkedin.jpg",
+  "Google Tasks": "https://stuff.thingsofbrand.com/google.com/images/img3_GoogleTasks.png",
+  "Postmark": "https://stuff.thingsofbrand.com/postmarkapp.com/images/img637c367ffb_postmarkapp.jpg",
+  "Telegram": "https://stuff.thingsofbrand.com/telegram.org/images/img6c1c10f144_telegram.jpg",
+  "Getalai": "https://stuff.thingsofbrand.com/getalai.com/images/imga_getalai.png",
+  "ViaSocket": "https://stuff.thingsofbrand.com/viasocket.com/images/img6b109ca44d_viasocket_plug.jpg",
+  "Plumsail": "https://stuff.thingsofbrand.com/plumsail.com/images/imgc_plumsail-documents-logo-colorful.png",
+  "Notion": "https://stuff.thingsofbrand.com/notion.so/images/img667018e3f8_notion.jpg",
+  "Facebook": "https://stuff.thingsofbrand.com/facebook.com/images/img6f6ece6e88_facebook.jpg",
+  "Instagram": "https://stuff.thingsofbrand.com/nstagram.com/images/img3_nstagram.png",
+  "Edenai": "https://stuff.thingsofbrand.com/edenai.co/images/img6bf8d31dff_edenai.jpg",
+  "Slack": "https://stuff.thingsofbrand.com/slack.com/images/img668216333e_slack.jpg",
+  "HubSpot": "https://stuff.thingsofbrand.com/hubspot.com/images/img6_hubspot.jpg",
+  "Airtable": "https://stuff.thingsofbrand.com/airtable.com/images/img6_airtable.jpg",
+  "WhatsApp": "https://stuff.thingsofbrand.com/whatsapp.com/images/imga_whatsapp.png",
+  "Shopify": "https://stuff.thingsofbrand.com/shopify.com/images/img6_shopify.jpg",
+  "Google Drive": "https://stuff.thingsofbrand.com/google.com/images/img6_googledrive.jpg",
+  "OpenAI": "https://stuff.thingsofbrand.com/openai.com/images/img6_openai.jpg",
+  "Webhook": "https://stuff.thingsofbrand.com/viasocket.com/images/imge_Webhook-bg.svg",
+};
 const MORE_APPS = [
   "Notion", "Trello", "Asana", "Jira", "GitHub", "GitLab", "Bitbucket",
   "Salesforce", "Zendesk", "Intercom", "Mailchimp", "SendGrid", "Twilio",
@@ -88,6 +132,7 @@ const ALL_TEMPLATES: Template[] = [
     installs: 13,
     useCase: "Marketing",
     product: "Flow",
+    featured: true,
   },
   {
     id: "t3",
@@ -107,6 +152,7 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Webhook", color: "bg-emerald-500", letter: "W" },
       { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
+      { name: "Slack", color: "bg-purple-600", letter: "S" },
     ],
     installs: 5,
     useCase: "IT",
@@ -118,6 +164,7 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Webhook", color: "bg-emerald-500", letter: "W" },
       { name: "Slack", color: "bg-purple-600", letter: "S" },
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
     ],
     installs: 4,
     useCase: "Operations",
@@ -129,6 +176,7 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Slack", color: "bg-purple-600", letter: "S" },
       { name: "HubSpot", color: "bg-orange-500", letter: "H" },
+      { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
     ],
     installs: 1,
     useCase: "Support",
@@ -140,11 +188,13 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Webhook", color: "bg-emerald-500", letter: "W" },
       { name: "OpenAI", color: "bg-slate-800", letter: "A" },
+      { name: "Slack", color: "bg-purple-600", letter: "S" },
     ],
     installs: 30,
     useCase: "IT",
     product: "AI Agent",
     recommended: true,
+    featured: true,
   },
   {
     id: "t8",
@@ -152,6 +202,7 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Webhook", color: "bg-emerald-500", letter: "W" },
       { name: "Slack", color: "bg-purple-600", letter: "S" },
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
     ],
     installs: 24,
     useCase: "Operations",
@@ -163,6 +214,7 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Webhook", color: "bg-emerald-500", letter: "W" },
       { name: "Airtable", color: "bg-blue-500", letter: "A" },
+      { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
     ],
     installs: 14,
     useCase: "Operations",
@@ -186,6 +238,7 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Shopify", color: "bg-emerald-600", letter: "S" },
       { name: "Slack", color: "bg-purple-600", letter: "S" },
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
     ],
     installs: 30,
     useCase: "Operations",
@@ -197,19 +250,88 @@ const ALL_TEMPLATES: Template[] = [
     apps: [
       { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
       { name: "Slack", color: "bg-purple-600", letter: "S" },
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
     ],
     installs: 5,
     useCase: "Finance",
+    product: "Flow",
+  },
+  {
+    id: "t13",
+    title: "Sync Shopify Orders to Google Sheets",
+    apps: [
+      { name: "Shopify", color: "bg-emerald-600", letter: "S" },
+      { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
+      { name: "Slack", color: "bg-purple-600", letter: "S" },
+    ],
+    installs: 18,
+    useCase: "Sales",
+    product: "Flow",
+  },
+  {
+    id: "t14",
+    title: "Send WhatsApp Message on New Airtable Record",
+    apps: [
+      { name: "Airtable", color: "bg-blue-500", letter: "A" },
+      { name: "WhatsApp", color: "bg-green-500", letter: "W" },
+      { name: "Slack", color: "bg-purple-600", letter: "S" },
+    ],
+    installs: 12,
+    useCase: "Marketing",
+    product: "Flow",
+  },
+  {
+    id: "t15",
+    title: "Create HubSpot Contact from Gmail Attachment",
+    apps: [
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
+      { name: "HubSpot", color: "bg-orange-500", letter: "H" },
+      { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
+    ],
+    installs: 8,
+    useCase: "Sales",
+    product: "Flow",
+  },
+  {
+    id: "t16",
+    title: "Post Slack Message on Webhook Trigger",
+    apps: [
+      { name: "Webhook", color: "bg-emerald-500", letter: "W" },
+      { name: "Slack", color: "bg-purple-600", letter: "S" },
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
+    ],
+    installs: 22,
+    useCase: "IT",
     product: "Flow",
   },
 ];
 
 /* ─── Components ─── */
 function AppBadge({ app }: { app: TemplateApp }) {
+  const imageUrl = APP_IMAGES[app.name];
+  
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={app.name}
+        className="size-6 shrink-0 rounded object-contain"
+        title={app.name}
+        onError={(e) => {
+          // Fallback to letter badge if image fails
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          const fallback = target.nextElementSibling as HTMLElement;
+          if (fallback) fallback.style.display = 'inline-flex';
+        }}
+      />
+    );
+  }
+  
   return (
     <span
       className={cn(
-        "inline-flex size-5 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white",
+        "inline-flex size-6 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white",
         app.color
       )}
       title={app.name}
@@ -221,28 +343,29 @@ function AppBadge({ app }: { app: TemplateApp }) {
 
 function TemplateCard({ template, onClick }: { template: Template; onClick: () => void }) {
   return (
-    <div
-      className="group relative flex flex-col rounded-xl border border-border/70 bg-background p-4 transition-shadow hover:shadow-md cursor-pointer"
-      onClick={onClick}
-    >
-      {/* Header: app badges + copy */}
+    <div className="group relative flex flex-col rounded-xl border border-border/70 bg-background p-4 transition-shadow hover:shadow-md">
+      {/* Header: app badges + featured + share */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-[5px]">
           {template.apps.map((app) => (
             <AppBadge key={app.name} app={app} />
           ))}
         </div>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-          className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          title="Use template"
-        >
-          <CopyIcon className="size-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {template.featured && (
+            <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+              Featured
+            </span>
+          )}
+          <Tooltip title="Share template link" arrow>
+            <button
+              type="button"
+              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ShareIcon className="size-4" />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Title */}
@@ -253,12 +376,14 @@ function TemplateCard({ template, onClick }: { template: Template; onClick: () =
       {/* Footer */}
       <div className="mt-auto flex items-center gap-2 pt-3 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">{template.installs}</span>
-        <span>uses</span>
-        {template.featured && (
-          <span className="ml-auto inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-            Featured
-          </span>
-        )}
+        <span>users</span>
+        <button
+          onClick={onClick}
+          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 cursor-pointer"
+        >
+          Install template
+          <ArrowRightIcon className="size-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -280,13 +405,13 @@ function FeaturedTemplate({ template, onClick }: { template: Template; onClick: 
         </div>
         <h2 className="text-lg font-semibold text-foreground leading-snug mb-2">{template.title}</h2>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-[5px]">
             {template.apps.map((app) => (
               <AppBadge key={app.name} app={app} />
             ))}
           </div>
           <span className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{template.installs}</span> uses
+            <span className="font-medium text-foreground">{template.installs}</span> users
           </span>
         </div>
       </div>
@@ -313,10 +438,12 @@ export default function TemplatesPage() {
   const [products, setProducts] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<"popularity" | "newest" |"name">("popularity");
   const [showMyTemplates, setShowMyTemplates] = useState(false);
-  const [expandedFilters, setExpandedFilters] = useState<Set<"usecase" | "app" | "product">>(new Set());
+  const [expandedFilters, setExpandedFilters] = useState<Set<"usecase" | "app" | "product">>(new Set(["usecase"]));
   const [showAppPopover, setShowAppPopover] = useState(false);
   const [appSearch, setAppSearch] = useState("");
   const [addedApps, setAddedApps] = useState<Set<string>>(new Set());
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   const toggleExpanded = (key: "usecase" | "app" | "product") => {
     const next = new Set(expandedFilters);
@@ -424,118 +551,51 @@ export default function TemplatesPage() {
         </Button>
       </div>
 
-      {/* Search + Sort + My Templates */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="relative flex-1 max-w-lg">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+      {/* Search */}
+      <div className="mb-5">
+        <div className="relative max-w-lg">
+          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search templates, apps, use cases..."
-            className="pl-9 pr-4"
+            className="h-12 pl-12 pr-4 text-base border-2 border-black focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/20"
           />
         </div>
-        
-        <div className="relative">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="h-8 appearance-none rounded-lg border border-input bg-background px-3 pr-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <option value="popularity">Sort by Popularity</option>
-            <option value="newest">Sort by Newest</option>
-            <option value="name">Sort by Name</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-        </div>
-
-        {/* Filter Chips Row */}
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <span className="text-xs font-medium text-muted-foreground shrink-0">Filter:</span>
-          
-          {/* My Templates Chip */}
-          <button
-            onClick={() => setShowMyTemplates(!showMyTemplates)}
-            className={cn(
-              "shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-              showMyTemplates
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-background text-foreground hover:bg-muted"
-            )}
-          >
-            My Templates
-          </button>
-
-          {/* Use Case Chip */}
-          <button
-            onClick={() => toggleExpanded("usecase")}
-            className={cn(
-              "shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-              expandedFilters.has("usecase")
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-background text-foreground hover:bg-muted"
-            )}
-          >
-            Use Case
-          </button>
-
-          {/* Apps Chip */}
-          <button
-            onClick={() => toggleExpanded("app")}
-            className={cn(
-              "shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-              expandedFilters.has("app")
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-background text-foreground hover:bg-muted"
-            )}
-          >
-            Apps
-          </button>
-
-          {/* Product Chip */}
-          <button
-            onClick={() => toggleExpanded("product")}
-            className={cn(
-              "shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-              expandedFilters.has("product")
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-background text-foreground hover:bg-muted"
-            )}
-          >
-            Product
-          </button>
-        </div>                
       </div>      
 
       {/* Expanded Filter Options */}
-      {expandedFilters.size > 0 && (
-        <div className="mb-5 space-y-3">
-          {/* Use Cases Options */}
-          {expandedFilters.has("usecase") && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Use Case:</span>
-              {USE_CASES.map((uc) => (
-                <button
-                  key={uc}
-                  onClick={() => toggleUseCase(uc)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    (uc === "All" ? useCases.size === 0 : useCases.has(uc))
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-background text-foreground hover:bg-muted"
-                  )}
-                >
-                  {uc}
-                </button>
-              ))}
-            </div>
-          )}
+      <div className="mb-5 space-y-3">
+        {/* Use Cases Options */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-xs font-medium text-muted-foreground shrink-0">Use Case:</span>
+          {USE_CASES.map((uc) => (
+            <button
+              key={uc}
+              onClick={() => toggleUseCase(uc)}
+              className={cn(
+                "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                (uc === "All" ? useCases.size === 0 : useCases.has(uc))
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-background text-foreground hover:bg-muted"
+              )}
+            >
+              {uc}
+            </button>
+          ))}
+          <button
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className="shrink-0 text-xs font-medium text-blue-600 hover:underline ml-2"
+          >
+            {showMoreFilters ? "Less filters" : "More filters"}
+          </button>
+        </div>
 
-          {/* Apps Options */}
-          {expandedFilters.has("app") && (
-            <div className="flex flex-wrap items-center gap-2 pb-1">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">App:</span>
-              {APPS.map((app) => (
+        {/* Apps Options */}
+        {showMoreFilters && (
+          <div className="flex flex-wrap items-center gap-2 pb-1">
+          <span className="text-xs font-medium text-muted-foreground shrink-0">Apps:</span>
+          {APPS.map((app) => (
                 <button
                   key={app}
                   onClick={() => toggleApp(app)}
@@ -640,37 +700,84 @@ export default function TemplatesPage() {
           )}
 
           {/* Products Options */}
-          {expandedFilters.has("product") && (
+          {showMoreFilters && (
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="text-xs font-medium text-muted-foreground shrink-0">Product:</span>
-              {PRODUCTS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => toggleProduct(p)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    (p === "All" ? products.size === 0 : products.has(p))
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-background text-foreground hover:bg-muted"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            <span className="text-xs font-medium text-muted-foreground shrink-0">Product:</span>
+            {PRODUCTS.map((p) => (
+              <button
+                key={p}
+                onClick={() => toggleProduct(p)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  (p === "All" ? products.size === 0 : products.has(p))
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-background text-foreground hover:bg-muted"
+                )}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
           )}
         </div>
-      )}
 
       {/* Grid */}
       <div>
-        <h2 className="text-sm font-semibold text-foreground mb-3">
-          {showMyTemplates
-            ? `My Templates (${filtered.length})`
-            : search || useCases.size > 0 || apps.size > 0 || products.size > 0
-            ? `Results (${filtered.length})`
-            : `Templates (${filtered.length})`}
-        </h2>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-foreground">
+            {showMyTemplates
+              ? `My Templates (${filtered.length})`
+              : search || useCases.size > 0 || apps.size > 0 || products.size > 0
+              ? `Results (${filtered.length})`
+              : `Templates (${filtered.length})`}
+          </h2>
+          <div className="relative">
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {sortBy === "popularity" ? "Popularity" : sortBy === "newest" ? "Newest" : "Name"}
+              <ChevronDown className="size-3" />
+            </button>
+            {showSortDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowSortDropdown(false)}
+                />
+                <div className="absolute left-0 top-full mt-1 z-50 rounded-lg border border-border bg-background shadow-lg p-1 min-w-[120px]">
+                  <button
+                    onClick={() => { setSortBy("popularity"); setShowSortDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors",
+                      sortBy === "popularity" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    Popularity
+                  </button>
+                  <button
+                    onClick={() => { setSortBy("newest"); setShowSortDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors",
+                      sortBy === "newest" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    onClick={() => { setSortBy("name"); setShowSortDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors",
+                      sortBy === "name" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    Name
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <SearchIcon className="size-10 text-muted-foreground/40 mb-3" />
