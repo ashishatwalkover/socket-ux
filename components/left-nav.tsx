@@ -94,12 +94,12 @@ const navigation: NavItem[] = [
   { name: "Home", href: APP_BASE, icon: NavIcon.home, divider: true },
   { name: "Workflows", href: `${APP_BASE}/workflows`, icon: NavIcon.templates},
   { name: "AI", href: AI_BASE, icon: NavIcon.ai },
-  { name: "Metrics", href: "/metrics", icon: NavIcon.metrics },
-  { name: "Templates", href: "/templates", icon: NavIcon.templates },
-  { name: "Connections", href: "/connections", icon: NavIcon.connections, dot: true },
-  { name: "MCP Server", href: "/mcp-server", icon: NavIcon.mcp, divider: true },
-  { name: "AI Agents", href: "/ai-agents", icon: NavIcon.ai },
-  { name: "Memory", href: "/memory", icon: NavIcon.memory },
+  { name: "Metrics", href: `${APP_BASE}/metrics`, icon: NavIcon.metrics },
+  { name: "Templates", href: `${APP_BASE}/templates`, icon: NavIcon.templates },
+  { name: "Connections", href: `${APP_BASE}/connections`, icon: NavIcon.connections, dot: true },
+  { name: "MCP Server", href: `${APP_BASE}/mcp-server`, icon: NavIcon.mcp, divider: true },
+  { name: "AI Agents", href: `${APP_BASE}/ai-agents`, icon: NavIcon.ai },
+  { name: "Memory", href: `${APP_BASE}/memory`, icon: NavIcon.memory },
 ];
 
 export function LeftNav() {
