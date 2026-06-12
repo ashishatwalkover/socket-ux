@@ -70,6 +70,18 @@ export function AiShell() {
   const [draft, setDraft] = useState("");
   const [turn, setTurn] = useState(0);
   const [pending, setPending] = useState(false);
+  const [selectedStep, setSelectedStep] = useState<{ name: string; description: string } | undefined>(undefined);
+  const [selectedStepId, setSelectedStepId] = useState<string | undefined>(undefined);
+
+  const handleStepSelect = useCallback((step: { name: string; description: string; id: string }) => {
+    setSelectedStep({ name: step.name, description: step.description });
+    setSelectedStepId(step.id);
+  }, []);
+
+  const handleStepDeselect = useCallback(() => {
+    setSelectedStep(undefined);
+    setSelectedStepId(undefined);
+  }, []);
   const searchParams = useSearchParams();
   const router = useRouter();
   const panel = searchParams.get("panel");
@@ -198,6 +210,17 @@ export function AiShell() {
             disabled={pending}
             flowName={flowInfo?.name}
             flowIcon={flowInfo?.icon}
+            selectedStep={selectedStep}
+            onTest={() => console.log("Test clicked")}
+            onPublish={() => console.log("Publish clicked")}
+            onClose={() => {
+              if (selectedStep) {
+                setSelectedStep(undefined);
+                setSelectedStepId(undefined);
+              } else {
+                router.push("/ai");
+              }
+            }}
           />
         </div>
         {hasPanel && (
@@ -205,7 +228,7 @@ export function AiShell() {
             key={panel}
             className="flex min-w-0 flex-1 border-l border-border/70 animate-in slide-in-from-right-8 fade-in duration-300"
           >
-            <RightPanel panel={panel!} />
+            <RightPanel panel={panel!} onStepSelect={handleStepSelect} selectedStepId={selectedStepId} onStepDeselect={handleStepDeselect} />
           </div>
         )}
       </div>

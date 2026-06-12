@@ -39,7 +39,7 @@ export function ConversationList({ activeId, onNew, onSelect }: Props) {
       <div className="p-3">
         <button
           onClick={onNew}
-          className="flex w-full items-center gap-2 rounded-lg border border-border/70 bg-background px-3 py-2 text-left text-sm font-medium hover:bg-muted/40 transition-colors"
+          className="flex w-full items-center gap-2 rounded-lg border border-border/70 bg-background px-3 py-2 text-left text-sm font-medium hover:bg-muted/40 transition-colors cursor-pointer"
         >
           <PlusIcon className="size-4 text-muted-foreground" />
           New automation
@@ -56,7 +56,7 @@ export function ConversationList({ activeId, onNew, onSelect }: Props) {
               <button
                 onClick={() => onSelect(c)}
                 className={cn(
-                  "group flex w-full items-start gap-2 rounded-md px-2 py-2 text-left transition-colors",
+                  "group flex w-full items-start gap-2 rounded-md px-2 py-2 text-left transition-colors cursor-pointer",
                   activeId === c.id
                     ? "bg-background shadow-sm"
                     : "hover:bg-background/60"

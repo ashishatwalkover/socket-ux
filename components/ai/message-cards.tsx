@@ -26,6 +26,7 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => onAction?.(opt)}
+                className="cursor-pointer"
               >
                 {opt}
               </Button>
@@ -62,10 +63,10 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
           <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-3">
             <span className="text-xs text-muted-foreground">{block.estimate}</span>
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => onAction?.("Edit plan")}>
+              <Button size="sm" variant="ghost" onClick={() => onAction?.("Edit plan")} className="cursor-pointer">
                 Edit
               </Button>
-              <Button size="sm" onClick={() => onAction?.("Deploy")}>
+              <Button size="sm" onClick={() => onAction?.("Deploy")} className="cursor-pointer">
                 Deploy
               </Button>
             </div>
@@ -86,10 +87,10 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
             </div>
           </div>
           <div className="mt-3 flex justify-end gap-2">
-            <Button size="sm" variant="ghost" onClick={() => onAction?.("Skip")}>
+            <Button size="sm" variant="ghost" onClick={() => onAction?.("Skip")} className="cursor-pointer">
               Skip
             </Button>
-            <Button size="sm" onClick={() => onAction?.(`Connect ${block.service}`)}>
+            <Button size="sm" onClick={() => onAction?.(`Connect ${block.service}`)} className="cursor-pointer">
               Connect {block.service}
             </Button>
           </div>
@@ -105,7 +106,7 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
               <h3 className="text-sm font-semibold">{block.name}</h3>
               <Badge variant="secondary">Running</Badge>
             </div>
-            <button className="text-xs text-muted-foreground hover:text-foreground">
+            <button className="text-xs text-muted-foreground hover:text-foreground cursor-pointer">
               View all logs →
             </button>
           </div>
@@ -143,10 +144,11 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
                   size="sm"
                   variant="outline"
                   onClick={() => onAction?.("Not now")}
+                  className="cursor-pointer"
                 >
                   Not now
                 </Button>
-                <Button size="sm" onClick={() => onAction?.("Add it")}>
+                <Button size="sm" onClick={() => onAction?.("Add it")} className="cursor-pointer">
                   Add it
                 </Button>
               </div>

@@ -6,10 +6,18 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tooltip } from "@mui/material";
+import { Dialog, Button as MuiButton, Popover } from "@mui/material";
 
 /* ─── Types ─── */
 type TemplateApp = { name: string; color: string; letter: string };
+
+type WorkflowStep = {
+  label: string;
+  app: string;
+  iconKind?: "schedule" | "filter" | "ai" | "default";
+};
+
+type FlowPreviewIcon = "schedule" | "arrow" | "ai" | "filter";
 
 type Template = {
   id: string;
@@ -17,6 +25,11 @@ type Template = {
   apps: TemplateApp[];
   installs: number;
   useCase: string;
+  chips?: string[];
+  description?: string;
+  displayTitle?: string;
+  workflowSteps?: WorkflowStep[];
+  flowPreviewIcons?: FlowPreviewIcon[];
   product: "Flow" | "AI Agent" | "Table";
   featured?: boolean;
   recommended?: boolean;
@@ -75,6 +88,53 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const StarIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const DownloadIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
+const ScheduleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const FilterIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+);
+
+const AiIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="3" y="8" width="18" height="12" rx="2" />
+    <path d="M12 8V5" />
+    <circle cx="9" cy="14" r="1" fill="currentColor" />
+    <circle cx="15" cy="14" r="1" fill="currentColor" />
+    <path d="M9 5h6" />
+  </svg>
+);
+
+const BranchIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
 /* ─── Sample Data ─── */
 const USE_CASES = ["All", "Sales", "Marketing", "Support", "Operations", "HR", "Finance", "IT"];
 const APPS = ["All", "Shopify", "Gmail", "Slack", "HubSpot", "Google Sheets", "WhatsApp", "Airtable"];
@@ -116,14 +176,49 @@ const PRODUCTS = ["All", "Flow", "AI Agent", "Table"];
 
 const ALL_TEMPLATES: Template[] = [
   {
+    id: "t17",
+    title: "Lead Scoring & Alert Automation",
+    displayTitle: "Lead Scoring & Alert Automation",
+    description:
+      "Send lead details to an AI agent to score buying intent (1–100); classify leads as Hot/Warm/Cold and automatically notify team channels and email recipients with tailored messages and follow-up actions based on the score.",
+    apps: [
+      { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
+      { name: "OpenAI", color: "bg-slate-800", letter: "A" },
+      { name: "Slack", color: "bg-purple-600", letter: "S" },
+      { name: "Gmail", color: "bg-red-500", letter: "M" },
+    ],
+    workflowSteps: [
+      { label: "daily at 11 AM on monday ex...", app: "Schedule", iconKind: "schedule" },
+      { label: "List Sheet Rows", app: "Google Sheets" },
+      { label: "Filter", app: "Filter", iconKind: "filter" },
+      { label: "AI Agent", app: "AI Agent", iconKind: "ai" },
+      { label: "Send Message", app: "Slack" },
+      { label: "Send Email", app: "Gmail" },
+      { label: "Send Message 1", app: "Slack" },
+      { label: "Send Email 1", app: "Gmail" },
+      { label: "Return a 2-day delay in min...", app: "Schedule", iconKind: "schedule" },
+      { label: "Send Email 2", app: "Gmail" },
+      { label: "Send Message 2", app: "Slack" },
+      { label: "Send Email 3", app: "Gmail" },
+    ],
+    flowPreviewIcons: ["schedule", "arrow", "ai", "filter"],
+    installs: 890,
+    useCase: "Sales",
+    chips: ["Sales", "AI", "Lead Scoring"],
+    product: "Flow",
+    featured: true,
+    recommended: true,
+  },
+  {
     id: "t1",
     title: "Automate Lead Capture to Google Sheets from a Webhook",
     apps: [
       { name: "Webhook", color: "bg-emerald-500", letter: "W" },
       { name: "Google Sheets", color: "bg-emerald-600", letter: "G" },
     ],
-    installs: 46,
+    installs: 1200,
     useCase: "Sales",
+    chips: ["Sales", "Marketing", "Lead Gen"],
     product: "Flow",
     featured: true,
     recommended: true,
@@ -313,85 +408,328 @@ const ALL_TEMPLATES: Template[] = [
   },
 ];
 
-/* ─── Components ─── */
-function AppBadge({ app }: { app: TemplateApp }) {
-  const imageUrl = APP_IMAGES[app.name];
-  
-  if (imageUrl) {
-    return (
-      <img
-        src={imageUrl}
-        alt={app.name}
-        className="size-6 shrink-0 rounded object-contain"
-        title={app.name}
-        onError={(e) => {
-          // Fallback to letter badge if image fails
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          const fallback = target.nextElementSibling as HTMLElement;
-          if (fallback) fallback.style.display = 'inline-flex';
-        }}
-      />
-    );
+const DEFAULT_FLOW_PREVIEW_ICONS: FlowPreviewIcon[] = ["schedule", "arrow", "ai", "filter"];
+
+const CHIP_COLORS = [
+  "border-blue-200 bg-blue-50 text-blue-700",
+  "border-violet-200 bg-violet-50 text-violet-700",
+  "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "border-amber-200 bg-amber-50 text-amber-700",
+  "border-rose-200 bg-rose-50 text-rose-700",
+  "border-cyan-200 bg-cyan-50 text-cyan-700",
+  "border-orange-200 bg-orange-50 text-orange-700",
+  "border-indigo-200 bg-indigo-50 text-indigo-700",
+  "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
+  "border-teal-200 bg-teal-50 text-teal-700",
+];
+
+function getChipColorClass(index: number) {
+  return CHIP_COLORS[index % CHIP_COLORS.length];
+}
+
+function getWorkflowSteps(template: Template): WorkflowStep[] {
+  if (template.workflowSteps?.length) return template.workflowSteps;
+  const steps: WorkflowStep[] = [
+    {
+      label: `Trigger via ${template.apps[0]?.name ?? "Webhook"}`,
+      app: template.apps[0]?.name ?? "Webhook",
+      iconKind: "schedule",
+    },
+  ];
+  template.apps.slice(1).forEach((app) => {
+    steps.push({ label: app.name, app: app.name });
+  });
+  return steps;
+}
+
+function StepIcon({ app, iconKind }: { app: string; iconKind?: WorkflowStep["iconKind"] }) {
+  const kind = iconKind ?? (app === "Filter" ? "filter" : app === "AI Agent" ? "ai" : app === "Schedule" ? "schedule" : "default");
+  const imageUrl = APP_IMAGES[app];
+
+  if (kind === "schedule") {
+    return <ScheduleIcon className="size-4 shrink-0 text-muted-foreground" />;
   }
-  
+  if (kind === "filter") {
+    return <FilterIcon className="size-4 shrink-0 text-blue-500" />;
+  }
+  if (kind === "ai") {
+    return <AiIcon className="size-4 shrink-0 text-muted-foreground" />;
+  }
+  if (imageUrl) {
+    return <img src={imageUrl} alt={app} className="size-4 shrink-0 object-contain" />;
+  }
   return (
-    <span
-      className={cn(
-        "inline-flex size-6 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white",
-        app.color
-      )}
-      title={app.name}
-    >
-      {app.letter}
+    <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm bg-muted text-[8px] font-bold text-muted-foreground">
+      {app.charAt(0)}
     </span>
   );
 }
 
-function TemplateCard({ template, onClick }: { template: Template; onClick: () => void }) {
+function FlowPreviewIconBox({ kind }: { kind: FlowPreviewIcon }) {
+  const iconClass = "size-5 text-muted-foreground";
   return (
-    <div className="group relative flex flex-col rounded-xl border border-border/70 bg-background p-4 transition-shadow hover:shadow-md">
-      {/* Header: app badges + featured + share */}
+    <span className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background">
+      {kind === "schedule" && <ScheduleIcon className={iconClass} />}
+      {kind === "arrow" && <ArrowRightIcon className={iconClass} />}
+      {kind === "ai" && <AiIcon className={iconClass} />}
+      {kind === "filter" && <BranchIcon className={iconClass} />}
+    </span>
+  );
+}
+
+function ConfigureTimeline({ steps }: { steps: WorkflowStep[] }) {
+  return (
+    <div className="flex flex-col">
+      {steps.map((step, index) => (
+        <div key={`${step.label}-${index}`} className="flex gap-3">
+          <div className="flex flex-col items-center">
+            <span className="mt-1.5 size-2 shrink-0 rounded-full bg-muted-foreground/50" />
+            {index < steps.length - 1 && <span className="w-px flex-1 bg-border" />}
+          </div>
+          <div className={cn("flex min-w-0 flex-1 items-center gap-2", index < steps.length - 1 ? "pb-3" : "pb-1")}>
+            <StepIcon app={step.app} iconKind={step.iconKind} />
+            <span className="truncate text-xs text-foreground">{step.label}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TemplateInstallDialog({
+  template,
+  open,
+  onInstall,
+  onCancel,
+}: {
+  template: Template;
+  open: boolean;
+  onInstall: () => void;
+  onCancel: () => void;
+}) {
+  const steps = getWorkflowSteps(template);
+  const previewIcons = template.flowPreviewIcons ?? DEFAULT_FLOW_PREVIEW_ICONS;
+  const displayTitle = template.displayTitle ?? template.title;
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      maxWidth={false}
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: "8px",
+          padding: 0,
+          maxWidth: "920px",
+          width: "100%",
+          overflow: "hidden",
+        },
+      }}
+    >
+      <div className="flex min-h-[480px]">
+        <aside className="flex w-[280px] shrink-0 flex-col border-r border-border bg-background">
+          <h3 className="px-5 pt-5 pb-4 text-base font-semibold text-foreground">Configure</h3>
+          <div className="flex-1 overflow-y-auto px-5 pb-5">
+            <ConfigureTimeline steps={steps} />
+          </div>
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col bg-background">
+          <div className="flex flex-1 flex-col px-8 py-6">
+            <h2 className="text-[1.75rem] font-semibold leading-tight text-foreground">{displayTitle}</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              {template.description ||
+                `Use this template to quickly set up ${template.title.toLowerCase()} with ${template.apps.map((a) => a.name).join(", ")}.`}
+            </p>
+            <div className="mt-6 flex items-center gap-2">
+              {previewIcons.map((icon, index) => (
+                <FlowPreviewIconBox key={`${icon}-${index}`} kind={icon} />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 px-8 pb-6">
+            <MuiButton
+              onClick={onInstall}
+              variant="contained"
+              disableElevation
+              sx={{ textTransform: "uppercase", fontWeight: 600, paddingX: "24px" }}
+            >
+              Install
+            </MuiButton>
+            <MuiButton
+              onClick={onCancel}
+              variant="outlined"
+              sx={{ textTransform: "uppercase", fontWeight: 600, paddingX: "24px" }}
+            >
+              Cancel
+            </MuiButton>
+          </div>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+/* ─── Components ─── */
+function AppBadge({ app, index }: { app: TemplateApp; index: number }) {
+  const [imgError, setImgError] = useState(false);
+  const imageUrl = APP_IMAGES[app.name];
+  const showImage = Boolean(imageUrl) && !imgError;
+
+  return (
+    <span
+      className={cn(
+        "relative inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-gray-200 bg-white",
+        index > 0 && "-ml-2.5"
+      )}
+      style={{ zIndex: index + 1 }}
+      title={app.name}
+    >
+      {showImage ? (
+        <img
+          src={imageUrl}
+          alt={app.name}
+          className="size-4 object-contain"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span
+          className={cn(
+            "inline-flex size-full items-center justify-center text-[10px] font-bold text-white",
+            app.color
+          )}
+        >
+          {app.letter}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function TemplateCard({ template, onCardClick }: { template: Template; onCardClick: (template: Template) => void }) {
+  const chips = template.chips || [template.useCase];
+  const displayChips = chips.slice(0, 2);
+  const remainingChips = chips.slice(2);
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
+  
+  const formatInstalls = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'k';
+    }
+    return num.toString();
+  };
+
+  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setPopoverAnchor(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setPopoverAnchor(null);
+  };
+
+  const popoverOpen = Boolean(popoverAnchor);
+
+  return (
+    <div 
+      className="group relative flex flex-col rounded-xl border border-border/70 bg-background p-4 transition-shadow hover:shadow-md cursor-pointer"
+      onClick={() => onCardClick(template)}
+    >
+      {/* Header: app badges + featured */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-[5px]">
-          {template.apps.map((app) => (
-            <AppBadge key={app.name} app={app} />
+        <div className="flex items-center">
+          {template.apps.map((app, index) => (
+            <AppBadge key={app.name} app={app} index={index} />
           ))}
         </div>
-        <div className="flex items-center gap-1">
-          {template.featured && (
-            <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-              Featured
-            </span>
-          )}
-          <Tooltip title="Share template link" arrow>
-            <button
-              type="button"
-              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <ShareIcon className="size-4" />
-            </button>
-          </Tooltip>
-        </div>
+        {template.featured && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+            <StarIcon className="size-3" />
+            Featured
+          </span>
+        )}
       </div>
 
       {/* Title */}
-      <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mb-1">
+      <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mb-3">
         {template.title}
       </h3>
 
-      {/* Footer */}
-      <div className="mt-auto flex items-center gap-2 pt-3 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{template.installs}</span>
-        <span>installs</span>
-        <button
-          onClick={onClick}
-          className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 cursor-pointer"
-        >
-          Install template
-          <ArrowRightIcon className="size-3.5" />
-        </button>
+      {/* Footer: chips + installs */}
+      <div className="mt-auto flex items-center justify-between pt-3">
+        <div className="flex items-center gap-1.5">
+          {displayChips.map((chip, index) => (
+            <span
+              key={index}
+              className={cn(
+                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                getChipColorClass(index)
+              )}
+            >
+              {chip}
+            </span>
+          ))}
+          {remainingChips.length > 0 && (
+            <span
+              className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground cursor-pointer hover:bg-muted/80"
+              onMouseEnter={handlePopoverOpen}
+              onMouseLeave={handlePopoverClose}
+            >
+              +{remainingChips.length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <DownloadIcon className="size-3.5" />
+          <span className="font-medium text-foreground">{formatInstalls(template.installs)}</span>
+          <span>installs</span>
+        </div>
       </div>
+
+      {/* Popover for remaining chips */}
+      <Popover
+        open={popoverOpen}
+        anchorEl={popoverAnchor}
+        onClose={handlePopoverClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        disableRestoreFocus
+        sx={{
+          pointerEvents: 'none',
+          '& .MuiPaper-root': {
+            pointerEvents: 'auto',
+            borderRadius: '8px',
+            padding: '8px',
+          },
+        }}
+        slotProps={{
+          paper: {
+            onMouseEnter: () => setPopoverAnchor(popoverAnchor),
+            onMouseLeave: handlePopoverClose,
+          },
+        }}
+      >
+        <div className="flex flex-col gap-1">
+          {remainingChips.map((chip, index) => (
+            <span
+              key={index}
+              className={cn(
+                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                getChipColorClass(displayChips.length + index)
+              )}
+            >
+              {chip}
+            </span>
+          ))}
+        </div>
+      </Popover>
     </div>
   );
 }
@@ -412,9 +750,9 @@ function FeaturedTemplate({ template, onClick }: { template: Template; onClick: 
         </div>
         <h2 className="text-lg font-semibold text-foreground leading-snug mb-2">{template.title}</h2>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-[5px]">
-            {template.apps.map((app) => (
-              <AppBadge key={app.name} app={app} />
+          <div className="flex items-center">
+            {template.apps.map((app, index) => (
+              <AppBadge key={app.name} app={app} index={index} />
             ))}
           </div>
           <span className="text-sm text-muted-foreground">
@@ -451,6 +789,8 @@ export default function TemplatesPage() {
   const [addedApps, setAddedApps] = useState<Set<string>>(new Set());
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
   const toggleExpanded = (key: "usecase" | "app" | "product") => {
     const next = new Set(expandedFilters);
@@ -494,6 +834,23 @@ export default function TemplatesPage() {
 
   const handleOpenTemplate = (id: string) => {
     router.push(`/app/templates/${id}`);
+  };
+
+  const handleCardClick = (template: Template) => {
+    setSelectedTemplate(template);
+    setShowDialog(true);
+  };
+
+  const handleInstall = () => {
+    if (selectedTemplate) {
+      setShowDialog(false);
+      handleOpenTemplate(selectedTemplate.id);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowDialog(false);
+    setSelectedTemplate(null);
   };
 
   const filtered = useMemo(() => {
@@ -560,7 +917,7 @@ export default function TemplatesPage() {
 
       {/* Search */}
       <div className="mb-5">
-        <div className="relative max-w-lg">
+        <div className="relative max-w-3xl">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
           <Input
             value={search}
@@ -572,7 +929,7 @@ export default function TemplatesPage() {
       </div>      
 
       {/* Expanded Filter Options */}
-      <div className="mb-5 space-y-3">
+      <div className="mb-10 space-y-3">
         {/* Use Cases Options */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <span className="text-xs font-medium text-muted-foreground shrink-0">Use Case:</span>
@@ -732,7 +1089,7 @@ export default function TemplatesPage() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           {/* Tabs */}
-          <div className="flex items-center bg-muted rounded-md p-0.5">
+          <div className="flex items-center bg-muted rounded-md p-1">
             <button
               onClick={() => setShowMyTemplates(false)}
               className={cn(
@@ -808,7 +1165,7 @@ export default function TemplatesPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((t) => (
-                <TemplateCard key={t.id} template={t} onClick={() => handleOpenTemplate(t.id)} />
+                <TemplateCard key={t.id} template={t} onCardClick={handleCardClick} />
               ))}
             </div>
             <div className="mt-8 rounded-xl border border-border/70 bg-muted/30 p-6">
@@ -856,11 +1213,21 @@ export default function TemplatesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((t) => (
-              <TemplateCard key={t.id} template={t} onClick={() => handleOpenTemplate(t.id)} />
+              <TemplateCard key={t.id} template={t} onCardClick={handleCardClick} />
             ))}
           </div>
         )}
       </div>
+
+      {/* Template Dialog */}
+      {selectedTemplate && (
+        <TemplateInstallDialog
+          template={selectedTemplate}
+          open={showDialog}
+          onInstall={handleInstall}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 }

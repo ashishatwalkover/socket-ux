@@ -13,9 +13,16 @@ type Props = {
   placeholder?: string;
   flowName?: string;
   flowIcon?: React.ReactNode;
+  selectedStep?: {
+    name: string;
+    description: string;
+  };
+  onTest?: () => void;
+  onPublish?: () => void;
+  onClose?: () => void;
 };
 
-export function Composer({ value, onChange, onSend, disabled, placeholder, flowName, flowIcon }: Props) {
+export function Composer({ value, onChange, onSend, disabled, placeholder, flowName, flowIcon, selectedStep, onTest, onPublish, onClose }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const menuWrapRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,35 +54,85 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
     <div className="flex flex-col bg-background/80 backdrop-blur px-4 py-4">
       <div className={cn(
         "mx-auto max-w-3xl w-full rounded-2xl",
-        flowName ? "bg-gradient-to-b from-emerald-50 to-white border border-emerald-200/50" : "bg-background"
+        (flowName || selectedStep) ? "bg-gradient-to-b from-emerald-50 to-white border border-emerald-200/50" : "bg-background"
       )}>
-        {flowName && (
+        {(flowName || selectedStep) && (
           <div className="px-5 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2 min-w-0">
-                <SparkIcon className="size-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-emerald-900">{flowName}</p>
-                  <p className="text-xs text-emerald-700/70 mt-0.5">Active automation running smoothly</p>
-                </div>
+                {selectedStep ? (
+                  <>
+                    <div className="flex size-4 shrink-0 items-center justify-center rounded bg-violet-100 text-violet-600 mt-0.5">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-2.5">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-violet-900">{selectedStep.name}</p>
+                      <p className="text-xs text-violet-700/70 mt-0.5">{selectedStep.description}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <SparkIcon className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-emerald-900">{flowName}</p>
+                      <p className="text-xs text-emerald-700/70 mt-0.5">Active automation running smoothly</p>
+                    </div>
+                  </>
+                )}
               </div>
-              <Link
-                href="/ai"
-                className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-100 transition-colors"
-                aria-label="Close flow"
-              >
-                <CloseIcon className="size-3" />
-              </Link>
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedStep ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onTest}
+                    className="text-xs cursor-pointer"
+                  >
+                    <PlayIcon className="size-3.5" />
+                    Test
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={onTest}
+                      className="text-xs cursor-pointer"
+                    >
+                      <PlayIcon className="size-3.5" />
+                      Test
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={onPublish}
+                      className="text-xs cursor-pointer"
+                    >
+                      Publish
+                    </Button>
+                  </>
+                )}
+                {selectedStep && (
+                  <button
+                    onClick={onClose}
+                    className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-100 transition-colors cursor-pointer"
+                    aria-label="Close flow"
+                  >
+                    <CloseIcon className="size-3" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
-        
+
         <div className="px-5 pb-3">
         <div>
         <div
           className={cn(
-            "flex items-end gap-2 rounded-2xl border border-border/70 bg-background px-3 py-2 shadow-sm transition-all",
-            "focus-within:border-violet-300 focus-within:ring-3 focus-within:ring-violet-100"
+            "flex items-center gap-2 rounded-2xl border-2 border-black bg-background px-3 py-2 transition-all",
+            "focus-within:border-black focus-within:ring-2 focus-within:ring-black/20"
           )}
         >
           <textarea
@@ -97,6 +154,7 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
             onClick={onSend}
             disabled={disabled || !value.trim()}
             aria-label="Send"
+            className="cursor-pointer"
           >
             <ArrowUp />
           </Button>
@@ -105,6 +163,7 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
               size="icon-sm"
               variant="ghost"
               onClick={() => setMenuOpen((v) => !v)}
+              className="cursor-pointer"
               aria-label="More options"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
@@ -135,7 +194,7 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
             )}
           </div>
         </div>
-        <p className="mt-2 px-1 text-[11px] text-muted-foreground">
+        <p className="mt-2 px-1 text-[11px] text-muted-foreground text-center">
           FlowMind can ask follow-up questions before deploying. Press Enter to send, Shift+Enter for new line.
         </p>
         </div>
@@ -216,6 +275,14 @@ function SparkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+    </svg>
+  );
+}
+
+function PlayIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <polygon points="6 4 20 12 6 20 6 4" />
     </svg>
   );
 }

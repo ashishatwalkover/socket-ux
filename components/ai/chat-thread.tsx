@@ -42,7 +42,7 @@ export function ChatThread({ messages, onAction, onPickStarter, empty }: Props) 
             <button
               key={s.title}
               onClick={() => onPickStarter(s.prompt)}
-              className="group rounded-xl border border-border/70 bg-background p-4 text-left transition-all hover:border-violet-300 hover:bg-violet-50/40 hover:shadow-sm"
+              className="group rounded-xl border border-border/70 bg-background p-4 text-left transition-all hover:border-violet-300 hover:bg-violet-50/40 hover:shadow-sm cursor-pointer"
             >
               <p className="text-sm font-medium text-foreground">{s.title}</p>
               <p className="mt-1 text-xs text-muted-foreground line-clamp-2">

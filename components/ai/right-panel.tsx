@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Props = { panel: string };
+type Props = { panel: string; onStepSelect?: (step: { name: string; description: string; id: string }) => void; selectedStepId?: string; onStepDeselect?: () => void };
 
 type FlowDef = {
   id: string;
@@ -119,11 +119,11 @@ const META: Record<string, { title: string; description: string }> = {
   profile: { title: "Profile", description: "Account & preferences." },
 };
 
-export function RightPanel({ panel }: Props) {
+export function RightPanel({ panel, onStepSelect, selectedStepId, onStepDeselect }: Props) {
   const searchParams = useSearchParams();
   const flowId = searchParams.get("flow");
   const extended = searchParams.get("extended");
-  
+
   let flow = null;
   if (panel === "home" && flowId) {
     const flows = getFlows(extended ? flowId : undefined);
@@ -131,7 +131,7 @@ export function RightPanel({ panel }: Props) {
   }
 
   if (flow) {
-    return <FlowDetail flow={flow} />;
+    return <FlowDetail flow={flow} onStepSelect={onStepSelect} selectedStepId={selectedStepId} onStepDeselect={onStepDeselect} />;
   }
 
   const meta = META[panel] ?? { title: panel, description: "Coming soon." };
@@ -170,7 +170,7 @@ function FlowList() {
   );
 }
 
-function FlowDetail({ flow }: { flow: FlowDef }) {
+function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { flow: FlowDef; onStepSelect?: (step: { name: string; description: string; id: string }) => void; selectedStepId?: string; onStepDeselect?: () => void }) {
   const [activeTab, setActiveTab] = useState<"summary" | "flow" | "logs">("summary");
 
   const tabs = [
@@ -190,7 +190,7 @@ function FlowDetail({ flow }: { flow: FlowDef }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`rounded-md px-4 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-md px-4 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-white text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -201,11 +201,11 @@ function FlowDetail({ flow }: { flow: FlowDef }) {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" className="cursor-pointer">
             <PlayIcon className="size-3.5" />
             Test
           </Button>
-          <Button size="sm">
+          <Button size="sm" className="cursor-pointer">
             Publish Flow
           </Button>
         </div>
@@ -240,14 +240,26 @@ function FlowDetail({ flow }: { flow: FlowDef }) {
           </div>
         )}
 
-        {activeTab === "flow" && <FlowSection steps={SAMPLE_FLOW_STEPS} onStepClick={(step) => setSelectedStep(step)} />}
+        {activeTab === "flow" && <FlowSection steps={SAMPLE_FLOW_STEPS} selectedStepId={selectedStepId} onStepClick={(step) => {
+          setSelectedStep(step);
+          if (onStepSelect) {
+            onStepSelect({
+              name: step.title,
+              description: step.subtitle || `${step.app} action step`,
+              id: step.id
+            });
+          }
+        }} />}
 
         {activeTab === "logs" && <LogsSection />}
       </div>
       <StepConfigDrawer
         step={selectedStep}
         open={!!selectedStep}
-        onClose={() => setSelectedStep(null)}
+        onClose={() => {
+          setSelectedStep(null);
+          onStepDeselect?.();
+        }}
       />
     </div>
   );
@@ -368,7 +380,7 @@ function FlowStepNode({ step, onClick }: { step: FlowStep; onClick: (step: FlowS
   return (
     <button
       onClick={() => onClick(step)}
-      className={`flex w-full items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-2.5 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 ${typeColors[step.type] || ""}`}
+      className={`flex w-full items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-2.5 text-left transition-colors hover:border-violet-300 hover:bg-violet-50/40 cursor-pointer ${typeColors[step.type] || ""}`}
     >
       <AppIconBadge app={step.app} />
       <div className="min-w-0 flex-1">
@@ -381,7 +393,7 @@ function FlowStepNode({ step, onClick }: { step: FlowStep; onClick: (step: FlowS
   );
 }
 
-function FlowTree({ steps, onStepClick }: { steps: FlowStep[]; onStepClick: (step: FlowStep) => void }) {
+function FlowTree({ steps, onStepClick, selectedStepId }: { steps: FlowStep[]; onStepClick: (step: FlowStep) => void; selectedStepId?: string }) {
   const numberMap = useMemo(() => {
     const map = new Map<string, number>();
     let num = 1;
@@ -468,7 +480,9 @@ function FlowTree({ steps, onStepClick }: { steps: FlowStep[]; onStepClick: (ste
               <div style={{ marginLeft: item.depth * 28 }} className="flex items-center gap-2">
                 <div
                   className={`w-fit rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
-                    step.type === "condition"
+                    selectedStepId === step.id
+                      ? "border-2 border-black bg-violet-50/50"
+                      : step.type === "condition"
                       ? "border-amber-300/70 bg-amber-50/30 hover:bg-amber-50/50"
                       : "border-border/70 bg-background hover:bg-violet-50/40"
                   }`}
@@ -489,7 +503,7 @@ function FlowTree({ steps, onStepClick }: { steps: FlowStep[]; onStepClick: (ste
                   <button
                     type="button"
                     onClick={() => toggleCollapse(step.id)}
-                    className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -577,7 +591,7 @@ function StepConfigDrawer({ step, open, onClose }: { step: FlowStep | null; open
           <AppIconBadge app={step.app} />
           <span className="text-sm font-semibold text-gray-800 truncate">{step.title}</span>
         </div>
-        <button onClick={onClose} className="inline-flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 shrink-0">
+        <button onClick={onClose} className="inline-flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 shrink-0 cursor-pointer">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -859,7 +873,7 @@ function LogItemRow({ log }: { log: LogItem }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-3 text-left transition-colors hover:bg-muted/30"
+        className="flex w-full items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-3 text-left transition-colors hover:bg-muted/30 cursor-pointer"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0 text-blue-500">
           <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
@@ -908,7 +922,7 @@ function LogItemRow({ log }: { log: LogItem }) {
   );
 }
 
-function FlowSection({ steps, onStepClick }: { steps: FlowStep[]; onStepClick: (step: FlowStep) => void }) {
+function FlowSection({ steps, onStepClick, selectedStepId }: { steps: FlowStep[]; onStepClick: (step: FlowStep) => void; selectedStepId?: string }) {
   const snapshot = useLogSnapshotState();
 
   return (
@@ -931,7 +945,7 @@ function FlowSection({ steps, onStepClick }: { steps: FlowStep[]; onStepClick: (
           canPrev={snapshot.canPrev}
           canNext={snapshot.canNext}
         />
-        <FlowTree steps={steps} onStepClick={onStepClick} />
+        <FlowTree steps={steps} onStepClick={onStepClick} selectedStepId={selectedStepId} />
       </div>
     </div>
   );
@@ -960,7 +974,7 @@ function LogSnapshotPanel({
                 type="button"
                 onClick={() => onSelect(index)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors cursor-pointer",
                   selected
                     ? "bg-blue-50 text-foreground"
                     : "text-foreground/80 hover:bg-muted/60"
@@ -1006,7 +1020,7 @@ function LogsFlowToolbar({
         aria-pressed={panelOpen}
         onClick={onTogglePanel}
         className={cn(
-          "inline-flex size-9 shrink-0 items-center justify-center border-r border-border/70 transition-colors",
+          "inline-flex size-9 shrink-0 items-center justify-center border-r border-border/70 transition-colors cursor-pointer",
           panelOpen
             ? "bg-muted text-foreground"
             : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -1027,7 +1041,7 @@ function LogsFlowToolbar({
         aria-label="Older snapshot"
         onClick={onPrev}
         disabled={!canPrev}
-        className="inline-flex size-9 shrink-0 items-center justify-center border-r border-border/70 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        className="inline-flex size-9 shrink-0 items-center justify-center border-r border-border/70 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
       >
         <ChevronLeft className="size-4" />
       </button>
@@ -1037,7 +1051,7 @@ function LogsFlowToolbar({
         aria-label="Newer snapshot"
         onClick={onNext}
         disabled={!canNext}
-        className="inline-flex size-9 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        className="inline-flex size-9 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
       >
         <ChevronRight className="size-4" />
       </button>
