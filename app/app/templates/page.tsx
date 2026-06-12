@@ -437,7 +437,7 @@ const CHIP_COLORS_SELECTED = [
 ];
 
 function getChipColorIndex(label: string): number {
-  for (const list of [USE_CASES, APPS, PRODUCTS]) {
+  for (const list of [USE_CASES, PRODUCTS]) {
     const index = list.indexOf(label);
     if (index >= 0) return index;
   }
@@ -455,6 +455,12 @@ function getChipColorClass(label: string) {
 function getFilterChipClass(label: string, isSelected: boolean) {
   const palette = isSelected ? CHIP_COLORS_SELECTED : CHIP_COLORS;
   return palette[getChipColorIndex(label) % palette.length];
+}
+
+function getAppFilterChipClass(isSelected: boolean) {
+  return isSelected
+    ? "border-foreground bg-foreground text-background"
+    : "border-gray-200 bg-gray-100 text-gray-700";
 }
 
 function getWorkflowSteps(template: Template): WorkflowStep[] {
@@ -998,7 +1004,7 @@ export default function TemplatesPage() {
                   onClick={() => toggleApp(app)}
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    getFilterChipClass(app, isSelected)
+                    getAppFilterChipClass(isSelected)
                   )}
                 >
                   {app}
@@ -1012,7 +1018,7 @@ export default function TemplatesPage() {
                   onClick={() => toggleApp(app)}
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    getFilterChipClass(app, apps.has(app))
+                    getAppFilterChipClass(apps.has(app))
                   )}
                 >
                   {app}
