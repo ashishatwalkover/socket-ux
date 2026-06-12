@@ -423,8 +423,38 @@ const CHIP_COLORS = [
   "border-teal-200 bg-teal-50 text-teal-700",
 ];
 
-function getChipColorClass(index: number) {
-  return CHIP_COLORS[index % CHIP_COLORS.length];
+const CHIP_COLORS_SELECTED = [
+  "border-blue-600 bg-blue-600 text-white",
+  "border-violet-600 bg-violet-600 text-white",
+  "border-emerald-600 bg-emerald-600 text-white",
+  "border-amber-600 bg-amber-600 text-white",
+  "border-rose-600 bg-rose-600 text-white",
+  "border-cyan-600 bg-cyan-600 text-white",
+  "border-orange-600 bg-orange-600 text-white",
+  "border-indigo-600 bg-indigo-600 text-white",
+  "border-fuchsia-600 bg-fuchsia-600 text-white",
+  "border-teal-600 bg-teal-600 text-white",
+];
+
+function getChipColorIndex(label: string): number {
+  for (const list of [USE_CASES, APPS, PRODUCTS]) {
+    const index = list.indexOf(label);
+    if (index >= 0) return index;
+  }
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) {
+    hash = (hash + label.charCodeAt(i) * (i + 1)) % CHIP_COLORS.length;
+  }
+  return hash;
+}
+
+function getChipColorClass(label: string) {
+  return CHIP_COLORS[getChipColorIndex(label) % CHIP_COLORS.length];
+}
+
+function getFilterChipClass(label: string, isSelected: boolean) {
+  const palette = isSelected ? CHIP_COLORS_SELECTED : CHIP_COLORS;
+  return palette[getChipColorIndex(label) % palette.length];
 }
 
 function getWorkflowSteps(template: Template): WorkflowStep[] {
@@ -664,7 +694,7 @@ function TemplateCard({ template, onCardClick }: { template: Template; onCardCli
               key={index}
               className={cn(
                 "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                getChipColorClass(index)
+                getChipColorClass(chip)
               )}
             >
               {chip}
@@ -722,7 +752,7 @@ function TemplateCard({ template, onCardClick }: { template: Template; onCardCli
               key={index}
               className={cn(
                 "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                getChipColorClass(displayChips.length + index)
+                getChipColorClass(chip)
               )}
             >
               {chip}
@@ -933,20 +963,21 @@ export default function TemplatesPage() {
         {/* Use Cases Options */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <span className="text-xs font-medium text-muted-foreground shrink-0">Use Case:</span>
-          {USE_CASES.map((uc) => (
+          {USE_CASES.map((uc) => {
+            const isSelected = uc === "All" ? useCases.size === 0 : useCases.has(uc);
+            return (
             <button
               key={uc}
               onClick={() => toggleUseCase(uc)}
               className={cn(
                 "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                (uc === "All" ? useCases.size === 0 : useCases.has(uc))
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-background text-foreground hover:bg-muted"
+                getFilterChipClass(uc, isSelected)
               )}
             >
               {uc}
             </button>
-          ))}
+            );
+          })}
           <button
             onClick={() => setShowMoreFilters(!showMoreFilters)}
             className="shrink-0 text-xs font-medium text-blue-600 hover:underline ml-2"
@@ -959,20 +990,21 @@ export default function TemplatesPage() {
         {showMoreFilters && (
           <div className="flex flex-wrap items-center gap-2 pb-1">
           <span className="text-xs font-medium text-muted-foreground shrink-0">Apps:</span>
-          {APPS.map((app) => (
+          {APPS.map((app) => {
+            const isSelected = app === "All" ? apps.size === 0 : apps.has(app);
+            return (
                 <button
                   key={app}
                   onClick={() => toggleApp(app)}
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    (app === "All" ? apps.size === 0 : apps.has(app))
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-background text-foreground hover:bg-muted"
+                    getFilterChipClass(app, isSelected)
                   )}
                 >
                   {app}
                 </button>
-              ))}
+              );
+          })}
               {/* Show added MORE_APPS as chips (persist even when deselected) */}
               {Array.from(addedApps).map((app) => (
                 <button
@@ -980,9 +1012,7 @@ export default function TemplatesPage() {
                   onClick={() => toggleApp(app)}
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    apps.has(app)
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-background text-foreground hover:bg-muted"
+                    getFilterChipClass(app, apps.has(app))
                   )}
                 >
                   {app}
@@ -1067,20 +1097,21 @@ export default function TemplatesPage() {
           {showMoreFilters && (
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
             <span className="text-xs font-medium text-muted-foreground shrink-0">Product:</span>
-            {PRODUCTS.map((p) => (
+            {PRODUCTS.map((p) => {
+              const isSelected = p === "All" ? products.size === 0 : products.has(p);
+              return (
               <button
                 key={p}
                 onClick={() => toggleProduct(p)}
                 className={cn(
                   "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  (p === "All" ? products.size === 0 : products.has(p))
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-background text-foreground hover:bg-muted"
+                  getFilterChipClass(p, isSelected)
                 )}
               >
                 {p}
               </button>
-            ))}
+              );
+            })}
           </div>
           )}
         </div>
