@@ -9,6 +9,7 @@ import { AIChatPanel } from "@/components/master-slide/ai-chat-panel";
 
 const ITEMS: MasterItem[] = [
   { id: "javascript", label: "JavaScript", badge: "JS", badgeBg: "bg-yellow-400", badgeFg: "text-black" },
+  { id: "where-clause", label: "Where clause", badge: "WC", badgeBg: "bg-gray-500", badgeFg: "text-white" },
 ];
 
 export default function MasterSlidePage() {

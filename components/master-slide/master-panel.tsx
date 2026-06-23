@@ -3,6 +3,7 @@
 import type { ComponentType } from "react";
 import type { MasterItem, PanelProps } from "./types";
 import { JavaScriptPanelV3 } from "./javascript-panel-v3";
+import { WhereClausePanel } from "./where-clause-panel";
 
 /**
  * Registry mapping a master-slide item id to its panel component.
@@ -10,6 +11,7 @@ import { JavaScriptPanelV3 } from "./javascript-panel-v3";
  */
 const PANEL_REGISTRY: Record<string, ComponentType<PanelProps>> = {
   javascript: JavaScriptPanelV3,
+  "where-clause": WhereClausePanel,
 };
 
 function DefaultPanel({ item, onClose }: PanelProps) {

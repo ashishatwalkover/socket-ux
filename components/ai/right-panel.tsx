@@ -22,8 +22,10 @@ type FlowStep = {
   title: string;
   subtitle?: string;
   app: string;
-  type: "trigger" | "action" | "condition" | "wait" | "stop";
+  type: "trigger" | "action" | "condition" | "wait" | "stop" | "loop";
   branches?: { label: string; steps: FlowStep[] }[];
+  loopBody?: FlowStep[];
+  loopLabel?: string;
 };
 
 const FLOWS_BASE: FlowDef[] = [
@@ -212,7 +214,7 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
         {activeTab === "summary" && (
           <div className="space-y-6">
             <section>
@@ -324,6 +326,23 @@ const SAMPLE_FLOW_STEPS: FlowStep[] = [
             app: "whatsapp",
             type: "action",
           },
+          {
+            id: "loop-1",
+            title: "For each pending item",
+            subtitle: "Loop",
+            app: "loop",
+            type: "loop",
+            loopLabel: "FOR EACH item",
+            loopBody: [
+              {
+                id: "loop-action-1",
+                title: "Notify customer via Slack",
+                subtitle: "Action",
+                app: "slack",
+                type: "action",
+              },
+            ],
+          },
         ],
       },
     ],
@@ -349,6 +368,7 @@ function AppIconBadge({ app }: { app: string }) {
     stop: "bg-red-500",
     log: "bg-gray-500",
     trigger: "bg-blue-500",
+    loop: "bg-indigo-500",
   };
   const labels: Record<string, string> = {
     shopify: "S",
@@ -361,6 +381,7 @@ function AppIconBadge({ app }: { app: string }) {
     stop: "■",
     log: "L",
     trigger: "T",
+    loop: "↻",
   };
   return (
     <span className={`inline-flex size-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white ${styles[app] || "bg-gray-400"}`}>
@@ -394,23 +415,6 @@ function FlowStepNode({ step, onClick }: { step: FlowStep; onClick: (step: FlowS
 }
 
 function FlowTree({ steps, onStepClick, selectedStepId }: { steps: FlowStep[]; onStepClick: (step: FlowStep) => void; selectedStepId?: string }) {
-  const numberMap = useMemo(() => {
-    const map = new Map<string, number>();
-    let num = 1;
-    function walk(items: FlowStep[]) {
-      for (const item of items) {
-        map.set(item.id, num++);
-        if (item.branches) {
-          for (const branch of item.branches) {
-            walk(branch.steps);
-          }
-        }
-      }
-    }
-    walk(steps);
-    return map;
-  }, [steps]);
-
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const toggleCollapse = (stepId: string) => {
@@ -422,103 +426,198 @@ function FlowTree({ steps, onStepClick, selectedStepId }: { steps: FlowStep[]; o
     });
   };
 
-  const items = useMemo(() => {
-    const result: (
-      | { type: "step"; step: FlowStep; num: number; depth: number }
-      | { type: "label"; label: string; count: number; depth: number }
-    )[] = [];
-    function walk(steps: FlowStep[], depth: number, parentCollapsed: boolean) {
-      for (const step of steps) {
-        const isCollapsed = parentCollapsed || collapsed.has(step.id);
-        result.push({ type: "step", step, num: numberMap.get(step.id) ?? 0, depth });
-        if (step.branches && !isCollapsed) {
-          for (const branch of step.branches) {
-            if (branch.label === "No") {
-              result.push({ type: "label", label: "ELSE", count: branch.steps.length, depth: depth + 1 });
-            }
-            walk(branch.steps, depth + 1, false);
-          }
-        }
-      }
-    }
-    walk(steps, 0, false);
-    return result;
-  }, [steps, numberMap, collapsed]);
-
   return (
-    <div className="relative flex w-full">
-      <div className="absolute top-0 bottom-0 left-3 w-px bg-border" />
-      <div className="flex-1 flex flex-col">
-        {items.map((item, i) => {
-          if (item.type === "label") {
-            return (
-              <div
-                key={`label-${i}`}
-                className="flex items-center gap-2 py-1 mb-1"
-                style={{ paddingLeft: 24 + (item.depth - 1) * 28 }}
-              >
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-pink-50 text-pink-500">ELSE</span>
-                <span className="text-[10px] text-muted-foreground">{item.count} step{item.count !== 1 ? "s" : ""}</span>
-              </div>
-            );
-          }
+    <div className="w-full">
+      <FlowSteps
+        steps={steps}
+        onStepClick={onStepClick}
+        selectedStepId={selectedStepId}
+        collapsed={collapsed}
+        toggleCollapse={toggleCollapse}
+        isRoot
+      />
+    </div>
+  );
+}
 
-          const step = item.step;
+type SectionLabelProps = {
+  kind: "when" | "do" | "if" | "else" | "loop";
+  count?: number;
+  text?: string;
+  collapsible?: boolean;
+  collapsed?: boolean;
+  onToggle?: () => void;
+};
+
+function SectionLabel({ kind, count, text, collapsible, collapsed, onToggle }: SectionLabelProps) {
+  const styles: Record<SectionLabelProps["kind"], { label: string; cls: string }> = {
+    when: { label: "WHEN", cls: "bg-black text-white" },
+    do: { label: "DO", cls: "bg-black text-white" },
+    if: { label: "IF", cls: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" },
+    else: { label: "ELSE", cls: "bg-pink-50 text-pink-600 ring-1 ring-pink-100" },
+    loop: { label: "LOOP", cls: "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100" },
+  };
+  const s = styles[kind];
+  const content = (
+    <>
+      <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${s.cls}`}>
+        {s.label}
+      </span>
+      {text && <span className="text-sm font-semibold text-foreground">{text}</span>}
+      {count !== undefined && (
+        <span className="text-xs text-muted-foreground">
+          {count} step{count !== 1 ? "s" : ""}
+        </span>
+      )}
+      {collapsible && (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`size-3 text-muted-foreground transition-transform ${collapsed ? "-rotate-90" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      )}
+    </>
+  );
+  if (collapsible) {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-2 py-1.5 relative z-10 cursor-pointer hover:opacity-80 transition-opacity"
+      >
+        {content}
+      </button>
+    );
+  }
+  return <div className="flex items-center gap-2 py-1.5 relative z-10">{content}</div>;
+}
+
+function FlowSteps({
+  steps,
+  onStepClick,
+  selectedStepId,
+  collapsed,
+  toggleCollapse,
+  isRoot = false,
+}: {
+  steps: FlowStep[];
+  onStepClick: (step: FlowStep) => void;
+  selectedStepId?: string;
+  collapsed: Set<string>;
+  toggleCollapse: (id: string) => void;
+  isRoot?: boolean;
+}) {
+  return (
+    <div className="relative">
+      <div className="flex flex-col">
+        {steps.map((step, idx) => {
           const hasBranches = !!step.branches;
+          const isLoop = step.type === "loop" && step.loopBody;
           const isCollapsed = collapsed.has(step.id);
+          // Skip line on the trigger (first root step); line starts from the DO step's first card
+          const showLine = !(isRoot && idx === 0);
+          // For the DO step, offset the line to start below the DO label
+          const lineTopClass = isRoot && idx === 1 ? "top-[44px]" : "top-0";
 
           return (
-            <div key={step.id} className="flex items-center mb-3 group">
-              {/* Number */}
-              <div className="w-6 flex justify-center shrink-0">
-                <div className="w-5 h-5 rounded-full bg-background border border-border flex items-center justify-center text-[10px] font-bold text-violet-600 z-10">
-                  {item.num}
-                </div>
-              </div>
+            <div key={step.id} className="relative">
+              {showLine && (
+                <div className={`absolute ${lineTopClass} bottom-0 left-[20px] w-px bg-black`} />
+              )}
+              {/* WHEN / DO labels for root level */}
+              {isRoot && idx === 0 && <SectionLabel kind="when" />}
+              {isRoot && idx === 1 && <SectionLabel kind="do" />}
 
-              {/* Card */}
-              <div style={{ marginLeft: item.depth * 28 }} className="flex items-center gap-2">
-                <div
-                  className={`w-fit rounded-lg border px-4 py-3 transition-colors cursor-pointer ${
-                    selectedStepId === step.id
-                      ? "border-2 border-black bg-violet-50/50"
-                      : step.type === "condition"
-                      ? "border-amber-300/70 bg-amber-50/30 hover:bg-amber-50/50"
-                      : "border-border/70 bg-background hover:bg-violet-50/40"
-                  }`}
-                  onClick={() => hasBranches ? toggleCollapse(step.id) : onStepClick(step)}
-                >
-                  <div className="flex items-center gap-2.5">
+              {/* Step card row — hidden for condition/loop since IF/ELSE/LOOP labels serve as headers */}
+              {!hasBranches && !isLoop && (
+                <div className="flex items-center gap-2 py-1.5 relative">
+                  <div
+                    onClick={() => onStepClick(step)}
+                    className={`relative z-10 inline-flex w-fit items-center gap-2.5 rounded-xl border bg-white px-3 py-2.5 transition-all cursor-pointer ${
+                      selectedStepId === step.id
+                        ? "border-2 border-black shadow-sm"
+                        : step.type === "stop"
+                        ? "border-rose-200 hover:shadow-sm"
+                        : "border-border/80 hover:border-violet-300 hover:shadow-sm"
+                    }`}
+                  >
                     <AppIconBadge app={step.app} />
-                    <span className="text-sm font-medium text-foreground whitespace-nowrap">{step.title}</span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{step.subtitle}</span>
-                    {hasBranches && (
-                      <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">
-                        {step.branches!.reduce((acc, b) => acc + b.steps.length, 0)} steps
-                      </span>
+                    <span className="text-sm font-semibold text-foreground whitespace-nowrap">{step.title}</span>
+                    {step.subtitle && (
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{step.subtitle}</span>
                     )}
                   </div>
                 </div>
-                {hasBranches && (
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapse(step.id)}
-                    className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`size-4 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                )}
-              </div>
+              )}
+
+              {/* Branches (IF / ELSE) */}
+              {hasBranches && (
+                <div className="mt-1 mb-2 space-y-1">
+                  {step.branches!.map((branch) => {
+                    const kind = branch.label === "Yes" ? "if" : "else";
+                    const sectionId = `${step.id}::${branch.label}`;
+                    const branchCollapsed = collapsed.has(sectionId);
+                    return (
+                      <div key={branch.label} className="relative">
+                        <SectionLabel
+                          kind={kind}
+                          text={step.title}
+                          count={branch.steps.length}
+                          collapsible
+                          collapsed={branchCollapsed}
+                          onToggle={() => toggleCollapse(sectionId)}
+                        />
+                        {!branchCollapsed && (
+                          <div className="mt-1 ml-10">
+                            <FlowSteps
+                              steps={branch.steps}
+                              onStepClick={onStepClick}
+                              selectedStepId={selectedStepId}
+                              collapsed={collapsed}
+                              toggleCollapse={toggleCollapse}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Loop body */}
+              {isLoop && (() => {
+                const sectionId = `${step.id}::loop`;
+                const loopSectionCollapsed = collapsed.has(sectionId);
+                return (
+                  <div className="mt-1 mb-2">
+                    <SectionLabel
+                      kind="loop"
+                      text={step.loopLabel || "Repeat"}
+                      count={step.loopBody!.length}
+                      collapsible
+                      collapsed={loopSectionCollapsed}
+                      onToggle={() => toggleCollapse(sectionId)}
+                    />
+                    {!loopSectionCollapsed && (
+                      <div className="mt-1 ml-10 w-fit rounded-xl border border-dashed border-indigo-200 bg-indigo-50/20 p-2">
+                        <FlowSteps
+                          steps={step.loopBody!}
+                          onStepClick={onStepClick}
+                          selectedStepId={selectedStepId}
+                          collapsed={collapsed}
+                          toggleCollapse={toggleCollapse}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
