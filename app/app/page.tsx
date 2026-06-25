@@ -84,6 +84,45 @@ const RECENT_FLOWS = [
   },
 ];
 
+const NAV_ITEMS = [
+  { key: "home", label: "Home", icon: "home" as const, active: true },
+  { key: "flows", label: "Flows", icon: "flows" as const },
+  { key: "search", label: "Search", icon: "search" as const, shortcut: "CTRL + K" },
+  { key: "connections", label: "Connections", icon: "connections" as const },
+  { key: "templates", label: "Templates", icon: "templates" as const },
+  { key: "mcp", label: "MCP Server", icon: "link" as const },
+  { key: "agent", label: "AI Agent", icon: "agent" as const },
+];
+
+const RECENT_WORKFLOWS = [
+  { id: "1", name: "Lookup Tasks", status: "Paused", description: "Find tasks with Status = Pending and, if any are…", runs: 0 },
+  { id: "2", name: "template_…", status: "Draft", description: "Executes a chosen AI action and returns the…", runs: 0 },
+  { id: "3", name: "Automate…", status: "Draft", description: "Sends a welcome email and message, and…", runs: 0 },
+  { id: "4", name: "Web Sear…", status: "Draft", description: "This workflow sends your message to an AI for…", runs: 0 },
+];
+
+const NavIcon = ({ name, className = "" }: { name: string; className?: string }) => {
+  const common = { width: 16, height: 16, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, className };
+  switch (name) {
+    case "home":
+      return <svg viewBox="0 0 24 24" {...common}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg>;
+    case "flows":
+      return <svg viewBox="0 0 24 24" {...common}><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V9"/></svg>;
+    case "search":
+      return <svg viewBox="0 0 24 24" {...common}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>;
+    case "connections":
+      return <svg viewBox="0 0 24 24" {...common}><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>;
+    case "templates":
+      return <svg viewBox="0 0 24 24" {...common}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+    case "link":
+      return <svg viewBox="0 0 24 24" {...common}><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 1 0 7 7l1.5-1.5"/></svg>;
+    case "agent":
+      return <svg viewBox="0 0 24 24" {...common}><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
+    default:
+      return null;
+  }
+};
+
 export default function WorkflowsControlCenter() {
   const router = useRouter();
   const [input, setInput] = useState("");
@@ -95,118 +134,146 @@ export default function WorkflowsControlCenter() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-violet-200/20 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl -z-10" />
-      
-      <div className="w-full max-w-2xl space-y-10">
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-100/60 border border-violet-200/50">
-            <Icon.sparkles className="size-3.5 text-violet-600" />
-            <span className="text-xs font-medium text-violet-700">AI-Powered Automation</span>
-          </div>
-          <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-violet-900 to-indigo-900 bg-clip-text text-transparent">
-            Build Workflows with AI
-          </h1>
-          <p className="text-lg text-slate-600 max-w-xl mx-auto">
-            Describe what you want to automate in plain language. Our AI will design and build the workflow for you instantly.
-          </p>
-        </div>
-
-        {/* Chat Input */}
-        <div className="space-y-4">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-500/40 to-indigo-500/40 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-75 group-hover:opacity-100" />
-            <div className="relative bg-white rounded-3xl border-2 border-violet-300/60 shadow-xl shadow-violet-500/15 flex items-center group-hover:border-violet-400 transition-colors">
-              <div className="pl-6 text-violet-500 flex-shrink-0">
-                <Icon.sparkles className="size-5" />
+    <div className="min-h-screen bg-slate-50">
+      {/* Main */}
+      <main className="bg-white overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
+          {/* Hero */}
+          <div className="space-y-4">
+            <h1 className="text-2xl font-semibold text-slate-900 text-center">
+              What should we automate for you?
+            </h1>
+            <div className="relative max-w-2xl mx-auto">
+              <div className="relative bg-white rounded-xl border-2 border-blue-400 shadow-sm">
+                <div className="absolute top-3 left-3 text-blue-500">
+                  <Icon.sparkles className="size-4" />
+                </div>
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && input.trim()) {
+                      e.preventDefault();
+                      handleCreateFlow();
+                    }
+                  }}
+                  placeholder="Describe what you want to automate..."
+                  rows={3}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl bg-white focus:outline-none text-sm placeholder:text-slate-400 resize-none"
+                />
+                <button
+                  onClick={handleCreateFlow}
+                  className="absolute bottom-3 right-3 text-slate-400 hover:text-blue-600"
+                  title="Send"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                </button>
               </div>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && input.trim()) {
-                    handleCreateFlow();
-                  }
-                }}
-                placeholder="Tell me what you want to automate..."
-                className="w-full px-5 py-4 rounded-3xl bg-white focus:outline-none text-base placeholder:text-slate-400"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-            <span>Press</span>
-            <kbd className="px-2 py-1 rounded bg-slate-100 border border-slate-200 font-mono text-slate-700">Enter</kbd>
-            <span>to create • Or</span>
-            <button
-              onClick={() => router.push(`${APP_BASE}`)}
-              className="text-violet-600 hover:text-violet-700 font-medium transition-colors cursor-pointer"
-            >
-              build manually
-            </button>
-          </div>
-        </div>
-
-        {/* Flow Type Cards */}
-        <div className="grid grid-cols-2 gap-4 pt-4">
-          {/* AI Flows Card */}
-          <div className="relative rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-teal-50/20 p-5 shadow-sm shadow-emerald-500/5">
-            <div className="relative space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm text-slate-900">AI Flows</h3>
-                  <p className="text-xs text-slate-600 mt-1 leading-snug">
-                    Chat with AI to build your automation instantly
-                  </p>
-                </div>
-                <div className="inline-flex items-center justify-center size-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex-shrink-0 shadow-md shadow-emerald-500/30">
-                  <Icon.sparkles className="size-5" />
-                </div>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 text-sm">✓</span>
-                  <span className="text-xs text-slate-700">No drag-drop needed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 text-sm">✓</span>
-                  <span className="text-xs text-slate-700">Fastest setup</span>
-                </div>
+              <div className="mt-3 text-center">
+                <span className="text-sm text-slate-500">or</span>
+                <button onClick={() => router.push(`${APP_BASE}`)} className="text-sm text-blue-600 hover:text-blue-700 font-medium ml-1 cursor-pointer">
+                  build flow manually
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Basic Flows Card */}
-          <div className="relative rounded-2xl border border-indigo-200/50 bg-gradient-to-br from-indigo-50/60 via-indigo-50/30 to-blue-50/20 p-5 shadow-sm shadow-indigo-500/5">
-            <div className="relative space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm text-slate-900">Basic Flows</h3>
-                  <p className="text-xs text-slate-600 mt-1 leading-snug">
-                    Visual canvas with full control & flexibility
-                  </p>
-                </div>
-                <div className="inline-flex items-center justify-center size-9 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex-shrink-0 shadow-md shadow-indigo-500/30">
-                  <Icon.grid className="size-5" />
-                </div>
+          {/* WhatsApp Alerts */}
+          <section className="space-y-3">
+            <div className="border border-slate-200 rounded-lg p-4 flex items-center gap-3 bg-slate-50/50">
+              <div className="size-9 rounded-full flex items-center justify-center flex-shrink-0">
+                <img src="https://stuff.thingsofbrand.com/whatsapp.com/images/imga_whatsapp.png" alt="WhatsApp" className="size-5" />
               </div>
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-indigo-600 text-sm">✓</span>
-                  <span className="text-xs text-slate-700">Drag-drop editor</span>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm text-slate-900">Get critical alerts on WhatsApp</div>
+                <div className="text-xs text-slate-600 mt-0.5">You haven't added your WhatsApp number yet. Add it so you don't miss any critical alerts.</div>
+              </div>
+              <button className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors flex-shrink-0 cursor-pointer">
+                Add number →
+              </button>
+            </div>
+          </section>
+
+          {/* Expired Connections */}
+          <section className="space-y-3">
+            <h2 className="text-base font-semibold text-slate-900">Expired Connections</h2>
+            <div className="bg-red-50 border border-red-100 rounded-lg p-4 flex items-start gap-3">
+              <div className="size-8 rounded-md bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                <Icon.alert className="size-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm text-slate-900">2 connections need your attention</div>
+                <div className="text-xs text-slate-600 mt-0.5">Shopify · HubSpot are expired and pausing 4 flows</div>
+              </div>
+              <button className="text-sm font-medium text-red-600 hover:text-red-700 flex-shrink-0">Fix now →</button>
+            </div>
+          </section>
+
+          {/* Recent Workflows */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-slate-900">Recent Workflows</h2>
+              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">All workflows →</button>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {RECENT_WORKFLOWS.map((wf) => (
+                <div key={wf.id} className="border border-slate-200 rounded-lg p-3 hover:shadow-sm transition-shadow cursor-pointer">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-sm text-slate-900 truncate">{wf.name}</span>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                      wf.status === "Paused" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+                    }`}>
+                      {wf.status}
+                    </span>
+                    <button className="text-slate-400 hover:text-slate-600 flex-shrink-0">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-snug">{wf.description}</p>
+                  <div className="mt-3 text-xs text-slate-500">Runs <span className="text-slate-900 font-medium">{wf.runs}</span></div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-indigo-600 text-sm">✓</span>
-                  <span className="text-xs text-slate-700">If/else conditions</span>
+              ))}
+            </div>
+          </section>
+
+          {/* What's New + Workspace Health */}
+          <section className="grid grid-cols-3 gap-4">
+            <div className="col-span-2 border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-900">What's New</h3>
+                <button className="text-slate-400 hover:text-slate-600">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+                </button>
+              </div>
+              <div className="mt-3">
+                <div className="text-sm font-semibold text-slate-900">Smarter template suggestions</div>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Templates now adapt to the apps you've connected and the workflows you've built. Get personalized suggestions that match your stack and save time on common automation patterns.
+                </p>
+                <div className="mt-3 flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-slate-300" />
+                  <span className="size-1.5 rounded-full bg-slate-300" />
+                  <span className="w-4 h-1.5 rounded-full bg-blue-500" />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-      </div>
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-slate-900">Workspace Health</h3>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500" style={{ width: "80%" }} />
+                </div>
+                <span className="text-sm font-semibold text-slate-900">80</span>
+              </div>
+              <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+                Your workspace is in <span className="font-semibold">good shape</span>. Most flows are running without errors.{" "}
+                <button className="text-blue-600 hover:text-blue-700 font-medium">View flows</button>
+              </p>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
