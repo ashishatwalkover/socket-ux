@@ -180,13 +180,14 @@ export default function WorkflowsControlCenter() {
 
           {/* WhatsApp Alerts */}
           <section className="space-y-3">
+            <h2 className="text-base font-semibold text-slate-900">Complete your workspace setup</h2>
             <div className="border border-slate-200 rounded-lg p-4 flex items-center gap-3 bg-slate-50/50">
               <div className="size-9 rounded-full flex items-center justify-center flex-shrink-0">
                 <img src="https://stuff.thingsofbrand.com/whatsapp.com/images/imga_whatsapp.png" alt="WhatsApp" className="size-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm text-slate-900">Get critical alerts on WhatsApp</div>
-                <div className="text-xs text-slate-600 mt-0.5">You haven't added your WhatsApp number yet. Add it so you don't miss any critical alerts.</div>
+                <div className="text-xs text-slate-600 mt-0.5">Add your WhatsApp number to receive important alerts about your workflows and automations.</div>
               </div>
               <button className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors flex-shrink-0 cursor-pointer">
                 Add number →
