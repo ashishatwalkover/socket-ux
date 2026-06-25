@@ -125,6 +125,10 @@ function WhereClauseBuilder({ viewMode = "sentence" }: { viewMode?: "sentence" |
   ]);
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [chainDropdownId, setChainDropdownId] = useState<string | null>(null);
+  const [chainValue, setChainValue] = useState<string | null>(null);
+  const [chainPrefix, setChainPrefix] = useState<string>("");
+  const [chainSuffix, setChainSuffix] = useState<string>("");
   const [maximizedPartId, setMaximizedPartId] = useState<string | null>(null);
   const [editingInlineId, setEditingInlineId] = useState<string | null>(null);
   const [inlinePrefix, setInlinePrefix] = useState("");
@@ -133,18 +137,16 @@ function WhereClauseBuilder({ viewMode = "sentence" }: { viewMode?: "sentence" |
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (openDropdownId) {
-        const target = e.target as HTMLElement;
-        // Check if click is inside any dropdown
-        const dropdown = target.closest('[data-dropdown]');
-        if (!dropdown) {
-          setOpenDropdownId(null);
-        }
+      const target = e.target as HTMLElement;
+      const dropdown = target.closest('[data-dropdown]');
+      if (!dropdown) {
+        if (openDropdownId) setOpenDropdownId(null);
+        if (chainDropdownId) setChainDropdownId(null);
       }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [openDropdownId]);
+  }, [openDropdownId, chainDropdownId]);
 
   const handlePartClick = (part: WhereClausePart) => {
     if (part.type === "dropdown" || part.type === "multiselect" || part.type === "boolean") {
@@ -314,6 +316,55 @@ function WhereClauseBuilder({ viewMode = "sentence" }: { viewMode?: "sentence" |
                 </>
               ) : part.type === "dropdown" || part.type === "multiselect" ? (
                 <>
+                  {part.id === "2" && chainValue ? (
+                    <>
+                      <span
+                        data-inline-row
+                        data-dropdown
+                        className="inline-flex items-center text-sm border-b-1 border-blue-500 text-blue-700 leading-none"
+                      >
+                        <InlineSizer
+                          value={chainPrefix}
+                          onChange={setChainPrefix}
+                          onFocus={() => setChainDropdownId(part.id)}
+                        />
+                        <LockedTag onClick={() => setChainDropdownId(part.id)}>{chainValue}</LockedTag>
+                        <InlineSizer
+                          value={chainSuffix}
+                          onChange={setChainSuffix}
+                          onFocus={() => setChainDropdownId(part.id)}
+                        />
+                      </span>
+                      {chainDropdownId === part.id && (
+                        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[120px]" data-dropdown>
+                          {["body", "query", "header"].map((opt) => (
+                            <button
+                              key={opt}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setChainValue(opt);
+                                setChainDropdownId(null);
+                              }}
+                              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors capitalize"
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setChainValue(null);
+                              setChainDropdownId(null);
+                            }}
+                            className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-t border-gray-100"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                  <>
                   <span
                     data-inline-row
                     data-dropdown
@@ -349,7 +400,52 @@ function WhereClauseBuilder({ viewMode = "sentence" }: { viewMode?: "sentence" |
                       />
                     )}
                   </span>
-                  
+
+                  {/* Chain plus icon — only for "action" (id=2) when its dropdown is open */}
+                  {part.id === "2" && isOpen && (
+                    <button
+                      data-dropdown
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownId(null);
+                        setChainDropdownId(part.id);
+                      }}
+                      className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors align-middle"
+                      title="Add target"
+                    >
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Show chain selection inline */}
+                  {part.id === "2" && chainValue && (
+                    <span className="ml-1 text-sm text-purple-700 font-medium bg-purple-50 px-1.5 rounded">
+                      {chainValue}
+                    </span>
+                  )}
+
+                  {/* Chain dropdown (body / query / header) */}
+                  {part.id === "2" && chainDropdownId === part.id && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[120px]" data-dropdown>
+                      {["body", "query", "header"].map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setChainValue(opt);
+                            setChainDropdownId(null);
+                          }}
+                          className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors capitalize"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {isOpen && (
                     <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[120px]" data-dropdown>
                       {part.options?.map((option) => {
@@ -380,6 +476,8 @@ function WhereClauseBuilder({ viewMode = "sentence" }: { viewMode?: "sentence" |
                         </button>
                       )}
                     </div>
+                  )}
+                  </>
                   )}
                 </>
               ) : part.type === "longtext" || part.type === "html" ? (
