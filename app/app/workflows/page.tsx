@@ -33,6 +33,9 @@ const Icon = {
   sparkles: (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 17l.75 2.25L8 20l-2.25.75L5 23l-.75-2.25L2 20l2.25-.75L5 17z"/><path d="M19 3l.5 1.5L21 5l-1.5.5L19 7l-.5-1.5L17 5l1.5-.5L19 3z"/></svg>
   ),
+  plus: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M12 5v14M5 12h14"/></svg>
+  ),
 };
 
 export default function WorkflowsControlCenter() {
@@ -47,7 +50,7 @@ export default function WorkflowsControlCenter() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">CMD + K</Button>
-          <Button>Create Flow</Button>
+          <Button className="flex items-center gap-2" onClick={() => router.push(`${APP_BASE}/workflows/new`)}><Icon.plus /> Create New Flow</Button>
         </div>
       </div>
 
