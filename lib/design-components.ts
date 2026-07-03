@@ -17,4 +17,11 @@ export const designComponents: DesignComponent[] = [
     href: `${APP_BASE}/components/offers-pricing`,
     status: "WIP",
   },
+  {
+    id: "comp-billing",
+    name: "Billing & Subscription",
+    description: "Plans, usage, coupons, payment methods, and invoice history",
+    href: `${APP_BASE}/billing`,
+    status: "Ready",
+  },
 ];
