@@ -7,7 +7,10 @@ import { AI_BASE, APP_BASE, isAiRoute, isAppRoute, isWebRoute } from "@/lib/app-
 import { designComponents } from "@/lib/design-components";
 import { cn } from "@/lib/utils";
 
-const FULL_BLEED_ROUTES = [`${APP_BASE}/flow-by-ai`];
+const FULL_BLEED_ROUTES = [
+  `${APP_BASE}/flow-by-ai`,
+  `${APP_BASE}/components/onboarding`,
+];
 
 function isFlowRoute(pathname: string): boolean {
   return pathname.startsWith(`${APP_BASE}/flows/`);
@@ -286,6 +289,8 @@ export function LeftNav() {
                   <Link
                     key={item.id}
                     href={item.href}
+                    target={item.openInNewWindow ? "_blank" : undefined}
+                    rel={item.openInNewWindow ? "noopener noreferrer" : undefined}
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
                       isActive
@@ -367,33 +372,6 @@ export function LeftNav() {
       </div>
       )}
 
-      <div className="p-3 border-t border-gray-200">
-        <p className="text-[10px] text-gray-400 px-1">UX Preview Designs</p>
-        <div className="mt-2 space-y-0.5">
-          {designComponents.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-md text-xs transition-colors",
-                  isActive
-                    ? "bg-gray-100 text-gray-900 font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                )}
-              >
-                <span className="truncate">{item.name}</span>
-                {item.status && (
-                  <span className="ml-auto text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">
-                    {item.status}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
     </nav>
   );
 }

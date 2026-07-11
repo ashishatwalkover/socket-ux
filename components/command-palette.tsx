@@ -180,7 +180,7 @@ export function CommandPalette() {
   function selectItem(item: CommandItem) {
     setOpen(false);
     if (item.href) {
-      if (item.href.startsWith("http")) {
+      if (item.href.startsWith("http") || item.openInNewWindow) {
         window.open(item.href, "_blank");
       } else {
         router.push(item.href);

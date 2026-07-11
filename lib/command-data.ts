@@ -22,6 +22,7 @@ export type CommandItem = {
   flowCount?: number;
   // component fields
   componentStatus?: "WIP" | "Ready" | "Draft";
+  openInNewWindow?: boolean;
 };
 
 export const collectionItems: CommandItem[] = [
@@ -87,6 +88,7 @@ export const componentItems: CommandItem[] = designComponents.map((c) => ({
   description: c.description,
   href: c.href,
   componentStatus: c.status,
+  openInNewWindow: c.openInNewWindow,
 }));
 
 export const helpItems: CommandItem[] = [

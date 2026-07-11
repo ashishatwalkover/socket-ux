@@ -6,10 +6,19 @@ export type DesignComponent = {
   description: string;
   href: string;
   status?: "WIP" | "Ready" | "Draft";
+  openInNewWindow?: boolean;
 };
 
 /** Add new UX preview components here — they appear in Cmd+K and the left nav footer. */
 export const designComponents: DesignComponent[] = [
+  {
+    id: "comp-onboarding",
+    name: "Onboarding",
+    description: "Guided setup checklist for new workspaces",
+    href: `${APP_BASE}/components/onboarding`,
+    status: "WIP",
+    openInNewWindow: true,
+  },
   {
     id: "comp-offers-pricing",
     name: "Offers & Pricing",
