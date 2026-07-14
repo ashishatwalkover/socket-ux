@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -172,6 +172,235 @@ function FlowList() {
   );
 }
 
+type V3Field = {
+  label: string;
+  value: string;
+  placeholder?: string;
+};
+
+type V3Action = {
+  label: string;
+  icon: string;
+  steps: { label: string; fields: V3Field[] }[];
+};
+
+const V3_ACTIONS: V3Action[] = [
+  {
+    label: "Trigger",
+    icon: "shopify",
+    steps: [{ label: "Event", fields: [{ label: "When", value: "Cart is abandoned" }, { label: "Store", value: "My Store" }] }],
+  },
+  {
+    label: "Wait",
+    icon: "timer",
+    steps: [{ label: "Duration", fields: [{ label: "Wait for", value: "2 hours" }] }],
+  },
+  {
+    label: "Check order",
+    icon: "check",
+    steps: [{ label: "Condition", fields: [{ label: "Continue when", value: "Order does not exist" }] }],
+  },
+  {
+    label: "Send email",
+    icon: "gmail",
+    steps: [
+      { label: "Recipient", fields: [{ label: "To", value: "customer email" }, { label: "From", value: "support@store.com" }] },
+      { label: "Message", fields: [{ label: "Subject", value: "You left something behind!" }, { label: "Body", value: "Your cart is waiting for you." }] },
+      { label: "Delivery", fields: [{ label: "Send", value: "Immediately" }] },
+    ],
+  },
+  {
+    label: "Retry",
+    icon: "retry",
+    steps: [{ label: "Policy", fields: [{ label: "Maximum retries", value: "1" }] }],
+  },
+  {
+    label: "Log outcome",
+    icon: "log",
+    steps: [{ label: "Details", fields: [{ label: "Log level", value: "Info" }] }],
+  },
+];
+
+function V3Icon({ icon, size = 22 }: { icon: string; size?: number }) {
+  if (icon === "shopify") return <span className="font-bold text-[#86b33f]" style={{ fontSize: size * 0.72 }}>S</span>;
+  if (icon === "gmail") return <span className="font-bold text-[#ea4335]" style={{ fontSize: size * 0.72 }}>M</span>;
+  if (icon === "timer") return <span className="text-gray-700" style={{ fontSize: size * 0.9 }}>◷</span>;
+  if (icon === "check") return <span className="font-semibold text-emerald-600" style={{ fontSize: size * 0.9 }}>✓</span>;
+  if (icon === "retry") return <span className="font-semibold text-violet-600" style={{ fontSize: size * 0.85 }}>↻</span>;
+  return <span className="font-semibold text-slate-600" style={{ fontSize: size * 0.72 }}>≡</span>;
+}
+
+function MicroAppV3() {
+  const [actionIndex, setActionIndex] = useState(0);
+  const [configIndex, setConfigIndex] = useState(0);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedFlowMenuOpen, setAdvancedFlowMenuOpen] = useState(false);
+  const advancedFlowMenuRef = useRef<HTMLDivElement>(null);
+  const action = V3_ACTIONS[actionIndex];
+  const config = action.steps[configIndex];
+  const isFirst = actionIndex === 0 && configIndex === 0;
+  const isLast = actionIndex === V3_ACTIONS.length - 1 && configIndex === action.steps.length - 1;
+
+  useEffect(() => {
+    if (!advancedFlowMenuOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (advancedFlowMenuRef.current && !advancedFlowMenuRef.current.contains(event.target as Node)) {
+        setAdvancedFlowMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [advancedFlowMenuOpen]);
+
+  const selectAction = (index: number) => {
+    setActionIndex(index);
+    setConfigIndex(0);
+  };
+
+  const goBack = () => {
+    if (configIndex > 0) {
+      setConfigIndex(configIndex - 1);
+    } else if (actionIndex > 0) {
+      const previous = actionIndex - 1;
+      setActionIndex(previous);
+      setConfigIndex(V3_ACTIONS[previous].steps.length - 1);
+    }
+  };
+
+  const goNext = () => {
+    if (configIndex < action.steps.length - 1) {
+      setConfigIndex(configIndex + 1);
+    } else if (actionIndex < V3_ACTIONS.length - 1) {
+      setActionIndex(actionIndex + 1);
+      setConfigIndex(0);
+    }
+  };
+
+  return (
+    <div className="w-[520px] max-w-full rounded-2xl border border-[#c9dfa3] bg-[#f1f8e7] text-[#24301c] shadow-sm" data-component="micro-app-v3">
+      <div className="border-b border-[#d7e8bd] px-4 pb-4 pt-5 sm:px-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60734d]">Configure workflow</p>
+            <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-[#24301c]">Cart recovery reminder</h1>
+            <p className="mt-1 text-xs text-[#60734d]">One clear decision at a time.</p>
+          </div>
+          <div ref={advancedFlowMenuRef} className="relative flex shrink-0 items-center gap-1">
+            <Button size="sm" variant="outline" className="border-[#b8cf92] bg-[#f8fcf2] text-[#37442e] hover:bg-white">
+              <PlayIcon className="size-3" />
+              Test
+            </Button>
+            <button
+              type="button"
+              aria-label="More flow options"
+              aria-expanded={advancedFlowMenuOpen}
+              onClick={() => setAdvancedFlowMenuOpen(!advancedFlowMenuOpen)}
+              className="flex size-8 items-center justify-center rounded-md text-lg leading-none text-[#60734d] transition-colors hover:bg-[#e4f1d2] hover:text-black"
+            >
+              ⋮
+            </button>
+            {advancedFlowMenuOpen && (
+              <div className="absolute right-0 top-10 z-20 w-[390px] max-w-[calc(100vw-2rem)] rounded-xl border border-[#c9dfa3] bg-white p-1.5 text-left shadow-lg">
+                <button type="button" className="w-full rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-[#edf6df]">
+                  <span className="block text-sm font-semibold text-[#24301c]">SWITCH TO ADVANCED FLOW →</span>
+                  <span className="mt-0.5 block text-xs text-[#60734d]">Customize extra steps and logic</span>
+                </button>
+                <button type="button" className="mt-1 flex w-full items-center gap-4 rounded-lg border border-[#d8e2ed] bg-[#f1f6fc] px-4 py-3 text-left transition-colors hover:bg-[#eaf2fb]">
+                  <span className="flex shrink-0 items-center">
+                    <span className="flex size-8 items-center justify-center rounded-md bg-[#20a95a] text-white">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h9l3 3v15H6z" /><path d="M9 12h6M9 16h6M9 8h3" /></svg>
+                    </span>
+                    <span className="-ml-2 flex size-8 items-center justify-center rounded-md bg-[#e8792f] text-white">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3 4 7v10l8 4 8-4V7z" /><path d="M4 7l8 4 8-4M12 11v10" /></svg>
+                    </span>
+                    <span className="-ml-2 flex size-8 items-center justify-center rounded-md bg-[#c04ab0] text-white">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="m6 16 4-4.5 3 3 3-3.5 3 5" /></svg>
+                    </span>
+                  </span>
+                  <span className="text-[15px] font-bold tracking-[0.12em] text-[#111827]">SWITCH TO ADVANCED FLOW →</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center gap-1 overflow-x-auto pb-1" aria-label="Workflow action tabs">
+          {V3_ACTIONS.map((item, index) => (
+            <div key={item.label} className="flex min-w-fit items-center">
+              <button
+                type="button"
+                aria-label={item.label}
+                title={item.label}
+                onClick={() => selectAction(index)}
+                className={cn(
+                  "flex size-12 shrink-0 items-center justify-center rounded-lg border-2 bg-[#f8fcf2] transition-colors",
+                  actionIndex === index ? "border-black text-black" : "border-transparent text-gray-400 hover:border-gray-300",
+                )}
+              >
+                <V3Icon icon={item.icon} />
+              </button>
+              {index < V3_ACTIONS.length - 1 && <span className={cn("mx-0.5 h-px w-3 shrink-0", index < actionIndex ? "bg-black" : "bg-gray-200")} />}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-4 py-4 sm:px-5 sm:py-5">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1" aria-label={`${action.label} configuration steps`}>
+          {action.steps.map((step, index) => (
+            <div key={step.label} className="flex min-w-fit items-center">
+              <button
+                type="button"
+                onClick={() => setConfigIndex(index)}
+                className={cn(
+                  "rounded-lg border border-dashed px-3 py-2 text-left text-xs transition-colors",
+                  configIndex === index ? "border-2 border-black bg-white font-semibold text-black" : "border-gray-300 text-gray-500 hover:border-gray-500",
+                )}
+              >
+                <span className="mr-1.5 text-[10px] text-gray-400">{String(index + 1).padStart(2, "0")}</span>{step.label}
+              </button>
+              {index < action.steps.length - 1 && <span className="mx-1.5 w-5 border-t border-dashed border-gray-300" />}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 rounded-xl border border-[#d7e8bd] bg-white p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#c9dfa3] bg-white"><V3Icon icon={action.icon} size={20} /></div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60734d]">{action.label}</p>
+              <h2 className="mt-1 text-lg font-semibold text-[#24301c]">{config.label}</h2>
+              <p className="mt-1 text-xs text-[#60734d]">Add the details needed for this step.</p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {config.fields.map((field) => (
+              <label key={field.label} className={cn("block", config.fields.length === 1 && "sm:col-span-2")}>
+                <span className="mb-1.5 block text-xs font-medium text-[#37442e]">{field.label}</span>
+                <input defaultValue={field.value} placeholder={field.placeholder} className="h-10 w-full rounded-lg border border-[#c9dfa3] bg-white px-3 text-sm text-[#24301c] outline-none transition-colors placeholder:text-[#81906f] focus:border-black" />
+              </label>
+            ))}
+          </div>
+
+          <button type="button" onClick={() => setAdvancedOpen(!advancedOpen)} className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#60734d] underline underline-offset-4 hover:text-black">
+            Advanced options <span className={cn("transition-transform", advancedOpen && "rotate-90")}>›</span>
+          </button>
+          {advancedOpen && <div className="mt-3 rounded-lg border border-dashed border-[#b8cf92] bg-[#edf6df] px-3 py-2.5 text-xs leading-relaxed text-[#4c5c3d]">Add filters, custom values, retries, and error handling for this step.</div>}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-[#d7e8bd] pt-4">
+          <button type="button" onClick={isFirst ? goNext : goBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-[#60734d] transition-colors hover:bg-[#e4f1d2] hover:text-black">{isFirst ? "Skip" : "Back"}</button>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#60734d]">{actionIndex + 1} / {V3_ACTIONS.length}</span>
+          <button type="button" onClick={goNext} className="rounded-lg bg-black px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800">{isLast ? "Done" : "Next"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { flow: FlowDef; onStepSelect?: (step: { name: string; description: string; id: string }) => void; selectedStepId?: string; onStepDeselect?: () => void }) {
   const [activeTab, setActiveTab] = useState<"summary" | "flow" | "logs">("summary");
 
@@ -186,7 +415,7 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
   const [summaryConfigureOpen, setSummaryConfigureOpen] = useState(false);
   const [summaryAdvancedOpen, setSummaryAdvancedOpen] = useState(false);
   const [summarySelectedStep, setSummarySelectedStep] = useState<number | null>(null);
-  const [selectedMicroAppVersion, setSelectedMicroAppVersion] = useState<"micro-app" | "micro-app1">("micro-app");
+  const [selectedMicroAppVersion, setSelectedMicroAppVersion] = useState<"micro-app" | "micro-app1" | "micro-app2">("micro-app");
   const [showAllStepsV2, setShowAllStepsV2] = useState(false);
 
   const SUMMARY_STEPS = [
@@ -347,9 +576,22 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
                 >
                   Version 2
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMicroAppVersion("micro-app2")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    selectedMicroAppVersion === "micro-app2"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Version 3
+                </button>
               </div>
-              {selectedMicroAppVersion === "micro-app" ? (
-                <div className="rounded-2xl overflow-hidden shadow-sm bg-white" data-component="micro-app">
+              {selectedMicroAppVersion === "micro-app2" ? (
+                <MicroAppV3 />
+              ) : selectedMicroAppVersion === "micro-app" ? (
+                <div className="w-fit max-w-full rounded-2xl overflow-hidden border border-[#c7ddfa] bg-[#eff6ff] shadow-sm" data-component="micro-app">
                   <div className="p-11">
                     <h1 className="text-2xl font-semibold text-gray-900">
                       Shopify Cart Abandonment Reminder
@@ -649,7 +891,7 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
                   <button
                     type="button"
                     onClick={() => setSummaryAdvancedOpen(!summaryAdvancedOpen)}
-                    className="inline-flex items-center gap-1.5 mt-4.5 text-sm font-semibold underline underline-offset-4 text-gray-500 hover:text-gray-700"
+                    className="inline-flex items-center gap-1.5 mt-4.5 text-sm font-semibold text-gray-500 hover:text-gray-700"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                       <circle cx="12" cy="12" r="3"/>
@@ -694,7 +936,7 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl overflow-hidden shadow-sm bg-white" data-component="micro-app1">
+              <div className="w-fit max-w-full rounded-2xl overflow-hidden border border-[#d9c9f5] bg-[#f6f0ff] shadow-sm" data-component="micro-app1">
                 <div className="p-11">
                   <h1 className="text-2xl font-semibold text-gray-900">
                     Shopify Cart Abandonment Reminder
@@ -1011,7 +1253,7 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
                 <button
                   type="button"
                   onClick={() => setSummaryAdvancedOpen(!summaryAdvancedOpen)}
-                  className="inline-flex items-center gap-1.5 mt-4.5 text-sm font-semibold underline underline-offset-4 text-gray-500 hover:text-gray-700"
+                  className="inline-flex items-center gap-1.5 mt-4.5 text-sm font-semibold text-gray-500 hover:text-gray-700"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <circle cx="12" cy="12" r="3"/>
