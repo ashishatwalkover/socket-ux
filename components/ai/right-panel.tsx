@@ -182,6 +182,104 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
   ];
 
   const [selectedStep, setSelectedStep] = useState<FlowStep | null>(null);
+  const [summaryTheme, setSummaryTheme] = useState<"dark" | "light">("light");
+  const [summaryConfigureOpen, setSummaryConfigureOpen] = useState(false);
+  const [summaryAdvancedOpen, setSummaryAdvancedOpen] = useState(false);
+  const [summarySelectedStep, setSummarySelectedStep] = useState<number | null>(null);
+  const [selectedMicroAppVersion, setSelectedMicroAppVersion] = useState<"micro-app" | "micro-app1">("micro-app");
+  const [showAllStepsV2, setShowAllStepsV2] = useState(false);
+
+  const SUMMARY_STEPS = [
+    {
+      label: 'Trigger: Shopify cart abandoned',
+      icon: 'shopify',
+      connection: { icon: 'shopify', name: 'My Store' },
+      field: { label: 'When cart is abandoned', chip: 'any cart' },
+      status: 'Showing data from 2h, 45:12',
+      json: [
+        ['{'],
+        ['"cart_id"', 'k', ': ', '"cart_abc123"', 's', ','],
+        ['"customer_email"', 'k', ': ', '"customer@example.com"', 's', ','],
+        ['"total_value"', 'k', ': ', '129.99', 'n', ','],
+        ['"items"', 'k', ': ', '3', 'n', ','],
+        ['"abandoned_at"', 'k', ': ', '1783061262', 'n', ''],
+        ['}']
+      ]
+    },
+    {
+      label: 'Wait 2 hours',
+      icon: 'timer',
+      connection: { icon: 'timer', name: 'Built-in delay' },
+      field: { label: 'Wait duration', chip: '2 hours' },
+      status: 'Completed at 4h, 45:12',
+      json: [
+        ['{'],
+        ['"delay_seconds"', 'k', ': ', '7200', 'n', ','],
+        ['"started_at"', 'k', ': ', '1783061262', 'n', ','],
+        ['"completed_at"', 'k', ': ', '1783068462', 'n', ''],
+        ['}']
+      ]
+    },
+    {
+      label: 'Check if order was completed',
+      icon: 'check',
+      connection: { icon: 'shopify', name: 'My Store' },
+      field: { label: 'Condition', chip: 'if order exists, stop' },
+      status: 'Order not found, continuing',
+      json: [
+        ['{'],
+        ['"order_exists"', 'k', ': ', 'false', 'n', ','],
+        ['"checked_at"', 'k', ': ', '1783068462', 'n', ','],
+        ['"should_continue"', 'k', ': ', 'true', 'n', ''],
+        ['}']
+      ]
+    },
+    {
+      label: 'Send reminder email via Gmail',
+      icon: 'gmail',
+      connection: { icon: 'gmail', name: 'support@store.com' },
+      field: { label: 'To', chip: 'customer email' },
+      status: 'Sent at 4h, 45:15',
+      json: [
+        ['{'],
+        ['"email_id"', 'k', ': ', '"msg_xyz789"', 's', ','],
+        ['"to"', 'k', ': ', '"customer@example.com"', 's', ','],
+        ['"subject"', 'k', ': ', '"You left something behind!"', 's', ','],
+        ['"status"', 'k', ': ', '"sent"', 's', ''],
+        ['}']
+      ]
+    },
+    {
+      label: 'Retry once if email fails',
+      icon: 'retry',
+      dim: true,
+      paused: false,
+      connection: { icon: 'gmail', name: 'support@store.com' },
+      field: { label: 'Retry policy', chip: 'max 1 retry' },
+      status: 'No retry needed - email sent',
+      json: [
+        ['{'],
+        ['"retry_count"', 'k', ': ', '0', 'n', ','],
+        ['"max_retries"', 'k', ': ', '1', 'n', ','],
+        ['"email_status"', 'k', ': ', '"sent"', 's', ''],
+        ['}']
+      ]
+    },
+    {
+      label: 'Log outcome',
+      icon: 'log',
+      connection: { icon: 'log', name: 'System logger' },
+      field: { label: 'Log level', chip: 'info' },
+      status: 'Logged at 4h, 45:16',
+      json: [
+        ['{'],
+        ['"event"', 'k', ': ', '"cart_abandonment_reminder"', 's', ','],
+        ['"outcome"', 'k', ': ', '"success"', 's', ','],
+        ['"timestamp"', 'k', ': ', '1783068466', 'n', ''],
+        ['}']
+      ]
+    }
+  ];
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-background">
@@ -224,22 +322,754 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
               <p className="mt-2 text-sm leading-relaxed text-foreground/90">{flow.summary}</p>
             </section>
 
-            <section>
-              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Steps
-              </h3>
-              <ol className="mt-3 space-y-2">
-                {flow.steps.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
-                      {i + 1}
+            {/* Summary App Look */}
+            <div className="mt-8">
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMicroAppVersion("micro-app")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    selectedMicroAppVersion === "micro-app"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Version 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMicroAppVersion("micro-app1")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    selectedMicroAppVersion === "micro-app1"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Version 2
+                </button>
+              </div>
+              {selectedMicroAppVersion === "micro-app" ? (
+                <div className="rounded-2xl overflow-hidden shadow-sm bg-white" data-component="micro-app">
+                  <div className="p-11">
+                    <h1 className="text-2xl font-semibold text-gray-900">
+                      Shopify Cart Abandonment Reminder
+                    </h1>
+                    <p className="text-sm text-gray-500">
+                      Automated Email Recovery Flow
+                    </p>
+
+                    <div className={`grid mt-6 transition-all duration-400 ${summarySelectedStep !== null ? 'grid-cols-[340px_1fr]' : 'grid-cols-[1fr]'}`}>
+                    {/* Left: Configure + Steps */}
+                    <div>
+                      <div className="p-5 rounded-xl border bg-gray-50 border-gray-200" style={{ width: 'fit-content' }}>
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSummaryConfigureOpen(!summaryConfigureOpen);
+                              if (summaryConfigureOpen) {
+                                setSummarySelectedStep(null);
+                              }
+                            }}
+                            className="inline-flex items-center gap-2 px-5 py-1.5 rounded-lg border border-blue-500 text-blue-500 transition-colors hover:bg-gray-100 h-9 cursor-pointer"
+                          >
+                            Configure
+                            <svg className={`transition-transform ${summaryConfigureOpen ? 'rotate-90' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                              <path d="M9 5l7 7-7 7"/>
+                            </svg>
+                          </button>
+
+                          <div className={`flex gap-2.5 transition-all ${summaryConfigureOpen ? 'opacity-0 w-0 overflow-hidden' : ''}`}>
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="#96bf48">
+                                <path d="M11.6 0C5.2 0 .1 5.2.1 11.6c0 6.4 5.1 11.6 11.5 11.6s11.5-5.2 11.5-11.6C23.1 5.2 18 0 11.6 0zm5.6 5.7l-.5 3.2c-.1.4-.4.5-.7.4l-2.3-.4c-.4-.1-.5-.4-.4-.7l.3-1.9c-1.2-.2-2.5-.3-3.7-.3-1.3 0-2.5.1-3.8.3l.3 2c.1.4-.2.7-.6.7l-2.3.2c-.4 0-.7-.2-.8-.6l-.4-3.1C1.7 7.1.1 9.1.1 11.6c0 6.4 5.1 11.6 11.5 11.6 6.4 0 11.5-5.2 11.5-11.6 0-2.6-1.7-4.7-4.5-5.9z"/>
+                              </svg>
+                            </span>
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                <circle cx="12" cy="13" r="7.5"/>
+                                <path d="M12 9v4l2.8 1.6"/>
+                                <path d="M9 2.5h6"/>
+                              </svg>
+                            </span>
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M20 6L9 17l-5-5"/>
+                              </svg>
+                            </span>
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                              </svg>
+                            </span>
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                <path d="M1 4v6h6M23 20v-6h-6"/>
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                              </svg>
+                            </span>
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                              </svg>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={`grid transition-all duration-300 ${summaryConfigureOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                          <div className="overflow-hidden">
+                            <div className="pt-4.5 mt-4 border-t border-gray-200">
+                              <div className="relative">
+                                <div className="absolute left-[20px] top-6 bottom-6 w-0.5 bg-gray-200"></div>
+                                {SUMMARY_STEPS.map((step, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setSummarySelectedStep(i)}
+                                    className={`relative grid grid-cols-[24px_40px_1fr_auto] items-center gap-3 p-2 w-full text-left rounded-lg transition-colors ${summarySelectedStep === i ? 'bg-blue-50' : 'hover:bg-gray-100'}`}
+                                  >
+                                    <span className={`relative z-10 w-2.5 h-2.5 rounded-full justify-self-center ${step.paused ? 'bg-gray-500' : 'bg-blue-500'}`}></span>
+                                    <span className={`w-9.5 h-9.5 rounded-lg flex items-center justify-center ${step.dim ? 'text-blue-500' : ''} ${step.dim ? 'opacity-70' : ''} bg-gray-100 border border-gray-200`}>
+                                      {step.icon === 'instagram' && (
+                                        <svg width="20" height="20" viewBox="0 0 20 20">
+                                          <rect x="1.5" y="1.5" width="17" height="17" rx="5.5" fill="url(#ig-grad)"/>
+                                          <rect x="6.2" y="6.2" width="7.6" height="7.6" rx="2.4" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                          <circle cx="10" cy="10" r="2.3" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                          <circle cx="14.1" cy="5.9" r="0.9" fill="#fff"/>
+                                        </svg>
+                                      )}
+                                      {step.icon === 'shopify' && (
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#96bf48">
+                                          <path d="M11.6 0C5.2 0 .1 5.2.1 11.6c0 6.4 5.1 11.6 11.5 11.6s11.5-5.2 11.5-11.6C23.1 5.2 18 0 11.6 0zm5.6 5.7l-.5 3.2c-.1.4-.4.5-.7.4l-2.3-.4c-.4-.1-.5-.4-.4-.7l.3-1.9c-1.2-.2-2.5-.3-3.7-.3-1.3 0-2.5.1-3.8.3l.3 2c.1.4-.2.7-.6.7l-2.3.2c-.4 0-.7-.2-.8-.6l-.4-3.1C1.7 7.1.1 9.1.1 11.6c0 6.4 5.1 11.6 11.5 11.6 6.4 0 11.5-5.2 11.5-11.6 0-2.6-1.7-4.7-4.5-5.9z"/>
+                                        </svg>
+                                      )}
+                                      {step.icon === 'timer' && (
+                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                          <circle cx="12" cy="13" r="7.5"/>
+                                          <path d="M12 9v4l2.8 1.6"/>
+                                          <path d="M9 2.5h6"/>
+                                        </svg>
+                                      )}
+                                      {step.icon === 'check' && (
+                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M20 6L9 17l-5-5"/>
+                                        </svg>
+                                      )}
+                                      {step.icon === 'gmail' && (
+                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                                          <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                        </svg>
+                                      )}
+                                      {step.icon === 'retry' && (
+                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                          <path d="M1 4v6h6M23 20v-6h-6"/>
+                                          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                        </svg>
+                                      )}
+                                      {step.icon === 'log' && (
+                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                          <polyline points="14 2 14 8 20 8"/>
+                                          <line x1="16" y1="13" x2="8" y2="13"/>
+                                          <line x1="16" y1="17" x2="8" y2="17"/>
+                                          <polyline points="10 9 9 9 8 9"/>
+                                        </svg>
+                                      )}
+                                    </span>
+                                    <span className={`text-sm font-medium truncate ${step.dim ? 'text-gray-400' : 'text-gray-900'}`}>
+                                      {step.label}
+                                    </span>
+                                    <span className="flex items-center gap-2">
+                                      {step.paused && (
+                                        <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-700">
+                                          Paused
+                                        </span>
+                                      )}
+                                      <svg className="opacity-0 group-hover:opacity-100 transition-opacity" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                        <path d="M9 5l7 7-7 7"/>
+                                      </svg>
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Detail Panel */}
+                    <div className={`min-w-0 overflow-hidden ${summarySelectedStep !== null ? '' : 'w-0'}`}>
+                      <div className={`min-w-[420px] pl-6 ${summarySelectedStep !== null ? 'animate-in slide-in-from-left-2' : ''}`}>
+                        {summarySelectedStep !== null && SUMMARY_STEPS[summarySelectedStep] && (
+                          <>
+                            <div className="flex items-center gap-3.5 pb-4.5 border-b mb-5.5">
+                              <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'instagram' && (
+                                  <svg width="20" height="20" viewBox="0 0 20 20">
+                                    <rect x="1.5" y="1.5" width="17" height="17" rx="5.5" fill="url(#ig-grad)"/>
+                                    <rect x="6.2" y="6.2" width="7.6" height="7.6" rx="2.4" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                    <circle cx="10" cy="10" r="2.3" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                    <circle cx="14.1" cy="5.9" r="0.9" fill="#fff"/>
+                                  </svg>
+                                )}
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'shopify' && (
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#96bf48">
+                                    <path d="M11.6 0C5.2 0 .1 5.2.1 11.6c0 6.4 5.1 11.6 11.5 11.6s11.5-5.2 11.5-11.6C23.1 5.2 18 0 11.6 0zm5.6 5.7l-.5 3.2c-.1.4-.4.5-.7.4l-2.3-.4c-.4-.1-.5-.4-.4-.7l.3-1.9c-1.2-.2-2.5-.3-3.7-.3-1.3 0-2.5.1-3.8.3l.3 2c.1.4-.2.7-.6.7l-2.3.2c-.4 0-.7-.2-.8-.6l-.4-3.1C1.7 7.1.1 9.1.1 11.6c0 6.4 5.1 11.6 11.5 11.6 6.4 0 11.5-5.2 11.5-11.6 0-2.6-1.7-4.7-4.5-5.9z"/>
+                                  </svg>
+                                )}
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'timer' && (
+                                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                    <circle cx="12" cy="13" r="7.5"/>
+                                    <path d="M12 9v4l2.8 1.6"/>
+                                    <path d="M9 2.5h6"/>
+                                  </svg>
+                                )}
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'check' && (
+                                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M20 6L9 17l-5-5"/>
+                                  </svg>
+                                )}
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'gmail' && (
+                                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                  </svg>
+                                )}
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'retry' && (
+                                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                    <path d="M1 4v6h6M23 20v-6h-6"/>
+                                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                  </svg>
+                                )}
+                                {SUMMARY_STEPS[summarySelectedStep].icon === 'log' && (
+                                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                  </svg>
+                                )}
+                              </span>
+                              <h3 className="text-xl font-semibold flex-1 text-gray-900">
+                                {SUMMARY_STEPS[summarySelectedStep].label}
+                              </h3>
+                              <button
+                                type="button"
+                                onClick={() => setSummarySelectedStep(null)}
+                                className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                  <path d="M5 5l14 14M19 5L5 19"/>
+                                </svg>
+                              </button>
+                            </div>
+
+                            <div className="flex items-center flex-wrap gap-3.5 p-5 rounded-xl border mb-4 bg-gray-50 border-gray-200">
+                              <span className="text-sm text-gray-900 font-medium">
+                                Using Connection <span className="text-red-500">*</span>
+                              </span>
+                              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-200 text-sm font-medium text-gray-900">
+                                {SUMMARY_STEPS[summarySelectedStep].connection.name}
+                              </span>
+                              <span className="text-xs font-bold tracking-wider text-blue-500 cursor-pointer">
+                                ADD TITLE
+                              </span>
+                            </div>
+
+                            <div className="flex items-center flex-wrap gap-3.5 p-5 rounded-xl border mb-4 bg-gray-50 border-gray-200">
+                              <span className="text-sm text-gray-900 font-medium">
+                                {SUMMARY_STEPS[summarySelectedStep].field.label} <span className="text-red-500">*</span>
+                              </span>
+                              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-200 text-sm font-medium text-gray-900">
+                                {SUMMARY_STEPS[summarySelectedStep].field.chip}
+                                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gray-500">
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <path d="M5 5l14 14M19 5L5 19"/>
+                                  </svg>
+                                </span>
+                              </span>
+                            </div>
+
+                            <div className="flex gap-2.5 my-1 mb-5.5">
+                              <button className="px-6 py-2.5 rounded-lg border-2 border-blue-500 text-blue-500 text-sm font-bold tracking-wider">
+                                TEST
+                              </button>
+                              <button className="px-6 py-2.5 rounded-lg border border-gray-300 bg-gray-100 text-gray-500 text-sm font-bold tracking-wider" disabled>
+                                SAVE
+                              </button>
+                            </div>
+
+                            <div className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-lg border mb-5 bg-gray-50 border-gray-200 text-sm text-gray-900">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                              {SUMMARY_STEPS[summarySelectedStep].status}
+                            </div>
+
+                            <div className="flex justify-end mb-2.5">
+                              <span className="text-sm font-bold tracking-wider text-blue-500 pb-1.5 border-b-2.5 border-blue-500">
+                                RESPONSE
+                              </span>
+                            </div>
+
+                            <div className="rounded-xl border p-4 bg-gray-50 border-gray-200">
+                              <p className="text-sm text-gray-500 mb-2.5">body</p>
+                              <div className="overflow-x-auto rounded-lg">
+                                <div className="rounded-lg p-3.5 font-mono text-sm leading-7 min-w-[320px] bg-gray-100 text-gray-900">
+                                  {SUMMARY_STEPS[summarySelectedStep].json.map((line, idx) => {
+                                    if (line.length === 1) return <div key={idx}><span className="text-gray-500 inline-block w-[2.2em] mr-2">{idx + 1}</span>{line[0]}</div>;
+                                    const keyColor = '#c2453a';
+                                    const strColor = '#b05a1e';
+                                    const numColor = '#9a6b10';
+                                    let valColor = strColor;
+                                    if (line[4] === 'n') valColor = numColor;
+                                    if (line[4] === 'k') valColor = keyColor;
+                                    return (
+                                      <div key={idx}>
+                                        <span className="text-gray-500 inline-block w-[2.2em] mr-2">{idx + 1}</span>
+                                        <span style={{ color: keyColor }}>{line[0]}</span>{line[2]}<span style={{ color: valColor }}>{line[3]}</span>{line[5]}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-8"></div>
+                  <div className="border-t border-gray-200"></div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSummaryAdvancedOpen(!summaryAdvancedOpen)}
+                    className="inline-flex items-center gap-1.5 mt-4.5 text-sm font-semibold underline underline-offset-4 text-gray-500 hover:text-gray-700"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.7 7.7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.7 7.7 0 0 0 1.7 1L11 21h4l.3-2.9a7.7 7.7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z"/>
+                    </svg>
+                    Advanced flow
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-400">
+                      optional
                     </span>
-                    <span className="text-foreground/90">{s}</span>
-                  </li>
-                ))}
-              </ol>
-            </section>
+                  </button>
+
+                  <div className={`grid transition-all duration-280 ${summaryAdvancedOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                    <div className="overflow-hidden">
+                      <p className="text-sm mt-3 mb-3.5 text-gray-500">
+                        Add extra steps to customize this template.
+                      </p>
+                      <button className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-lg border text-xs font-bold tracking-wider hover:bg-gray-100">
+                        <div className="flex">
+                          <span className="w-5 h-5 rounded flex items-center justify-center ml-0" style={{ background: '#20a95a' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
+                              <path d="M6 3h9l3 3v15H6z"/>
+                              <path d="M9 12h6M9 16h6M9 8h3"/>
+                            </svg>
+                          </span>
+                          <span className="w-5 h-5 rounded flex items-center justify-center -ml-1.5" style={{ background: '#e8792f' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
+                              <path d="M12 3 4 7v10l8 4 8-4V7z"/>
+                              <path d="M4 7l8 4 8-4M12 11v10"/>
+                            </svg>
+                          </span>
+                          <span className="w-5 h-5 rounded flex items-center justify-center -ml-1.5" style={{ background: '#c04ab0' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
+                              <rect x="3.5" y="4.5" width="17" height="15" rx="2"/>
+                              <path d="m6 16 4-4.5 3 3 3-3.5 3 5"/>
+                            </svg>
+                          </span>
+                        </div>
+                        SWITCH TO ADVANCED FLOW →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl overflow-hidden shadow-sm bg-white" data-component="micro-app1">
+                <div className="p-11">
+                  <h1 className="text-2xl font-semibold text-gray-900">
+                    Shopify Cart Abandonment Reminder
+                  </h1>
+                  <p className="text-sm text-gray-500">
+                    Automated Email Recovery Flow
+                  </p>
+
+                  <div className={`grid mt-6 transition-all duration-400 ${summarySelectedStep !== null ? 'grid-cols-[340px_1fr]' : 'grid-cols-[1fr]'}`}>
+                  {/* Left: Configure + Steps */}
+                  <div>
+                    <div className="p-5 rounded-xl border bg-gray-50 border-gray-200" style={{ width: 'fit-content' }}>
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSummaryConfigureOpen(!summaryConfigureOpen);
+                            if (summaryConfigureOpen) {
+                              setSummarySelectedStep(null);
+                            }
+                          }}
+                          className="inline-flex items-center gap-2 px-5 py-1.5 rounded-lg border border-blue-500 text-blue-500 transition-colors hover:bg-gray-100 h-9 cursor-pointer"
+                        >
+                          Configure
+                          <svg className={`transition-transform ${summaryConfigureOpen ? 'rotate-90' : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                            <path d="M9 5l7 7-7 7"/>
+                          </svg>
+                        </button>
+
+                        <div className={`flex gap-2.5 transition-all ${summaryConfigureOpen ? 'opacity-0 w-0 overflow-hidden' : ''}`}>
+                          <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#96bf48">
+                              <path d="M11.6 0C5.2 0 .1 5.2.1 11.6c0 6.4 5.1 11.6 11.5 11.6s11.5-5.2 11.5-11.6C23.1 5.2 18 0 11.6 0zm5.6 5.7l-.5 3.2c-.1.4-.4.5-.7.4l-2.3-.4c-.4-.1-.5-.4-.4-.7l.3-1.9c-1.2-.2-2.5-.3-3.7-.3-1.3 0-2.5.1-3.8.3l.3 2c.1.4-.2.7-.6.7l-2.3.2c-.4 0-.7-.2-.8-.6l-.4-3.1C1.7 7.1.1 9.1.1 11.6c0 6.4 5.1 11.6 11.5 11.6 6.4 0 11.5-5.2 11.5-11.6 0-2.6-1.7-4.7-4.5-5.9z"/>
+                            </svg>
+                          </span>
+                          <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                              <circle cx="12" cy="13" r="7.5"/>
+                              <path d="M12 9v4l2.8 1.6"/>
+                              <path d="M9 2.5h6"/>
+                            </svg>
+                          </span>
+                          <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                          </span>
+                          <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                          </span>
+                          <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                              <path d="M1 4v6h6M23 20v-6h-6"/>
+                              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                            </svg>
+                          </span>
+                          <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                              <polyline points="14 2 14 8 20 8"/>
+                              <line x1="16" y1="13" x2="8" y2="13"/>
+                              <line x1="16" y1="17" x2="8" y2="17"/>
+                              <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className={`grid transition-all duration-300 ${summaryConfigureOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                        <div className="overflow-hidden">
+                          <div className="pt-4.5 mt-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between pb-3 mb-1">
+                              <span className="text-xs font-medium text-gray-700">Show all steps</span>
+                              <button
+                                type="button"
+                                onClick={() => setShowAllStepsV2(!showAllStepsV2)}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showAllStepsV2 ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showAllStepsV2 ? 'translate-x-4' : 'translate-x-0.5'}`}/>
+                              </button>
+                            </div>
+                            <div className="relative">
+                              {SUMMARY_STEPS.map((step, i) => showAllStepsV2 || i === 0 || i === 1 || i === 3 ? (
+                                <div
+                                  key={i}
+                                  className="group relative grid grid-cols-[40px_1fr] items-start gap-3 p-2 w-full text-left rounded-lg"
+                                >
+                                  <span className={`w-9.5 h-9.5 rounded-lg flex items-center justify-center mt-1 ${step.dim ? 'text-blue-500' : ''} ${step.dim ? 'opacity-70' : ''} bg-gray-100 border border-gray-200`}>
+                                    {step.icon === 'instagram' && (
+                                      <svg width="20" height="20" viewBox="0 0 20 20">
+                                        <rect x="1.5" y="1.5" width="17" height="17" rx="5.5" fill="url(#ig-grad)"/>
+                                        <rect x="6.2" y="6.2" width="7.6" height="7.6" rx="2.4" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                        <circle cx="10" cy="10" r="2.3" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                        <circle cx="14.1" cy="5.9" r="0.9" fill="#fff"/>
+                                      </svg>
+                                    )}
+                                    {step.icon === 'shopify' && (
+                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#96bf48">
+                                        <path d="M11.6 0C5.2 0 .1 5.2.1 11.6c0 6.4 5.1 11.6 11.5 11.6s11.5-5.2 11.5-11.6C23.1 5.2 18 0 11.6 0zm5.6 5.7l-.5 3.2c-.1.4-.4.5-.7.4l-2.3-.4c-.4-.1-.5-.4-.4-.7l.3-1.9c-1.2-.2-2.5-.3-3.7-.3-1.3 0-2.5.1-3.8.3l.3 2c.1.4-.2.7-.6.7l-2.3.2c-.4 0-.7-.2-.8-.6l-.4-3.1C1.7 7.1.1 9.1.1 11.6c0 6.4 5.1 11.6 11.5 11.6 6.4 0 11.5-5.2 11.5-11.6 0-2.6-1.7-4.7-4.5-5.9z"/>
+                                      </svg>
+                                    )}
+                                    {step.icon === 'timer' && (
+                                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                        <circle cx="12" cy="13" r="7.5"/>
+                                        <path d="M12 9v4l2.8 1.6"/>
+                                        <path d="M9 2.5h6"/>
+                                      </svg>
+                                    )}
+                                    {step.icon === 'check' && (
+                                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M20 6L9 17l-5-5"/>
+                                      </svg>
+                                    )}
+                                    {step.icon === 'gmail' && (
+                                      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                      </svg>
+                                    )}
+                                    {step.icon === 'retry' && (
+                                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                        <path d="M1 4v6h6M23 20v-6h-6"/>
+                                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                      </svg>
+                                    )}
+                                    {step.icon === 'log' && (
+                                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                      </svg>
+                                    )}
+                                  </span>
+                                  <div className="flex flex-col gap-2 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className={`text-sm font-medium truncate ${step.dim ? 'text-gray-400' : 'text-gray-900'}`}>
+                                        {step.label}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setSummarySelectedStep(i)}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium text-blue-500 hover:text-blue-600 cursor-pointer"
+                                      >
+                                        Advance →
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center flex-wrap gap-2 p-2.5 rounded-lg border bg-gray-50 border-gray-200">
+                                      <span className="text-xs text-gray-900 font-medium">
+                                        {step.field.label} <span className="text-red-500">*</span>
+                                      </span>
+                                      <input
+                                        type="text"
+                                        defaultValue={step.field.chip}
+                                        className="flex-1 min-w-0 px-2.5 py-1 rounded-md border border-gray-300 bg-white text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Detail Panel */}
+                  <div className={`min-w-0 overflow-hidden ${summarySelectedStep !== null ? '' : 'w-0'}`}>
+                    <div className={`min-w-[420px] pl-6 ${summarySelectedStep !== null ? 'animate-in slide-in-from-left-2' : ''}`}>
+                      {summarySelectedStep !== null && SUMMARY_STEPS[summarySelectedStep] && (
+                        <>
+                          <div className="flex items-center gap-3.5 pb-4.5 border-b mb-5.5">
+                            <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'instagram' && (
+                                <svg width="20" height="20" viewBox="0 0 20 20">
+                                  <rect x="1.5" y="1.5" width="17" height="17" rx="5.5" fill="url(#ig-grad)"/>
+                                  <rect x="6.2" y="6.2" width="7.6" height="7.6" rx="2.4" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                  <circle cx="10" cy="10" r="2.3" fill="none" stroke="#fff" strokeWidth="1.3"/>
+                                  <circle cx="14.1" cy="5.9" r="0.9" fill="#fff"/>
+                                </svg>
+                              )}
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'shopify' && (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#96bf48">
+                                  <path d="M11.6 0C5.2 0 .1 5.2.1 11.6c0 6.4 5.1 11.6 11.5 11.6s11.5-5.2 11.5-11.6C23.1 5.2 18 0 11.6 0zm5.6 5.7l-.5 3.2c-.1.4-.4.5-.7.4l-2.3-.4c-.4-.1-.5-.4-.4-.7l.3-1.9c-1.2-.2-2.5-.3-3.7-.3-1.3 0-2.5.1-3.8.3l.3 2c.1.4-.2.7-.6.7l-2.3.2c-.4 0-.7-.2-.8-.6l-.4-3.1C1.7 7.1.1 9.1.1 11.6c0 6.4 5.1 11.6 11.5 11.6 6.4 0 11.5-5.2 11.5-11.6 0-2.6-1.7-4.7-4.5-5.9z"/>
+                                </svg>
+                              )}
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'timer' && (
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                  <circle cx="12" cy="13" r="7.5"/>
+                                  <path d="M12 9v4l2.8 1.6"/>
+                                  <path d="M9 2.5h6"/>
+                                </svg>
+                              )}
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'check' && (
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M20 6L9 17l-5-5"/>
+                                </svg>
+                              )}
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'gmail' && (
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                </svg>
+                              )}
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'retry' && (
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                  <path d="M1 4v6h6M23 20v-6h-6"/>
+                                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                </svg>
+                              )}
+                              {SUMMARY_STEPS[summarySelectedStep].icon === 'log' && (
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                  <polyline points="14 2 14 8 20 8"/>
+                                  <line x1="16" y1="13" x2="8" y2="13"/>
+                                  <line x1="16" y1="17" x2="8" y2="17"/>
+                                  <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                              )}
+                            </span>
+                            <h3 className="text-xl font-semibold flex-1 text-gray-900">
+                              {SUMMARY_STEPS[summarySelectedStep].label}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => setSummarySelectedStep(null)}
+                              className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M5 5l14 14M19 5L5 19"/>
+                              </svg>
+                            </button>
+                          </div>
+
+                          <div className="flex items-center flex-wrap gap-3.5 p-5 rounded-xl border mb-4 bg-gray-50 border-gray-200">
+                            <span className="text-sm text-gray-900 font-medium">
+                              Using Connection <span className="text-red-500">*</span>
+                            </span>
+                            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-200 text-sm font-medium text-gray-900">
+                              {SUMMARY_STEPS[summarySelectedStep].connection.name}
+                            </span>
+                            <span className="text-xs font-bold tracking-wider text-blue-500 cursor-pointer">
+                              ADD TITLE
+                            </span>
+                          </div>
+
+                          <div className="flex items-center flex-wrap gap-3.5 p-5 rounded-xl border mb-4 bg-gray-50 border-gray-200">
+                            <span className="text-sm text-gray-900 font-medium">
+                              {SUMMARY_STEPS[summarySelectedStep].field.label} <span className="text-red-500">*</span>
+                            </span>
+                            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-200 text-sm font-medium text-gray-900">
+                              {SUMMARY_STEPS[summarySelectedStep].field.chip}
+                              <span className="flex items-center justify-center w-4 h-4 rounded-full bg-gray-500">
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                  <path d="M5 5l14 14M19 5L5 19"/>
+                                </svg>
+                              </span>
+                            </span>
+                          </div>
+
+                          <div className="flex gap-2.5 my-1 mb-5.5">
+                            <button className="px-6 py-2.5 rounded-lg border-2 border-blue-500 text-blue-500 text-sm font-bold tracking-wider">
+                              TEST
+                            </button>
+                            <button className="px-6 py-2.5 rounded-lg border border-gray-300 bg-gray-100 text-gray-500 text-sm font-bold tracking-wider" disabled>
+                              SAVE
+                            </button>
+                          </div>
+
+                          <div className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-lg border mb-5 bg-gray-50 border-gray-200 text-sm text-gray-900">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            {SUMMARY_STEPS[summarySelectedStep].status}
+                          </div>
+
+                          <div className="flex justify-end mb-2.5">
+                            <span className="text-sm font-bold tracking-wider text-blue-500 pb-1.5 border-b-2.5 border-blue-500">
+                              RESPONSE
+                            </span>
+                          </div>
+
+                          <div className="rounded-xl border p-4 bg-gray-50 border-gray-200">
+                            <p className="text-sm text-gray-500 mb-2.5">body</p>
+                            <div className="overflow-x-auto rounded-lg">
+                              <div className="rounded-lg p-3.5 font-mono text-sm leading-7 min-w-[320px] bg-gray-100 text-gray-900">
+                                {SUMMARY_STEPS[summarySelectedStep].json.map((line, idx) => {
+                                  if (line.length === 1) return <div key={idx}><span className="text-gray-500 inline-block w-[2.2em] mr-2">{idx + 1}</span>{line[0]}</div>;
+                                  const keyColor = '#c2453a';
+                                  const strColor = '#b05a1e';
+                                  const numColor = '#9a6b10';
+                                  let valColor = strColor;
+                                  if (line[4] === 'n') valColor = numColor;
+                                  if (line[4] === 'k') valColor = keyColor;
+                                  return (
+                                    <div key={idx}>
+                                      <span className="text-gray-500 inline-block w-[2.2em] mr-2">{idx + 1}</span>
+                                      <span style={{ color: keyColor }}>{line[0]}</span>{line[2]}<span style={{ color: valColor }}>{line[3]}</span>{line[5]}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-8"></div>
+                <div className="border-t border-gray-200"></div>
+
+                <button
+                  type="button"
+                  onClick={() => setSummaryAdvancedOpen(!summaryAdvancedOpen)}
+                  className="inline-flex items-center gap-1.5 mt-4.5 text-sm font-semibold underline underline-offset-4 text-gray-500 hover:text-gray-700"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.7 7.7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.7 7.7 0 0 0 1.7 1L11 21h4l.3-2.9a7.7 7.7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z"/>
+                  </svg>
+                  Advanced flow
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-400">
+                    optional
+                  </span>
+                </button>
+
+                <div className={`grid transition-all duration-280 ${summaryAdvancedOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                  <div className="overflow-hidden">
+                    <p className="text-sm mt-3 mb-3.5 text-gray-500">
+                      Add extra steps to customize this template.
+                    </p>
+                    <button className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-lg border text-xs font-bold tracking-wider hover:bg-gray-100">
+                      <div className="flex">
+                        <span className="w-5 h-5 rounded flex items-center justify-center ml-0" style={{ background: '#20a95a' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
+                            <path d="M6 3h9l3 3v15H6z"/>
+                            <path d="M9 12h6M9 16h6M9 8h3"/>
+                          </svg>
+                        </span>
+                        <span className="w-5 h-5 rounded flex items-center justify-center -ml-1.5" style={{ background: '#e8792f' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
+                            <path d="M12 3 4 7v10l8 4 8-4V7z"/>
+                            <path d="M4 7l8 4 8-4M12 11v10"/>
+                          </svg>
+                        </span>
+                        <span className="w-5 h-5 rounded flex items-center justify-center -ml-1.5" style={{ background: '#c04ab0' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
+                            <rect x="3.5" y="4.5" width="17" height="15" rx="2"/>
+                            <path d="m6 16 4-4.5 3 3 3-3.5 3 5"/>
+                          </svg>
+                        </span>
+                      </div>
+                      SWITCH TO ADVANCED FLOW →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
+            
+            {/* SVG gradient definition */}
+            <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+              <defs>
+                <linearGradient id="ig-grad" x1="0" y1="20" x2="20" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#feda75"/>
+                  <stop offset="0.35" stopColor="#d62976"/>
+                  <stop offset="0.7" stopColor="#962fbf"/>
+                  <stop offset="1" stopColor="#4f5bd5"/>
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
+        </div>
         )}
 
         {activeTab === "flow" && <FlowSection steps={SAMPLE_FLOW_STEPS} selectedStepId={selectedStepId} onStepClick={(step) => {

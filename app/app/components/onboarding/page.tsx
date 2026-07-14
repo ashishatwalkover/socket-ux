@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Tooltip } from "@mui/material";
 
 type StepId = "website" | "workspace" | "role" | "business" | "apps";
 
@@ -712,14 +713,15 @@ export default function OnboardingPage() {
               </p>
             ) : (
               <div key={item.id} className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => goToStep(item.stepId)}
-                  className="max-w-[85%] rounded-full bg-[#2f6bff] px-4 py-2 text-left text-[14px] font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-                  title="Click to edit"
-                >
-                  {item.text}
-                </button>
+                <Tooltip title="Click to back & edit" placement="top" arrow>
+                  <button
+                    type="button"
+                    onClick={() => goToStep(item.stepId)}
+                    className="max-w-[85%] rounded-full bg-[#2f6bff] px-4 py-2 text-left text-[14px] font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                  >
+                    {item.text}
+                  </button>
+                </Tooltip>
               </div>
             )
           )}
