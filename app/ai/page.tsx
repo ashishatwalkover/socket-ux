@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { AiShell } from "@/components/ai/ai-shell";
+import { FreshChatbot } from "@/components/ai/fresh-chatbot";
 
 export default function AiPage() {
-  return (
-    <Suspense fallback={null}>
-      <AiShell />
-    </Suspense>
-  );
+  return <FreshChatbot />;
 }

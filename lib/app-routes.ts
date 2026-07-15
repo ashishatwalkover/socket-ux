@@ -12,7 +12,12 @@ export function isAppRoute(pathname: string): boolean {
 }
 
 export function isAiRoute(pathname: string): boolean {
-  return pathname === AI_BASE || pathname.startsWith(`${AI_BASE}/`);
+  return (
+    pathname === AI_BASE ||
+    pathname.startsWith(`${AI_BASE}/`) ||
+    pathname === "/ai2" ||
+    pathname.startsWith("/ai2/")
+  );
 }
 
 export function isWebRoute(pathname: string): boolean {

@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack",
-    "dev:profile": "NODE_OPTIONS='--inspect --heap-prof --max-old-space-size=6144' next dev --turbopack",
+    "crg:init": "code-review-graph build .",
+    "crg:watch": "code-review-graph watch .",
+    "dev": "npm run crg:init && concurrently \"npm run crg:watch\" \"NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack\"",
+    "dev:profile": "npm run crg:init && concurrently \"npm run crg:watch\" \"NODE_OPTIONS='--inspect --heap-prof --max-old-space-size=6144' next dev --turbopack\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -29,6 +31,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",

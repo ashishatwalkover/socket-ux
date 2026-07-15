@@ -33,4 +33,11 @@ export const designComponents: DesignComponent[] = [
     href: `${APP_BASE}/billing`,
     status: "Ready",
   },
+  {
+    id: "comp-templates",
+    name: "Template Cards",
+    description: "Reusable template cards for automation workflows",
+    href: `${APP_BASE}/components`,
+    status: "Ready",
+  },
 ];
