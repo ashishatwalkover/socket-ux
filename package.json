@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "crg:init": "code-review-graph build .",
-    "crg:watch": "code-review-graph watch .",
+    "crg:init": "code-review-graph build",
+    "crg:watch": "code-review-graph watch",
     "dev": "npm run crg:init && concurrently \"npm run crg:watch\" \"NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack\"",
     "dev:profile": "npm run crg:init && concurrently \"npm run crg:watch\" \"NODE_OPTIONS='--inspect --heap-prof --max-old-space-size=6144' next dev --turbopack\"",
     "build": "next build",

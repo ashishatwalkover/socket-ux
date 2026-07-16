@@ -35,6 +35,86 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
         </div>
       );
 
+    case "template":
+      return (
+        <div className="rounded-xl border border-border/70 bg-background p-4">
+          <p className="text-sm font-medium text-foreground">{block.question}</p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {block.options.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => onAction?.(opt.title)}
+                className="group relative flex flex-col rounded-xl border border-border/70 bg-background p-4 transition-shadow hover:shadow-md cursor-pointer text-left"
+              >
+                {/* Header: app badges */}
+                <div className="flex items-center mb-3">
+                  {opt.apps?.map((app, index) => (
+                    <span
+                      key={app.name}
+                      className={cn(
+                        "relative inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-gray-200 bg-white",
+                        index > 0 && "-ml-2.5"
+                      )}
+                      style={{ zIndex: index + 1 }}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex size-full items-center justify-center text-[10px] font-bold text-white",
+                          app.color
+                        )}
+                      >
+                        {app.letter}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Title */}
+                <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mb-2">
+                  {opt.title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                  {opt.description}
+                </p>
+
+                {/* Footer: chips + installs */}
+                <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/50">
+                  <div className="flex items-center gap-1.5">
+                    {opt.chips?.slice(0, 2).map((chip, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-700"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                  {opt.installs && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <DownloadIcon className="size-3.5" />
+                      <span className="font-medium text-foreground">{opt.installs >= 1000 ? (opt.installs / 1000).toFixed(1) + 'k' : opt.installs}</span>
+                      <span>installs</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onAction?.("Skip")}
+              className="cursor-pointer"
+            >
+              Skip
+            </Button>
+          </div>
+        </div>
+      );
+
     case "plan":
       return (
         <div className="rounded-xl border border-border/70 bg-background p-4 shadow-sm">
@@ -175,6 +255,16 @@ function PlugIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M15 2v6" />
       <path d="M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8z" />
       <path d="M12 17v5" />
+    </svg>
+  );
+}
+
+function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
     </svg>
   );
 }

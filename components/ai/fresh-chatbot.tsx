@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AssistantBlockView } from "@/components/ai/message-cards";
+import { ASSISTANT_SCRIPT, PAST_CONVERSATIONS } from "@/lib/ai/mock-data";
+import type { AssistantBlock } from "@/lib/ai/mock-data";
 
 const ArrowUp = ({ className }: { className?: string }) => (
   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -22,11 +25,9 @@ const Gear = ({ className }: { className?: string }) => (
   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/></svg>
 );
 
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-};
+type Message =
+  | { id: string; role: "user"; content: string }
+  | { id: string; role: "assistant"; content?: string; blocks?: AssistantBlock[] };
 
 type FlowStep = {
   id: string;
@@ -57,12 +58,25 @@ export function FreshChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [turn, setTurn] = useState(0);
+  const [flowActive, setFlowActive] = useState(false);
   const [showFlowPanel, setShowFlowPanel] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(true);
   const [selectedFlowStep, setSelectedFlowStep] = useState<string | null>("home");
   const [showOptionalSteps, setShowOptionalSteps] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [showEllipsisMenu, setShowEllipsisMenu] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+const [changedSteps, setChangedSteps] = useState<Set<string>>(new Set());
+const [changesCount, setChangesCount] = useState(0);
+
+const handleStepChange = (stepId: string) => {
+  const newChangedSteps = new Set(changedSteps);
+  newChangedSteps.add(stepId);
+  setChangedSteps(newChangedSteps);
+  setChangesCount(newChangedSteps.size);
+  setHasChanges(true);
+};
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,42 +86,62 @@ export function FreshChatbot() {
   const send = (text: string) => {
     const trimmed = text.trim();
     const shouldSendChanges = hasChanges && !trimmed;
-    
+
     if (!trimmed && !hasChanges) return;
-    
-    const messages: Message[] = [];
-    
+
+    const userMessages: Message[] = [];
+
     if (shouldSendChanges) {
-      messages.push({
+      userMessages.push({
         id: crypto.randomUUID(),
         role: "user",
         content: "Changes made to configuration",
       });
     } else if (trimmed) {
-      messages.push({
+      userMessages.push({
         id: crypto.randomUUID(),
         role: "user",
         content: trimmed,
       });
     }
-    
-    setMessages((prev) => [...prev, ...messages]);
+
+    setMessages((prev) => [...prev, ...userMessages]);
     setInput("");
     setHasChanges(false);
     setIsTyping(true);
-    
+
     setTimeout(() => {
-      const reply: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: shouldSendChanges 
-          ? "Configuration changes applied. Your automation is ready to test."
-          : `Here's a thought on "${trimmed}":\n\nThis is a fresh AI assistant. Responses here are simulated for now — plug in your model of choice to make it real.`,
-      };
+      let reply: Message;
+      if (shouldSendChanges) {
+        reply = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Configuration changes applied. Your automation is ready to test.",
+        };
+      } else if (turn < ASSISTANT_SCRIPT.length) {
+        const assistantTurn = ASSISTANT_SCRIPT[turn];
+        reply = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          blocks: assistantTurn.blocks,
+        };
+        if (turn === 1) setFlowActive(true);
+        setTurn((t) => t + 1);
+      } else {
+        reply = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `Here's a thought on "${trimmed}":\n\nThis is a fresh AI assistant. Responses here are simulated for now — plug in your model of choice to make it real.`,
+        };
+      }
       setMessages((prev) => [...prev, reply]);
       setIsTyping(false);
     }, 700);
   };
+
+  const handleAction = useCallback((label: string) => {
+    send(label);
+  }, [send]);
 
   const empty = messages.length === 0;
 
@@ -176,15 +210,23 @@ export function FreshChatbot() {
                 >
                   {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </span>
-                <div
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-gray-900 text-white"
-                      : "border border-gray-200 bg-white text-gray-800 shadow-sm"
-                  }`}
-                >
-                  {m.content}
-                </div>
+                {m.role === "assistant" && m.blocks ? (
+                  <div className="flex min-w-0 flex-1 flex-col space-y-3">
+                    {m.blocks.map((b, i) => (
+                      <AssistantBlockView key={i} block={b} onAction={handleAction} />
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                      m.role === "user"
+                        ? "bg-gray-900 text-white"
+                        : "border border-gray-200 bg-white text-gray-800 shadow-sm"
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -205,15 +247,58 @@ export function FreshChatbot() {
           </div>
 
           {/* Composer wrapped in flow mini-app card */}
-          <div className="bg-white px-4 py-4">
+          <div className="bg-white px-4 py-4 relative">
+            {/* Draft flows popover */}
+            {empty && showDrafts && (
+              <div className="mx-auto w-full max-w-4xl mb-2">
+                <div className="rounded-xl border border-gray-200 bg-white shadow-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h2 className="text-sm font-semibold text-gray-900">Draft flows</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">Continue where you left off</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDrafts(false)}
+                      className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      Skip
+                    </button>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 divide-y divide-gray-100">
+                    {PAST_CONVERSATIONS.filter((c) => c.status === "draft").map((flow, i) => (
+                      <button
+                        key={flow.id}
+                        type="button"
+                        onClick={() => send(`Continue working on: ${flow.title}`)}
+                        className="w-full p-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 flex items-center gap-3 cursor-pointer group"
+                      >
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center text-xs font-medium text-gray-600">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900">{flow.title}</div>
+                        </div>
+                        <div className="text-xs text-gray-500">{flow.updated}</div>
+                        <svg className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="mx-auto w-full max-w-4xl">
-              <div className="rounded-2xl border border-gray-200 bg-gray-50/60 p-4">
+              <div className={flowActive ? "rounded-2xl border border-gray-200 bg-gray-50/60 p-4" : ""}>
                 {/* Mini-app header */}
-                <div className="flex items-start justify-between mb-3">
+                {flowActive && (
+                <div className="flex items-start mb-3" data-component="flow-config-box">
                   <button
                     type="button"
                     onClick={() => setShowFlowPanel(!showFlowPanel)}
-                    className="flex items-start gap-2 text-left group"
+                    className="flex flex-1 items-start gap-2 text-left group cursor-pointer"
                   >
                     <span className="text-gray-600 mt-0.5">
                       <Sparkles className="h-4 w-4" />
@@ -232,17 +317,26 @@ export function FreshChatbot() {
                     </div>
                   </button>
                   <div className="flex items-center gap-1.5">
-                    <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                    >
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                       Test
                     </button>
-                    <button className="px-3 py-1.5 rounded-lg bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 transition-colors">
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                    >
                       Publish
                     </button>
                     <div className="relative">
                       <button
                         type="button"
-                        onClick={() => setShowEllipsisMenu(!showEllipsisMenu)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEllipsisMenu(!showEllipsisMenu);
+                        }}
                         className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -263,6 +357,7 @@ export function FreshChatbot() {
                     </div>
                   </div>
                 </div>
+                )}
 
 
                 {/* Collapsible flow steps + config panel (combined) */}
@@ -290,6 +385,23 @@ export function FreshChatbot() {
                               {step.icon === "bell" && "🔔"}
                             </span>
                             <span className={`text-xs font-medium flex-1 truncate ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>{step.label}</span>
+                            <div className="flex items-center gap-1">
+                              {step.badge && (
+                                <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                                  {step.badge}
+                                </span>
+                              )}
+                              {changedSteps.has(step.id) && (
+                                <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                                  Draft
+                                </span>
+                              )}
+                              {step.id === "3" && (
+                                <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
+                                  Error
+                                </span>
+                              )}
+                            </div>
                           </button>
                         );
                       })}
@@ -297,9 +409,14 @@ export function FreshChatbot() {
                         <button
                           type="button"
                           onClick={() => setShowOptionalSteps(true)}
-                          className="w-full text-left p-2 text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors mt-1"
+                          className="w-full text-left p-2 text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors mt-1 cursor-pointer"
                         >
-                          + Optional
+                          <span className="relative inline-block">
+                            + Optional
+                            {FLOW_STEPS.some(step => step.optional && step.id === "3") && (
+                              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                            )}
+                          </span>
                         </button>
                       )}
                       {showOptionalSteps && (
@@ -354,6 +471,45 @@ export function FreshChatbot() {
                                   Automated lead capture &amp; sales notification. Sends a welcome email and message, and notifies the sales team of new leads.
                                 </p>
                               </div>
+                              <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium text-emerald-900 mb-1">Your flow is working fine!</p>
+                                    <p className="text-xs text-emerald-700 leading-relaxed">
+                                      You can publish this as a template so that others can use it. When users use your template, you'll get credit for it.
+                                    </p>
+                                    <button
+                                      type="button"
+                                      className="mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-md transition-colors"
+                                    >
+                                      Publish as Template
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-3 flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                                      <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <span className="text-xs font-medium text-gray-700">Switch to Advanced Flow</span>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-0.5">Add extra steps to customize this template.</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-800 hover:bg-gray-900 text-white text-xs font-medium rounded transition-colors"
+                                >
+                                  Switch
+                                </button>
+                              </div>
                             </>
                           );
                         }
@@ -380,59 +536,301 @@ export function FreshChatbot() {
                               )}
                             </div>
                             <div className="space-y-3">
-                              <div>
-                                <label className="text-[11px] font-medium text-gray-700 block mb-1">Name</label>
-                                <input
-                                  type="text"
-                                  defaultValue={step.label}
-                                  onChange={() => setHasChanges(true)}
-                                  className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-[11px] font-medium text-gray-700 block mb-1">Description</label>
-                                <textarea
-                                  rows={2}
-                                  placeholder="Add a description…"
-                                  onChange={() => setHasChanges(true)}
-                                  className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setShowOptionalFields(!showOptionalFields)}
-                                className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors pt-1"
-                              >
-                                {showOptionalFields ? '− Optional Fields' : '+ Optional Fields'}
-                              </button>
-                              {showOptionalFields && (
-                                <div className="space-y-3 pt-2 border-t border-gray-100">
+                              {step.id === "1" && (
+                                <>
                                   <div>
-                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Timeout (seconds)</label>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Form URL</label>
                                     <input
-                                      type="number"
-                                      placeholder="30"
-                                      onChange={() => setHasChanges(true)}
+                                      type="url"
+                                      placeholder="https://your-form-url.com"
+                                      onChange={() => handleStepChange(step.id)}
                                       className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     />
                                   </div>
                                   <div>
-                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Retry on failure</label>
-                                    <select onChange={() => setHasChanges(true)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
-                                      <option>No</option>
-                                      <option>Yes (max 3 times)</option>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Field Mapping</label>
+                                    <textarea
+                                      rows={3}
+                                      placeholder="name → firstName, email → emailAddress"
+                                      onChange={() => handleStepChange(step.id)}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                                    className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors pt-1"
+                                  >
+                                    {showOptionalFields ? '− Optional Fields' : '+ Optional Fields'}
+                                  </button>
+                                  {showOptionalFields && (
+                                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Timeout (seconds)</label>
+                                        <input
+                                          type="number"
+                                          placeholder="30"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Retry on failure</label>
+                                        <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                          <option>No</option>
+                                          <option>Yes (max 3 times)</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Custom tags</label>
+                                        <input
+                                          type="text"
+                                          placeholder="e.g., important, urgent"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {step.id === "2" && (
+                                <>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Message Template</label>
+                                    <textarea
+                                      rows={3}
+                                      placeholder="Hi {name}, thanks for reaching out!"
+                                      onChange={() => handleStepChange(step.id)}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Send Delay</label>
+                                    <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                      <option>Immediately</option>
+                                      <option>After 5 minutes</option>
+                                      <option>After 1 hour</option>
+                                    </select>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                                    className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors pt-1"
+                                  >
+                                    {showOptionalFields ? '− Optional Fields' : '+ Optional Fields'}
+                                  </button>
+                                  {showOptionalFields && (
+                                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Timeout (seconds)</label>
+                                        <input
+                                          type="number"
+                                          placeholder="30"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Retry on failure</label>
+                                        <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                          <option>No</option>
+                                          <option>Yes (max 3 times)</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Custom tags</label>
+                                        <input
+                                          type="text"
+                                          placeholder="e.g., important, urgent"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {step.id === "3" && (
+                                <>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Email Template</label>
+                                    <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                      <option>Welcome Email</option>
+                                      <option>Confirmation Email</option>
+                                      <option>Custom Template</option>
                                     </select>
                                   </div>
                                   <div>
-                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Custom tags</label>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Subject Line</label>
                                     <input
                                       type="text"
-                                      placeholder="e.g., important, urgent"
-                                      onChange={() => setHasChanges(true)}
+                                      placeholder="Welcome to our service!"
+                                      onChange={() => handleStepChange(step.id)}
                                       className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                                     />
                                   </div>
-                                </div>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">From Address</label>
+                                    <input
+                                      type="email"
+                                      placeholder="welcome@yourcompany.com"
+                                      onChange={() => handleStepChange(step.id)}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                                    className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors pt-1"
+                                  >
+                                    {showOptionalFields ? '− Optional Fields' : '+ Optional Fields'}
+                                  </button>
+                                  {showOptionalFields && (
+                                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Timeout (seconds)</label>
+                                        <input
+                                          type="number"
+                                          placeholder="30"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Retry on failure</label>
+                                        <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                          <option>No</option>
+                                          <option>Yes (max 3 times)</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Custom tags</label>
+                                        <input
+                                          type="text"
+                                          placeholder="e.g., important, urgent"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {step.id === "4" && (
+                                <>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">CRM Field Mapping</label>
+                                    <textarea
+                                      rows={3}
+                                      placeholder="firstName → First Name, email → Email Address"
+                                      onChange={() => handleStepChange(step.id)}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Lead Source</label>
+                                    <input
+                                      type="text"
+                                      placeholder="Website Form"
+                                      onChange={() => handleStepChange(step.id)}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                                    className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors pt-1"
+                                  >
+                                    {showOptionalFields ? '− Optional Fields' : '+ Optional Fields'}
+                                  </button>
+                                  {showOptionalFields && (
+                                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Timeout (seconds)</label>
+                                        <input
+                                          type="number"
+                                          placeholder="30"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Retry on failure</label>
+                                        <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                          <option>No</option>
+                                          <option>Yes (max 3 times)</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Custom tags</label>
+                                        <input
+                                          type="text"
+                                          placeholder="e.g., important, urgent"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {step.id === "5" && (
+                                <>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Notification Channel</label>
+                                    <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                      <option>Slack #sales</option>
+                                      <option>Email to team</option>
+                                      <option>Both</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="text-[11px] font-medium text-gray-700 block mb-1">Message Content</label>
+                                    <textarea
+                                      rows={2}
+                                      placeholder="New lead: {name} ({email}) - {company}"
+                                      onChange={() => handleStepChange(step.id)}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                                    className="text-[10px] font-medium text-gray-500 hover:text-gray-700 transition-colors pt-1"
+                                  >
+                                    {showOptionalFields ? '− Optional Fields' : '+ Optional Fields'}
+                                  </button>
+                                  {showOptionalFields && (
+                                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Timeout (seconds)</label>
+                                        <input
+                                          type="number"
+                                          placeholder="30"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Retry on failure</label>
+                                        <select onChange={() => handleStepChange(step.id)} className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                                          <option>No</option>
+                                          <option>Yes (max 3 times)</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] font-medium text-gray-700 block mb-1">Custom tags</label>
+                                        <input
+                                          type="text"
+                                          placeholder="e.g., important, urgent"
+                                          onChange={() => handleStepChange(step.id)}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           </>
@@ -448,14 +846,19 @@ export function FreshChatbot() {
                     e.preventDefault();
                     send(input);
                   }}
+                  onClick={(e) => e.stopPropagation()}
                   className="flex w-full items-end gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm focus-within:border-gray-300 transition-shadow"
                 >
                   {hasChanges && (
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-100 border border-blue-200">
-                      <span className="text-xs font-medium text-blue-900">Changes made</span>
+                      <span className="text-xs font-medium text-blue-900">{changesCount} changes made</span>
                       <button
                         type="button"
-                        onClick={() => setHasChanges(false)}
+                        onClick={() => {
+                          setHasChanges(false);
+                          setChangedSteps(new Set());
+                          setChangesCount(0);
+                        }}
                         className="text-blue-600 hover:text-blue-700"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -481,9 +884,6 @@ export function FreshChatbot() {
                     className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white transition-opacity hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     <ArrowUp className="h-3.5 w-3.5" />
-                  </button>
-                  <button type="button" className="text-gray-400 hover:text-gray-600 p-1">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                   </button>
                 </form>
                 <p className="mt-2 text-center text-[11px] text-gray-600">

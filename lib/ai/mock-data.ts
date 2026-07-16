@@ -34,6 +34,8 @@ export type Conversation = {
   title: string;
   status: "running" | "draft" | "paused" | "failed";
   updated: string;
+  description?: string;
+  subheading?: string;
 };
 
 export const PAST_CONVERSATIONS: Conversation[] = [
@@ -61,6 +63,22 @@ export const PAST_CONVERSATIONS: Conversation[] = [
     status: "failed",
     updated: "Last week",
   },
+  {
+    id: "c5",
+    title: "Abandoned cart recovery",
+    status: "draft",
+    updated: "5 min ago",
+    subheading: "E-commerce automation",
+    description: "Send reminder emails to users who abandoned their cart 2 hours ago, with follow-up sequence.",
+  },
+  {
+    id: "c6",
+    title: "Welcome email sequence",
+    status: "draft",
+    updated: "1 hour ago",
+    subheading: "Customer onboarding",
+    description: "Automated onboarding flow for new signups with 3-part email series over 7 days.",
+  },
 ];
 
 // ---------- Scripted assistant turns ----------
@@ -71,6 +89,11 @@ export type AssistantBlock =
       kind: "clarify";
       question: string;
       options: string[];
+    }
+  | {
+      kind: "template";
+      question: string;
+      options: { title: string; description: string; apps?: { name: string; color: string; letter: string }[]; chips?: string[]; installs?: number }[];
     }
   | {
       kind: "plan";
@@ -106,6 +129,41 @@ export type AssistantTurn = {
  * Nth message. Anything past the end loops back to a closing turn.
  */
 export const ASSISTANT_SCRIPT: AssistantTurn[] = [
+  {
+    blocks: [
+      {
+        kind: "text",
+        text: "Got it. Let me help you get started with a template.",
+      },
+      {
+        kind: "template",
+        question: "Choose a template to get started:",
+        options: [
+          { 
+            title: "Abandoned Cart Recovery", 
+            description: "Recover lost sales by sending automated reminders",
+            apps: [{ name: "Shopify", color: "bg-emerald-600", letter: "S" }, { name: "Gmail", color: "bg-red-500", letter: "G" }],
+            chips: ["Sales", "E-commerce"],
+            installs: 1200
+          },
+          { 
+            title: "Welcome Email Sequence", 
+            description: "Onboard new customers with automated emails",
+            apps: [{ name: "HubSpot", color: "bg-orange-500", letter: "H" }, { name: "Gmail", color: "bg-red-500", letter: "G" }],
+            chips: ["Marketing", "Onboarding"],
+            installs: 890
+          },
+          { 
+            title: "Invoice Reminder", 
+            description: "Automate payment reminders for unpaid invoices",
+            apps: [{ name: "Stripe", color: "bg-indigo-600", letter: "S" }, { name: "Slack", color: "bg-purple-600", letter: "S" }],
+            chips: ["Finance", "Operations"],
+            installs: 650
+          },
+        ],
+      },
+    ],
+  },
   {
     blocks: [
       {
