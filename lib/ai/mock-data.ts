@@ -137,7 +137,7 @@ export const ASSISTANT_SCRIPT: AssistantTurn[] = [
       },
       {
         kind: "template",
-        question: "Choose a template to get started:",
+        question: "Found some templates that match your use case.:",
         options: [
           { 
             title: "Abandoned Cart Recovery", 

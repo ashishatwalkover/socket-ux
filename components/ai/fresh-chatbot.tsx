@@ -46,8 +46,8 @@ const SUGGESTIONS = [
 ];
 
 const FLOW_STEPS: FlowStep[] = [
-  { id: "home", label: "Home", icon: "home", status: "active" },
-  { id: "1", label: "Lead Form Submitted", icon: "facebook", status: "completed", badge: "Unsaved" },
+  { id: "home", label: "Summary", icon: "home", status: "active" },
+  { id: "1", label: "Lead Form Submitted", icon: "facebook", status: "completed", badge: "changes" },
   { id: "2", label: "Send Confirmation Message On W...", icon: "message", status: "completed" },
   { id: "3", label: "Send Welcome Email", icon: "mail", status: "completed", optional: true },
   { id: "4", label: "Add New Lead In CRM", icon: "crm", status: "completed" },
@@ -67,16 +67,16 @@ export function FreshChatbot() {
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [showEllipsisMenu, setShowEllipsisMenu] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-const [changedSteps, setChangedSteps] = useState<Set<string>>(new Set());
-const [changesCount, setChangesCount] = useState(0);
+  const [changedSteps, setChangedSteps] = useState<Set<string>>(new Set());
+  const [changesCount, setChangesCount] = useState(0);
 
-const handleStepChange = (stepId: string) => {
-  const newChangedSteps = new Set(changedSteps);
-  newChangedSteps.add(stepId);
-  setChangedSteps(newChangedSteps);
-  setChangesCount(newChangedSteps.size);
-  setHasChanges(true);
-};
+  const handleStepChange = (stepId: string) => {
+    const newChangedSteps = new Set(changedSteps);
+    newChangedSteps.add(stepId);
+    setChangedSteps(newChangedSteps);
+    setChangesCount(newChangedSteps.size);
+    setHasChanges(true);
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -377,7 +377,7 @@ const handleStepChange = (stepId: string) => {
                             className={`w-full flex items-center gap-2 text-left p-2 rounded-lg transition-colors ${isSelected ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
                           >
                             <span className="w-6 h-6 rounded flex items-center justify-center bg-gray-100 text-gray-600 text-xs shrink-0">
-                              {step.icon === "home" && "🏠"}
+                              {step.icon === "home" && "📋"}
                               {step.icon === "facebook" && "f"}
                               {step.icon === "message" && "✓"}
                               {step.icon === "mail" && "✉"}
@@ -387,13 +387,13 @@ const handleStepChange = (stepId: string) => {
                             <span className={`text-xs font-medium flex-1 truncate ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>{step.label}</span>
                             <div className="flex items-center gap-1">
                               {step.badge && (
-                                <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                                <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
                                   {step.badge}
                                 </span>
                               )}
                               {changedSteps.has(step.id) && (
                                 <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                                  Draft
+                                  changes
                                 </span>
                               )}
                               {step.id === "3" && (
@@ -459,9 +459,13 @@ const handleStepChange = (stepId: string) => {
                                   <div className="text-sm font-semibold text-blue-900 mt-0.5">Active</div>
                                 </div>
                                 <div className="rounded-lg bg-orange-50 p-2.5">
-                                  <div className="text-[10px] text-orange-700/80 font-medium">Unsaved</div>
+                                  <div className="text-[10px] text-orange-700/80 font-medium">changes</div>
                                   <div className="text-lg font-semibold text-orange-900 mt-0.5">
-                                    {configurableSteps.filter((s) => s.badge === "Unsaved").length}
+                                    {
+                                      configurableSteps.filter(
+                                        (s) => s.badge === "changes" || changedSteps.has(s.id)
+                                      ).length
+                                    }
                                   </div>
                                 </div>
                               </div>
@@ -530,7 +534,7 @@ const handleStepChange = (stepId: string) => {
                                 </div>
                               </div>
                               {step.badge && (
-                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
                                   {step.badge}
                                 </span>
                               )}
