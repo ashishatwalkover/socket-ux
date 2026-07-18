@@ -37,13 +37,20 @@ export function TemplateCards({ templates }: TemplateCardsProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {templates.map((template) => (
-        <button
+        <div
           key={template.id}
-          type="button"
+          role="button"
+          tabIndex={0}
           onClick={template.onClick}
-          className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-left transition-all hover:border-gray-300 hover:shadow-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              template.onClick?.();
+            }
+          }}
+          className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-left transition-all hover:border-gray-300 hover:shadow-lg cursor-pointer"
         >
           {/* Image Slider (Template 1) */}
           {template.imageStyle === "slider" && template.images && template.images.length > 0 && (
@@ -164,7 +171,7 @@ export function TemplateCards({ templates }: TemplateCardsProps) {
               </div>
             </div>
           )}
-        </button>
+        </div>
       ))}
     </div>
   );

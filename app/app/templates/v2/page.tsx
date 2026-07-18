@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, Button as MuiButton, Popover } from "@mui/material";
+import { TemplateCards } from "@/components/ai/template-cards";
 
 /* ─── Types ─── */
 type TemplateApp = { name: string; color: string; letter: string };
@@ -644,131 +645,57 @@ function AppBadge({ app, index }: { app: TemplateApp; index: number }) {
   );
 }
 
-function TemplateCard({ template, onCardClick }: { template: Template; onCardClick: (template: Template) => void }) {
-  const chips = template.chips || [template.useCase];
-  const displayChips = chips.slice(0, 2);
-  const remainingChips = chips.slice(2);
-  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
-  
-  const formatInstalls = (num: number) => {
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'k';
-    }
-    return num.toString();
-  };
-
-  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    setPopoverAnchor(event.currentTarget);
-  };
-
-  const handlePopoverClose = () => {
-    setPopoverAnchor(null);
-  };
-
-  const popoverOpen = Boolean(popoverAnchor);
-
+/* Card content adapted for the components/ai/template-cards.tsx design (image slider variant) */
+function CardAppIcon({ app }: { app: TemplateApp }) {
+  const [imgError, setImgError] = useState(false);
+  const imageUrl = APP_IMAGES[app.name];
+  if (imageUrl && !imgError) {
+    return (
+      <img
+        src={imageUrl}
+        alt={app.name}
+        className="h-7 w-7 object-contain"
+        onError={() => setImgError(true)}
+      />
+    );
+  }
   return (
-    <div 
-      className="group relative flex flex-col rounded-xl border border-border/70 bg-background p-4 transition-shadow hover:shadow-md cursor-pointer"
-      onClick={() => onCardClick(template)}
-    >
-      {/* Header: app badges + featured */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
-          {template.apps.map((app, index) => (
-            <AppBadge key={app.name} app={app} index={index} />
-          ))}
-        </div>
-        {template.featured && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-            <StarIcon className="size-3" />
-            Featured
-          </span>
-        )}
-      </div>
-
-      {/* Title */}
-      <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 mb-3">
-        {template.title}
-      </h3>
-
-      {/* Footer: chips + installs */}
-      <div className="mt-auto flex items-center justify-between pt-3">
-        <div className="flex items-center gap-1.5">
-          {displayChips.map((chip, index) => (
-            <span
-              key={index}
-              className={cn(
-                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                getChipColorClass(chip)
-              )}
-            >
-              {chip}
-            </span>
-          ))}
-          {remainingChips.length > 0 && (
-            <span
-              className="inline-flex items-center rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground cursor-pointer hover:bg-muted/80"
-              onMouseEnter={handlePopoverOpen}
-              onMouseLeave={handlePopoverClose}
-            >
-              +{remainingChips.length}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <DownloadIcon className="size-3.5" />
-          <span className="font-medium text-foreground">{formatInstalls(template.installs)}</span>
-          <span>installs</span>
-        </div>
-      </div>
-
-      {/* Popover for remaining chips */}
-      <Popover
-        open={popoverOpen}
-        anchorEl={popoverAnchor}
-        onClose={handlePopoverClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        disableRestoreFocus
-        sx={{
-          pointerEvents: 'none',
-          '& .MuiPaper-root': {
-            pointerEvents: 'auto',
-            borderRadius: '8px',
-            padding: '8px',
-          },
-        }}
-        slotProps={{
-          paper: {
-            onMouseEnter: () => setPopoverAnchor(popoverAnchor),
-            onMouseLeave: handlePopoverClose,
-          },
-        }}
-      >
-        <div className="flex flex-col gap-1">
-          {remainingChips.map((chip, index) => (
-            <span
-              key={index}
-              className={cn(
-                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                getChipColorClass(chip)
-              )}
-            >
-              {chip}
-            </span>
-          ))}
-        </div>
-      </Popover>
-    </div>
+    <span className={cn("flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white", app.color)}>
+      {app.letter}
+    </span>
   );
+}
+
+const FIRST_SLIDE_IMAGES = [
+  "https://files.msg91.com/92283/yemeyeki/aexoumol.png",
+  "https://files.msg91.com/92283/yemeyeki/fryargow.png",
+  "https://files.msg91.com/92283/yemeyeki/wbcfjbcv.png",
+];
+
+const REST_SLIDE_IMAGES = [
+  "https://files.msg91.com/92283/yemeyeki/stamfhto.png",
+  "https://files.msg91.com/92283/yemeyeki/sszhzabe.webp",
+  "https://files.msg91.com/92283/yemeyeki/ezxwefnu.webp",
+  "https://files.msg91.com/92283/yemeyeki/kyopytlf.webp",
+  "https://files.msg91.com/92283/yemeyeki/umtkbzqi.webp",
+  "https://files.msg91.com/92283/yemeyeki/nhcjlaqj.webp",
+  "https://files.msg91.com/92283/yemeyeki/yyexeirl.webp",
+  "https://files.msg91.com/92283/yemeyeki/dsfzlnfz.webp",
+];
+
+function hashSeed(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return hash;
+}
+
+function templatePreviewImages(id: string, count: number) {
+  const first = FIRST_SLIDE_IMAGES[hashSeed(id) % FIRST_SLIDE_IMAGES.length];
+  const rest = Array.from(
+    { length: count - 1 },
+    (_, i) => REST_SLIDE_IMAGES[hashSeed(`${id}-${i}`) % REST_SLIDE_IMAGES.length]
+  );
+  return [first, ...rest];
 }
 
 const TEMPLATE_VERSIONS: { key: "v1" | "v2" | "v3" | "v4"; href: string }[] = [
@@ -966,13 +893,30 @@ export default function TemplatesPage() {
   const recommended = useMemo(() => ALL_TEMPLATES.filter((t) => t.recommended), []);
   const myTemplatesCount = 0; // Mock: no templates for demo to show empty state
 
+  const cardTemplates = useMemo(
+    () =>
+      filtered.map((t) => ({
+        id: t.id,
+        title: t.title,
+        icons: t.apps.map((app, index) => (
+          <CardAppIcon key={`${t.id}-${app.name}-${index}`} app={app} />
+        )),
+        chips: (t.chips || [t.useCase]).slice(0, 3),
+        installs: t.installs,
+        images: templatePreviewImages(t.id, 3),
+        imageStyle: "slider" as const,
+        onClick: () => handleCardClick(t),
+      })),
+    [filtered]
+  );
+
   return (
     <div className="min-h-full bg-background p-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-foreground">Templates</h1>
-          <VersionNav current="v1" />
+          <VersionNav current="v2" />
         </div>
 
         <Button variant="default" size="sm" className="flex items-center gap-2">
@@ -1230,11 +1174,7 @@ export default function TemplatesPage() {
         </div>
         {showMyTemplates && myTemplatesCount === 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filtered.map((t) => (
-                <TemplateCard key={t.id} template={t} onCardClick={handleCardClick} />
-              ))}
-            </div>
+            <TemplateCards templates={cardTemplates} />
             <div className="mt-8 rounded-xl border border-border/70 bg-muted/30 p-6">
               <h3 className="text-sm font-semibold text-foreground mb-4">How to create your first template</h3>
               <div className="space-y-3">
@@ -1278,11 +1218,7 @@ export default function TemplatesPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filtered.map((t) => (
-              <TemplateCard key={t.id} template={t} onCardClick={handleCardClick} />
-            ))}
-          </div>
+          <TemplateCards templates={cardTemplates} />
         )}
       </div>
 
