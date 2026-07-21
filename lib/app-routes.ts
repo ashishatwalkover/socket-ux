@@ -16,7 +16,9 @@ export function isAiRoute(pathname: string): boolean {
     pathname === AI_BASE ||
     pathname.startsWith(`${AI_BASE}/`) ||
     pathname === "/ai2" ||
-    pathname.startsWith("/ai2/")
+    pathname.startsWith("/ai2/") ||
+    pathname === "/ai3" ||
+    pathname.startsWith("/ai3/")
   );
 }
 

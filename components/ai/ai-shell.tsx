@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "./chat-thread";
 import { Composer } from "./composer";
 import { RightPanel } from "./right-panel";
+import { AiVersionNav } from "./ai-version-nav";
 import { ASSISTANT_SCRIPT } from "@/lib/ai/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -123,7 +124,7 @@ export function AiShell() {
   // Auto-open flows panel when flow is created (turn 2 - after plan shown)
   useEffect(() => {
     if (turn === 2 && !panel) {
-      router.push("/ai?panel=home&flow=cart-recovery");
+      router.push("/ai2?panel=home&flow=cart-recovery");
     }
   }, [turn, panel, router]);
 
@@ -167,7 +168,7 @@ export function AiShell() {
     (label: string) => {
       // Handle "Add it" action to show extended flow
       if (label === "Add it" && flowId === "cart-recovery" && panel === "home") {
-        router.push("/ai?panel=home&flow=cart-recovery&extended=true");
+        router.push("/ai2?panel=home&flow=cart-recovery&extended=true");
       }
       // Treat inline action clicks as synthetic user messages so the script advances naturally.
       submitText(label);
@@ -218,7 +219,7 @@ export function AiShell() {
                 setSelectedStep(undefined);
                 setSelectedStepId(undefined);
               } else {
-                router.push("/ai");
+                router.push("/ai2");
               }
             }}
           />
@@ -250,12 +251,13 @@ function TopHeader({
 }) {
   const panelLabel = panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : "";
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-2">
+    <header className="flex items-center gap-3 border-b border-border/70 px-4 py-2">
+      <AiVersionNav />
       <nav className="flex min-w-0 items-center gap-1.5 text-xs">
         {hasPanel ? (
           <>
             <Link
-              href={`/ai?panel=${panel}`}
+              href={`/ai2?panel=${panel}`}
               className="text-muted-foreground hover:text-foreground"
             >
               {panelLabel}

@@ -156,7 +156,7 @@ function FlowList() {
       {FLOWS.map((f) => (
         <li key={f.id}>
           <Link
-            href={`/ai?panel=home&flow=${f.id}`}
+            href={`/ai2?panel=home&flow=${f.id}`}
             className="flex items-start gap-3 rounded-lg border border-border/70 bg-background px-3 py-2.5 text-sm transition-colors hover:border-violet-300 hover:bg-violet-50/40"
           >
             <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${statusStyle[f.status]}`} />

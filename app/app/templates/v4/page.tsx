@@ -707,6 +707,14 @@ type CardTemplate = {
   onClick: () => void;
 };
 
+function formatInstalls(n: number): string {
+  if (n >= 1000) {
+    const k = n / 1000;
+    return `${k % 1 === 0 ? k : Number(k.toFixed(1))}k`;
+  }
+  return String(n);
+}
+
 function DownloadIconSmall(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -721,8 +729,10 @@ function DownloadIconSmall(props: React.SVGProps<SVGSVGElement>) {
 function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({});
   const [touchedIds, setTouchedIds] = useState<Record<string, boolean>>({});
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
 
   return (
+    <>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {templates.map((template) => {
         const images = template.images;
@@ -746,7 +756,15 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
             {images.length > 0 && (
               <div className="bg-gray-100">
                 <div className="relative w-full h-48 group">
-                  <img src={images[activeIndex]} alt="Template preview" className="w-full h-full object-cover" />
+                  <img
+                    src={images[activeIndex]}
+                    alt="Template preview"
+                    className="w-full h-full object-cover cursor-zoom-in"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightbox({ images, index: activeIndex });
+                    }}
+                  />
                   {images.length > 1 && (
                     <>
                       <button
@@ -810,7 +828,10 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
               </div>
             )}
 
-            <div className="p-8">
+            <div className="group/info relative p-8">
+              <span className="pointer-events-none absolute left-8 top-2 text-xs font-semibold text-gray-400 opacity-0 transition-opacity group-hover/info:opacity-100">
+                Click to install
+              </span>
               <h3 className="text-2xl font-bold text-gray-900 mb-4 leading-tight">{template.title}</h3>
 
               <div className="flex items-center gap-3 mb-8">
@@ -834,7 +855,7 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
                 </div>
                 <div className="flex items-center gap-1 text-sm text-gray-600 whitespace-nowrap">
                   <DownloadIconSmall width={16} height={16} />
-                  <span className="font-medium">{template.installs}</span>
+                  <span className="font-medium">{formatInstalls(template.installs)}</span>
                   <span>installs</span>
                 </div>
               </div>
@@ -843,6 +864,70 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
         );
       })}
     </div>
+
+    <Dialog
+      open={Boolean(lightbox)}
+      onClose={() => setLightbox(null)}
+      maxWidth={false}
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: "12px",
+          padding: 0,
+          maxWidth: "90vw",
+          overflow: "visible",
+          backgroundColor: "transparent",
+          boxShadow: "none",
+        },
+      }}
+    >
+      {lightbox && (
+        <div className="relative flex items-center justify-center">
+          <img
+            src={lightbox.images[lightbox.index]}
+            alt="Template preview"
+            className="block max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
+          />
+          {lightbox.images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() =>
+                  setLightbox((prev) =>
+                    prev
+                      ? { ...prev, index: prev.index === 0 ? prev.images.length - 1 : prev.index - 1 }
+                      : prev
+                  )
+                }
+                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2.5 text-gray-800 shadow-md transition-colors hover:bg-white"
+                aria-label="Previous image"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setLightbox((prev) =>
+                    prev ? { ...prev, index: (prev.index + 1) % prev.images.length } : prev
+                  )
+                }
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2.5 text-gray-800 shadow-md transition-colors hover:bg-white"
+                aria-label="Next image"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                {lightbox.index + 1} / {lightbox.images.length}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </Dialog>
+    </>
   );
 }
 
@@ -896,7 +981,7 @@ function FeaturedTemplate({ template, onClick }: { template: Template; onClick: 
             ))}
           </div>
           <span className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{template.installs}</span> users
+            <span className="font-medium text-foreground">{formatInstalls(template.installs)}</span> users
           </span>
         </div>
       </div>
