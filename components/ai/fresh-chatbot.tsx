@@ -113,6 +113,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
   const [showAddMenu, setShowAddMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const importFileRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   const handleStepChange = (stepId: string) => {
@@ -218,6 +219,19 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
     }
   };
 
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImportJson(typeof reader.result === "string" ? reader.result : "");
+      setImportError(null);
+    };
+    reader.onerror = () => setImportError("Couldn't read that file. Try again.");
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
   const toggleVoice = () => {
     if (isListening) {
       recognitionRef.current?.stop();
@@ -296,9 +310,9 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
         <div className="flex-1 flex flex-col">
           {/* Flow micro-app pinned on top (Version 3) */}
           {miniAppOnTop && flowActive && (
-            <div className="border-b border-gray-200 bg-white px-4 py-4">
+            <div className="border-b border-sky-200 bg-sky-50 px-4 py-4">
               <div className="mx-auto w-full max-w-4xl">
-                <div className="rounded-2xl border border-gray-200 bg-gray-50/60 p-4">
+                <div className="rounded-2xl border border-sky-200 bg-white p-4 shadow-sm">
                   <FlowMiniApp
                     showFlowPanel={showFlowPanel}
                     setShowFlowPanel={setShowFlowPanel}
@@ -352,6 +366,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                 </div>
               </div>
 
+              {!miniAppOnTop && (
               <div className="mt-8 w-full text-left">
                 <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-gray-400">
                   Or start another way
@@ -391,6 +406,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                   </Link>
                 </div>
               </div>
+              )}
             </div>
           ) : (
             messages.map((m) => (
@@ -570,7 +586,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
 
                 {/* Version 3: attach + mic controls below the input box */}
                 {miniAppOnTop && (
-                  <div className="mt-2 flex items-center gap-0.5 px-1">
+                  <div className="mt-2 flex items-center gap-0.5 px-1 flex-wrap">
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -687,6 +703,13 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                         </>
                       )}
                     </div>
+                    <p className="ml-auto text-[11px] text-gray-600">
+                      {isListening
+                        ? "Listening… speak now."
+                        : voiceSupported
+                          ? "Type, or tap the mic to speak. Press Enter to send, Shift+Enter for new line."
+                          : "Voice input isn't supported in this browser. Type your prompt instead."}
+                    </p>
                   </div>
                 )}
 
@@ -720,13 +743,15 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                   </div>
                 )}
 
-                <p className={`mt-2 text-[11px] text-gray-600 ${miniAppOnTop ? "text-right" : "text-center"}`}>
-                  {isListening
-                    ? "Listening… speak now."
-                    : voiceSupported
-                      ? "Type, or tap the mic to speak. Press Enter to send, Shift+Enter for new line."
-                      : "Voice input isn't supported in this browser. Type your prompt instead."}
-                </p>
+                {!miniAppOnTop && (
+                  <p className="mt-2 text-[11px] text-gray-600 text-center">
+                    {isListening
+                      ? "Listening… speak now."
+                      : voiceSupported
+                        ? "Type, or tap the mic to speak. Press Enter to send, Shift+Enter for new line."
+                        : "Voice input isn't supported in this browser. Type your prompt instead."}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -750,7 +775,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                 </span>
                 <div className="leading-tight">
                   <div className="text-sm font-semibold text-gray-900">Import flow from JSON</div>
-                  <div className="text-[11px] text-gray-500">Paste an exported flow definition</div>
+                  <div className="text-[11px] text-gray-500">Upload a file or paste an exported flow definition</div>
                 </div>
               </div>
               <button
@@ -762,6 +787,26 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
               </button>
             </div>
             <div className="px-5 py-4">
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleImportFile}
+              />
+              <button
+                type="button"
+                onClick={() => importFileRef.current?.click()}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+              >
+                <Upload className="h-4 w-4" />
+                Upload JSON file
+              </button>
+              <div className="my-3 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                <span className="h-px flex-1 bg-gray-200" />
+                or paste
+                <span className="h-px flex-1 bg-gray-200" />
+              </div>
               <textarea
                 value={importJson}
                 onChange={(e) => {
