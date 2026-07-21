@@ -35,6 +35,7 @@ type FlowMiniAppProps = {
   setShowOptionalFields: (v: boolean) => void;
   changedSteps: Set<string>;
   onStepChange: (stepId: string) => void;
+  onSendToChat?: (stepLabel: string) => void;
 };
 
 /**
@@ -55,7 +56,10 @@ export function FlowMiniApp({
   setShowOptionalFields,
   changedSteps,
   onStepChange,
+  onSendToChat,
 }: FlowMiniAppProps) {
+  const activeStep = FLOW_STEPS.find((s) => s.id === selectedFlowStep);
+  const showSendToChat = !!onSendToChat && showFlowPanel && !!activeStep && activeStep.id !== "home";
   return (
     <>
       {/* Mini-app header */}
@@ -604,6 +608,23 @@ export function FlowMiniApp({
               );
             })()}
           </div>
+        </div>
+      )}
+
+      {/* Send to chat — common to all steps, hidden on Summary */}
+      {showSendToChat && (
+        <div className="flex justify-end pt-1">
+          <button
+            type="button"
+            onClick={() => onSendToChat?.(activeStep!.label)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-900 text-xs font-medium text-white hover:bg-gray-800 transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+            Send to chat
+          </button>
         </div>
       )}
     </>

@@ -326,6 +326,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                     setShowOptionalFields={setShowOptionalFields}
                     changedSteps={changedSteps}
                     onStepChange={handleStepChange}
+                    onSendToChat={(stepLabel) => send(`Help me with the "${stepLabel}" step`)}
                   />
                 </div>
               </div>
