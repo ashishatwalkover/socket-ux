@@ -1414,15 +1414,17 @@ export default function TemplatesPage() {
             )}
           </div>
 
-          <VersionNav current="v4" />
         </div>
 
-        {showMyTemplates && (
-          <Button variant="default" size="sm" className="flex items-center gap-2">
-            <PlusIcon className="size-4" />
-            Create New Template
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {showMyTemplates && (
+            <Button variant="default" size="sm" className="flex items-center gap-2">
+              <PlusIcon className="size-4" />
+              Create New Template
+            </Button>
+          )}
+          <VersionNav current="v4" />
+        </div>
       </div>
 
       {/* Search */}
