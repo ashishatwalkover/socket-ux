@@ -12,6 +12,14 @@ export type DesignComponent = {
 /** Add new UX preview components here — they appear in Cmd+K and the left nav footer. */
 export const designComponents: DesignComponent[] = [
   {
+    id: "comp-ai-plug-builder",
+    name: "AI Plug Builder",
+    description: "Describe an automation in plain English and watch the plug assemble",
+    href: `${APP_BASE}/components/ai-plug-builder`,
+    status: "WIP",
+    openInNewWindow: true,
+  },
+  {
     id: "comp-onboarding",
     name: "Onboarding",
     description: "Guided setup checklist for new workspaces",
