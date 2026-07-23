@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -682,6 +682,17 @@ const REST_SLIDE_IMAGES = [
   "https://files.msg91.com/92283/yemeyeki/dsfzlnfz.webp",
 ];
 
+/* Sample walkthrough videos mixed in with the preview images */
+const SAMPLE_VIDEOS = [
+  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4",
+  "https://www.w3schools.com/html/mov_bbb.mp4",
+];
+
+function isVideoUrl(url: string) {
+  return url.endsWith(".mp4");
+}
+
 function hashSeed(seed: string) {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
@@ -694,18 +705,98 @@ function templatePreviewImages(id: string, count: number) {
     { length: count - 1 },
     (_, i) => REST_SLIDE_IMAGES[hashSeed(`${id}-${i}`) % REST_SLIDE_IMAGES.length]
   );
-  return [first, ...rest];
+  const media = [first, ...rest];
+  // every other template also gets a sample walkthrough video as its first slide
+  if (hashSeed(id) % 2 === 0) {
+    media.unshift(SAMPLE_VIDEOS[hashSeed(`${id}-video`) % SAMPLE_VIDEOS.length]);
+  }
+  return media;
 }
 
 type CardTemplate = {
   id: string;
   title: string;
   icons: React.ReactNode[];
+  iconUrl?: string;
   chips: string[];
   installs: number;
   images: string[];
   onClick: () => void;
 };
+
+/* Sample the first app icon on a small canvas and turn its dominant hue into a soft card tint. */
+type CardTint = { bg: string; strip: string; border: string };
+
+const iconTintCache = new Map<string, CardTint | null>();
+
+function rgbToSoftTint(r: number, g: number, b: number): CardTint {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+  let h = 0;
+  if (delta > 0) {
+    if (max === rn) h = ((gn - bn) / delta) % 6;
+    else if (max === gn) h = (bn - rn) / delta + 2;
+    else h = (rn - gn) / delta + 4;
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+  const l = (max + min) / 2;
+  const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+  // bright card background: keep the icon's hue, normalize sat/lightness so white text stays readable
+  const sat = Math.min(Math.max(Math.round(s * 100), 45), 65);
+  return {
+    bg: `hsl(${h}, ${sat}%, 52%)`,
+    strip: `hsl(${h}, ${sat}%, 42%)`,
+    border: `hsl(${h}, ${sat}%, 34%)`,
+  };
+}
+
+function extractIconTint(url: string): Promise<CardTint | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const size = 32;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0, size, size);
+        const { data } = ctx.getImageData(0, 0, size, size);
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        let count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 125) continue;
+          const pr = data[i];
+          const pg = data[i + 1];
+          const pb = data[i + 2];
+          const maxCh = Math.max(pr, pg, pb);
+          const minCh = Math.min(pr, pg, pb);
+          // skip white/black/gray pixels so borders and text don't wash out the hue
+          if (minCh > 240 || maxCh < 30 || maxCh - minCh < 20) continue;
+          r += pr;
+          g += pg;
+          b += pb;
+          count++;
+        }
+        resolve(count > 0 ? rgbToSoftTint(r / count, g / count, b / count) : null);
+      } catch {
+        // canvas tainted by a non-CORS image — keep the default background
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    // icon CDNs don't send CORS headers, so load through the same-origin proxy
+    img.src = `/api/icon-proxy?url=${encodeURIComponent(url)}`;
+  });
+}
 
 function formatInstalls(n: number): string {
   if (n >= 1000) {
@@ -730,14 +821,40 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
   const [activeIndices, setActiveIndices] = useState<Record<string, number>>({});
   const [touchedIds, setTouchedIds] = useState<Record<string, boolean>>({});
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const [iconTints, setIconTints] = useState<Record<string, CardTint>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    templates.forEach((template) => {
+      const url = template.iconUrl;
+      if (!url) return;
+      const cached = iconTintCache.get(url);
+      if (cached !== undefined) {
+        if (cached) {
+          setIconTints((prev) => (prev[template.id] === cached ? prev : { ...prev, [template.id]: cached }));
+        }
+        return;
+      }
+      extractIconTint(url).then((tint) => {
+        iconTintCache.set(url, tint);
+        if (!cancelled && tint) {
+          setIconTints((prev) => ({ ...prev, [template.id]: tint }));
+        }
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [templates]);
 
   return (
     <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {templates.map((template) => {
         const images = template.images;
         const activeIndex = activeIndices[template.id] || 0;
         const touched = touchedIds[template.id] ?? false;
+        const tint = iconTints[template.id];
 
         return (
           <div
@@ -751,20 +868,36 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
                 template.onClick();
               }
             }}
-            className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-left transition-all hover:border-gray-300 hover:shadow-lg cursor-pointer"
+            className="flex flex-col rounded-2xl border border-gray-400 bg-white overflow-hidden text-left transition-all hover:border-gray-500 hover:shadow-lg cursor-pointer"
+            style={tint ? { backgroundColor: tint.bg, borderColor: tint.border } : undefined}
           >
             {images.length > 0 && (
               <div className="bg-gray-100">
                 <div className="relative w-full h-48 group">
-                  <img
-                    src={images[activeIndex]}
-                    alt="Template preview"
-                    className="w-full h-full object-cover cursor-zoom-in"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightbox({ images, index: activeIndex });
-                    }}
-                  />
+                  {isVideoUrl(images[activeIndex]) ? (
+                    <video
+                      src={images[activeIndex]}
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover cursor-zoom-in"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightbox({ images, index: activeIndex });
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={images[activeIndex]}
+                      alt="Template preview"
+                      className="w-full h-full object-cover cursor-zoom-in"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightbox({ images, index: activeIndex });
+                      }}
+                    />
+                  )}
                   {images.length > 1 && (
                     <>
                       <button
@@ -805,7 +938,13 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
 
                 {/* Thumbnail footer */}
                 {images.length > 1 && (
-                  <div className="flex items-center gap-2 border-t border-b border-gray-200 bg-gray-50 p-2">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 border-t border-b p-2",
+                      tint ? "border-black/10" : "border-gray-200 bg-gray-50"
+                    )}
+                    style={tint ? { backgroundColor: tint.strip } : undefined}
+                  >
                     {images.map((img, idx) => (
                       <button
                         key={idx}
@@ -817,10 +956,21 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
                         }}
                         className={cn(
                           "relative h-10 w-10 shrink-0 overflow-hidden rounded-md border-2 transition-colors",
-                          touched && idx === activeIndex ? "border-gray-900" : "border-gray-200 hover:border-gray-300"
+                          touched && idx === activeIndex ? "border-gray-900" : "border-gray-300 hover:border-gray-400"
                         )}
                       >
-                        <img src={img} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
+                        {isVideoUrl(img) ? (
+                          <>
+                            <video src={img} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+                              <svg viewBox="0 0 24 24" fill="white" width="14" height="14">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </span>
+                          </>
+                        ) : (
+                          <img src={img} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -828,11 +978,18 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
               </div>
             )}
 
-            <div className="group/info relative p-8">
-              <span className="pointer-events-none absolute left-8 top-2 text-xs font-semibold text-gray-400 opacity-0 transition-opacity group-hover/info:opacity-100">
+            <div className="group/info relative flex flex-1 flex-col p-8">
+              <span
+                className={cn(
+                  "pointer-events-none absolute left-8 top-2 text-xs font-semibold opacity-0 transition-opacity group-hover/info:opacity-100",
+                  tint ? "text-white/80" : "text-gray-400"
+                )}
+              >
                 Click to install
               </span>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4 leading-tight">{template.title}</h3>
+              <h3 className={cn("text-2xl font-bold mb-4 leading-tight", tint ? "text-white" : "text-gray-900")}>
+                {template.title}
+              </h3>
 
               <div className="flex items-center gap-3 mb-8">
                 {template.icons.map((icon, idx) => (
@@ -842,18 +999,26 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
                 ))}
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="mt-auto flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
                   {template.chips.map((chip, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center px-3 py-1 rounded-full border border-gray-300 bg-white text-xs font-medium text-gray-700"
+                      className={cn(
+                        "inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium",
+                        tint ? "border-white/40 bg-white/20 text-white" : "border-gray-300 bg-white text-gray-700"
+                      )}
                     >
                       {chip}
                     </span>
                   ))}
                 </div>
-                <div className="flex items-center gap-1 text-sm text-gray-600 whitespace-nowrap">
+                <div
+                  className={cn(
+                    "flex items-center gap-1 text-sm whitespace-nowrap",
+                    tint ? "text-white/90" : "text-gray-600"
+                  )}
+                >
                   <DownloadIconSmall width={16} height={16} />
                   <span className="font-medium">{formatInstalls(template.installs)}</span>
                   <span>installs</span>
@@ -882,11 +1047,21 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
     >
       {lightbox && (
         <div className="relative flex items-center justify-center">
-          <img
-            src={lightbox.images[lightbox.index]}
-            alt="Template preview"
-            className="block max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
-          />
+          {isVideoUrl(lightbox.images[lightbox.index]) ? (
+            <video
+              src={lightbox.images[lightbox.index]}
+              controls
+              autoPlay
+              playsInline
+              className="block max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
+            />
+          ) : (
+            <img
+              src={lightbox.images[lightbox.index]}
+              alt="Template preview"
+              className="block max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
+            />
+          )}
           {lightbox.images.length > 1 && (
             <>
               <button
@@ -1126,36 +1301,128 @@ export default function TemplatesPage() {
   const recommended = useMemo(() => ALL_TEMPLATES.filter((t) => t.recommended), []);
   const myTemplatesCount = 0; // Mock: no templates for demo to show empty state
 
-  const cardTemplates = useMemo(
-    () =>
-      filtered.map((t) => ({
-        id: t.id,
-        title: t.title,
-        icons: t.apps.map((app, index) => (
-          <CardAppIcon key={`${t.id}-${app.name}-${index}`} app={app} />
-        )),
-        chips: (t.chips || [t.useCase]).slice(0, 3),
-        installs: t.installs,
-        images: templatePreviewImages(t.id, 3),
-        imageStyle: "slider" as const,
-        onClick: () => handleCardClick(t),
-      })),
-    [filtered]
-  );
+  const cardTemplates = useMemo(() => {
+    const cards = filtered.map((t) => ({
+      id: t.id,
+      title: t.title,
+      icons: t.apps.map((app, index) => (
+        <CardAppIcon key={`${t.id}-${app.name}-${index}`} app={app} />
+      )),
+      iconUrl: t.apps[0] ? APP_IMAGES[t.apps[0].name] : undefined,
+      chips: (t.chips || [t.useCase]).slice(0, 3),
+      installs: t.installs,
+      images: templatePreviewImages(t.id, 3),
+      imageStyle: "slider" as const,
+      onClick: () => handleCardClick(t),
+    }));
+
+    // interleave by first-icon color so neighboring cards don't share the same tint
+    const groups = new Map<string, typeof cards>();
+    cards.forEach((card) => {
+      const key = card.iconUrl ?? "none";
+      const group = groups.get(key);
+      if (group) group.push(card);
+      else groups.set(key, [card]);
+    });
+    const buckets = [...groups.values()];
+    const arranged: typeof cards = [];
+    for (let i = 0; arranged.length < cards.length; i++) {
+      for (const bucket of buckets) {
+        if (i < bucket.length) arranged.push(bucket[i]);
+      }
+    }
+    return arranged;
+  }, [filtered]);
 
   return (
     <div className="min-h-full bg-background p-6">
-      {/* Header */}
+      {/* Header: tabs + sort take the place of the old page heading */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-foreground">Templates</h1>
+          {/* Tabs */}
+          <div className="flex items-center bg-muted rounded-md p-1">
+            <button
+              onClick={() => setShowMyTemplates(false)}
+              className={cn(
+                "px-2.5 py-1 text-sm font-medium rounded-sm transition-colors",
+                !showMyTemplates
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              All Templates ({filtered.length})
+            </button>
+            <button
+              onClick={() => setShowMyTemplates(true)}
+              className={cn(
+                "px-2.5 py-1 text-sm font-medium rounded-sm transition-colors",
+                showMyTemplates
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              My Templates ({myTemplatesCount})
+            </button>
+          </div>
+
+          {/* Sort */}
+          <div className="relative flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">Sort by: </span>
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="flex items-center gap-1 text-sm hover:text-foreground transition-colors"
+            >
+              {sortBy === "popularity" ? "Popularity" : sortBy === "newest" ? "Newest" : "Name"}
+              <ChevronDown className="size-3" />
+            </button>
+            {showSortDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowSortDropdown(false)}
+                />
+                <div className="absolute left-0 top-full mt-1 z-50 rounded-lg border border-border bg-background shadow-lg p-1 min-w-[120px]">
+                  <button
+                    onClick={() => { setSortBy("popularity"); setShowSortDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
+                      sortBy === "popularity" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    Popularity
+                  </button>
+                  <button
+                    onClick={() => { setSortBy("newest"); setShowSortDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
+                      sortBy === "newest" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    onClick={() => { setSortBy("name"); setShowSortDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
+                      sortBy === "name" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
+                    )}
+                  >
+                    Name
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           <VersionNav current="v4" />
         </div>
 
-        <Button variant="default" size="sm" className="flex items-center gap-2">
-          <PlusIcon className="size-4" />
-          Create New Template
-        </Button>
+        {showMyTemplates && (
+          <Button variant="default" size="sm" className="flex items-center gap-2">
+            <PlusIcon className="size-4" />
+            Create New Template
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -1200,8 +1467,7 @@ export default function TemplatesPage() {
         </div>
 
         {/* Apps Options */}
-        {showMoreFilters && (
-          <div className="flex flex-wrap items-center gap-2 pb-1">
+        <div className="flex flex-wrap items-center gap-2 pb-1">
           <span className="text-xs font-medium text-muted-foreground shrink-0">Apps:</span>
           {APPS.map((app) => {
             const isSelected = app === "All" ? apps.size === 0 : apps.has(app);
@@ -1304,7 +1570,6 @@ export default function TemplatesPage() {
                 )}
               </div>
             </div>
-          )}
 
           {/* Products Options */}
           {showMoreFilters && (
@@ -1331,80 +1596,6 @@ export default function TemplatesPage() {
 
       {/* Grid */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          {/* Tabs */}
-          <div className="flex items-center bg-muted rounded-md p-1">
-            <button
-              onClick={() => setShowMyTemplates(false)}
-              className={cn(
-                "px-2.5 py-1 text-sm font-medium rounded-sm transition-colors",
-                !showMyTemplates
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              All Templates ({filtered.length})
-            </button>
-            <button
-              onClick={() => setShowMyTemplates(true)}
-              className={cn(
-                "px-2.5 py-1 text-sm font-medium rounded-sm transition-colors",
-                showMyTemplates
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              My Templates ({myTemplatesCount})
-            </button>
-          </div>
-          <div className="relative flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Sort by: </span>
-            <button
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-1 text-sm hover:text-foreground transition-colors"
-            >
-              {sortBy === "popularity" ? "Popularity" : sortBy === "newest" ? "Newest" : "Name"}
-              <ChevronDown className="size-3" />
-            </button>
-            {showSortDropdown && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowSortDropdown(false)}
-                />
-                <div className="absolute left-0 top-full mt-1 z-50 rounded-lg border border-border bg-background shadow-lg p-1 min-w-[120px]">
-                  <button
-                    onClick={() => { setSortBy("popularity"); setShowSortDropdown(false); }}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
-                      sortBy === "popularity" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
-                    )}
-                  >
-                    Popularity
-                  </button>
-                  <button
-                    onClick={() => { setSortBy("newest"); setShowSortDropdown(false); }}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
-                      sortBy === "newest" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
-                    )}
-                  >
-                    Newest
-                  </button>
-                  <button
-                    onClick={() => { setSortBy("name"); setShowSortDropdown(false); }}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
-                      sortBy === "name" ? "bg-muted text-foreground" : "hover:bg-muted text-foreground"
-                    )}
-                  >
-                    Name
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
         {showMyTemplates && myTemplatesCount === 0 ? (
           <>
             <TemplateSliderCards templates={cardTemplates} />
