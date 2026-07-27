@@ -127,9 +127,9 @@ export function LeftNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  // Hide on the new home page (v1). The v2 duplicate at `${APP_BASE}/v2` keeps the nav.
-  const isHomeV1 = pathname === APP_BASE;
-  if (isHomeV1 || FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname) || isFlowRoute(pathname)) return null;
+  // Hide on the new home experiments (v1, v3). The v2 duplicate keeps the nav.
+  const isNewHome = pathname === APP_BASE || pathname === `${APP_BASE}/v3`;
+  if (isNewHome || FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname) || isFlowRoute(pathname)) return null;
 
   const menuItems = [
     { icon: (

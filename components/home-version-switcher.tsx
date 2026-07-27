@@ -13,6 +13,7 @@ type HomeVersion = {
 const HOME_VERSIONS: HomeVersion[] = [
   { id: "v1", label: "v1", href: APP_BASE },
   { id: "v2", label: "v2", href: `${APP_BASE}/v2` },
+  { id: "v3", label: "v3", href: `${APP_BASE}/v3` },
 ];
 
 /**
