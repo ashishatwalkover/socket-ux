@@ -326,7 +326,7 @@ function AirtableTab() {
       <h2 className="text-xl font-semibold">Airtable Logging</h2>
       <p className="mt-1 text-sm text-slate-500">Configure where the new lead alert should be logged in Airtable.</p>
       <div className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200">
-        <ValueRow logo={LOGO.airtable} label="Airtable Base" value="Untitled App" />
+        <ValueRow logo={LOGO.airtable} label="Airtable Base" value="Untitled App" variant="inline" />
         <div className="group flex items-center gap-4 px-4 py-4">
           <div className="flex w-40 shrink-0 items-center gap-2">
             <DragHandle />
