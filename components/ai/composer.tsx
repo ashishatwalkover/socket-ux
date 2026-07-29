@@ -20,9 +20,11 @@ type Props = {
   onTest?: () => void;
   onPublish?: () => void;
   onClose?: () => void;
+  /** Drop the translucent background "area" around the composer (used by V4). */
+  bare?: boolean;
 };
 
-export function Composer({ value, onChange, onSend, disabled, placeholder, flowName, flowIcon, selectedStep, onTest, onPublish, onClose }: Props) {
+export function Composer({ value, onChange, onSend, disabled, placeholder, flowName, flowIcon, selectedStep, onTest, onPublish, onClose, bare }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const menuWrapRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,12 +53,16 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
   }, [menuOpen]);
 
   return (
-    <div className="flex flex-col bg-background/80 backdrop-blur px-4 py-4">
+    <div className={cn("flex flex-col px-4 py-4", !bare && "bg-background/80 backdrop-blur")}>
       <div className={cn(
         "mx-auto max-w-3xl w-full rounded-2xl",
-        (flowName || selectedStep) ? "bg-gradient-to-b from-emerald-50 to-white border border-emerald-200/50" : "bg-background"
+        bare
+          ? ""
+          : (flowName || selectedStep)
+            ? "bg-gradient-to-b from-emerald-50 to-white border border-emerald-200/50"
+            : "bg-background"
       )}>
-        {(flowName || selectedStep) && (
+        {(flowName || selectedStep) && !bare && (
           <div className="px-5 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2 min-w-0">
@@ -127,7 +133,7 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
           </div>
         )}
 
-        <div className="px-5 pb-3">
+        <div className={cn(bare ? "p-0" : "px-5 pb-3")}>
         <div>
         <div
           className={cn(
@@ -194,9 +200,11 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
             )}
           </div>
         </div>
-        <p className="mt-2 px-1 text-[11px] text-muted-foreground text-center">
-          FlowMind can ask follow-up questions before deploying. Press Enter to send, Shift+Enter for new line.
-        </p>
+        {!bare && (
+          <p className="mt-2 px-1 text-[11px] text-muted-foreground text-center">
+            FlowMind can ask follow-up questions before deploying. Press Enter to send, Shift+Enter for new line.
+          </p>
+        )}
         </div>
         </div>
       </div>

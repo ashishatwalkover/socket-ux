@@ -7,6 +7,7 @@ const AI_VERSIONS: { key: string; label: string; href: string }[] = [
   { key: "classic", label: "Version1", href: "/ai2" },
   { key: "fresh", label: "Version2", href: "/ai" },
   { key: "studio", label: "Version3", href: "/ai3" },
+  { key: "split", label: "Version4", href: "/ai4" },
 ];
 
 /**

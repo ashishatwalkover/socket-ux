@@ -704,13 +704,32 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                         </>
                       )}
                     </div>
-                    <p className="ml-auto text-[11px] text-gray-600">
-                      {isListening
-                        ? "Listening… speak now."
-                        : voiceSupported
-                          ? "Type, or tap the mic to speak. Press Enter to send, Shift+Enter for new line."
-                          : "Voice input isn't supported in this browser. Type your prompt instead."}
-                    </p>
+                    {miniAppOnTop ? (
+                      <div className="ml-auto flex items-center gap-3 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => setShowExpert(true)}
+                          className="text-gray-600 underline hover:text-gray-800 transition-colors"
+                        >
+                          Talk to an expert
+                        </button>
+                        <button
+                          type="button"
+                          onClick={switchToManual}
+                          className="text-gray-600 underline hover:text-gray-800 transition-colors"
+                        >
+                          Switch to English flow
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="ml-auto text-[11px] text-gray-600">
+                        {isListening
+                          ? "Listening… speak now."
+                          : voiceSupported
+                            ? "Type, or tap the mic to speak. Press Enter to send, Shift+Enter for new line."
+                            : "Voice input isn't supported in this browser. Type your prompt instead."}
+                      </p>
+                    )}
                   </div>
                 )}
 
