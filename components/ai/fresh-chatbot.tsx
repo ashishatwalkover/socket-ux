@@ -290,7 +290,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
             className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
           >
             <Headset className="h-3.5 w-3.5" />
-            Talk to expert
+            Hire an expert
           </button>
           {flowActive && (
             <button
@@ -299,7 +299,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
               className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
             >
               <Layers className="h-3.5 w-3.5" />
-              Switch to manual flow
+              Build manually
             </button>
           )}
         </div>
@@ -392,7 +392,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                       <Headset className="h-4 w-4" />
                     </span>
-                    <span className="text-sm font-medium text-gray-900">Talk to an expert</span>
+                    <span className="text-sm font-medium text-gray-900">Hire an expert</span>
                     <span className="text-xs text-gray-500">Get a human to help you build it.</span>
                   </button>
                   <Link
@@ -711,14 +711,14 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                           onClick={() => setShowExpert(true)}
                           className="text-gray-600 underline hover:text-gray-800 transition-colors"
                         >
-                          Talk to an expert
+                          Hire an expert
                         </button>
                         <button
                           type="button"
                           onClick={switchToManual}
                           className="text-gray-600 underline hover:text-gray-800 transition-colors"
                         >
-                          Switch to English flow
+                          Build manually
                         </button>
                       </div>
                     ) : (
@@ -750,7 +750,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                       className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:bg-gray-50"
                     >
                       <Headset className="h-3 w-3" />
-                      Talk to expert
+                      Hire an expert
                     </button>
                     <button
                       type="button"
@@ -861,7 +861,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
         </div>
       )}
 
-      {/* Talk to expert dialog */}
+      {/* Hire an expert dialog */}
       {showExpert && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -876,7 +876,7 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 text-white">
                   <Headset className="h-4 w-4" />
                 </span>
-                <div className="text-sm font-semibold text-gray-900">Talk to an expert</div>
+                <div className="text-sm font-semibold text-gray-900">Hire an expert</div>
               </div>
               <button
                 type="button"
