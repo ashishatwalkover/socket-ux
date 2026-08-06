@@ -843,8 +843,8 @@ export function AiShellV5() {
               </div>
             )}
 
-            {/* Actions — horizontally scrollable row, centered. */}
-            <div className={`mt-8 flex items-stretch justify-center gap-3 overflow-x-auto px-6 sm:px-16 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}>
+            {/* Actions — horizontally scrollable row; left-aligned while choosing, centered once an action is added. */}
+            <div className={`mt-8 flex items-stretch gap-3 overflow-x-auto px-6 sm:px-16 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${hasAction ? "justify-center" : "justify-start"}`}>
               <button
                 type="button"
                 onClick={() => setPanelKind("action")}
