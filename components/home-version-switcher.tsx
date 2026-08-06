@@ -14,6 +14,7 @@ const HOME_VERSIONS: HomeVersion[] = [
   { id: "v1", label: "v1", href: APP_BASE },
   { id: "v2", label: "v2", href: `${APP_BASE}/v2` },
   { id: "v3", label: "v3", href: `${APP_BASE}/v3` },
+  { id: "v4", label: "v4", href: `${APP_BASE}/v4` },
 ];
 
 /**
