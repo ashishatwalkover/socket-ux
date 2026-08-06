@@ -170,6 +170,34 @@ function HomeTab() {
         <Logo src={LOGO.gmail} />
         <Logo src={LOGO.slack} />
       </div>
+
+      {/* Webhook URL + copy / run icons */}
+      <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+        <code className="flex-1 truncate font-mono text-xs text-slate-700">
+          https://flow.sokt.io/func/scripQGnrZSF
+        </code>
+        <button
+          type="button"
+          aria-label="Copy webhook URL"
+          onClick={() => navigator.clipboard?.writeText("https://flow.sokt.io/func/scripQGnrZSF")}
+          className="flex size-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          aria-label="Run webhook"
+          className="flex size-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden>
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      </div>
+
       <h2 className="mt-4 text-xl font-semibold">Google Sheets lead alerts to Slack, Gmail, and Airtable</h2>
       <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-sm text-slate-700">
         <li>Trigger when a row is added or updated in Google Sheets.</li>
