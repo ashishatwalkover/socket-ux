@@ -122,9 +122,10 @@ function EditableValue({ initial, multiline = false, truncate = false }: { initi
 
 export function MiniAppConfig() {
   const [tab, setTab] = useState<Tab>("home");
+  const [testOpen, setTestOpen] = useState(false);
 
   return (
-    <div className="h-full w-full bg-[#f5f5f5] p-6 text-slate-900">
+    <div className="relative h-full w-full overflow-hidden bg-[#f5f5f5] p-6 text-slate-900">
       <div className="flex w-full max-w-[1000px] overflow-hidden rounded-xl border border-slate-200 bg-white">
         {/* Sub-nav */}
         <nav className="w-64 shrink-0 border-r border-slate-200 p-3">
@@ -146,7 +147,7 @@ export function MiniAppConfig() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {tab === "home" && <HomeTab />}
+          {tab === "home" && <HomeTab onOpenTest={() => setTestOpen(true)} />}
           {tab === "destinations" && <DestinationsTab variant="inline" />}
           {tab === "destinations2" && <DestinationsTab variant="stacked" />}
           {tab === "content1" && <ContentTab variant="inline" />}
@@ -154,11 +155,13 @@ export function MiniAppConfig() {
           {tab === "airtable" && <AirtableTab />}
         </div>
       </div>
+
+      {testOpen && <TestFlowPanel onClose={() => setTestOpen(false)} />}
     </div>
   );
 }
 
-function HomeTab() {
+function HomeTab({ onOpenTest }: { onOpenTest?: () => void }) {
   return (
     <div>
       <div className="flex items-center gap-2">
@@ -173,13 +176,20 @@ function HomeTab() {
 
       {/* Webhook URL + copy / run icons */}
       <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-        <code className="flex-1 truncate font-mono text-xs text-slate-700">
+        <button
+          type="button"
+          onClick={onOpenTest}
+          className="flex-1 truncate text-left font-mono text-xs text-slate-700 hover:text-slate-900"
+        >
           https://flow.sokt.io/func/scripQGnrZSF
-        </code>
+        </button>
         <button
           type="button"
           aria-label="Copy webhook URL"
-          onClick={() => navigator.clipboard?.writeText("https://flow.sokt.io/func/scripQGnrZSF")}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard?.writeText("https://flow.sokt.io/func/scripQGnrZSF");
+          }}
           className="flex size-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -190,6 +200,7 @@ function HomeTab() {
         <button
           type="button"
           aria-label="Run webhook"
+          onClick={onOpenTest}
           className="flex size-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden>
@@ -364,5 +375,178 @@ function AirtableTab() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TestFlowPanel({ onClose }: { onClose: () => void }) {
+  const [body, setBody] = useState<"form-data" | "x-www-form-urlencoded" | "json" | "raw">("form-data");
+
+  return (
+    <aside className="absolute inset-y-0 right-0 z-30 flex w-[420px] max-w-full flex-col border-l border-slate-200 bg-white shadow-2xl">
+      {/* Header */}
+      <div className="flex items-start gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4">
+        <button
+          type="button"
+          aria-label="Back"
+          onClick={onClose}
+          className="mt-0.5 text-slate-500 hover:text-slate-900"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-slate-900">Test Flow</h3>
+          <p className="text-sm text-slate-500">Runs your flow with sample data</p>
+        </div>
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          className="text-slate-400 hover:text-slate-900"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-5 py-5">
+        {/* Sample Data */}
+        <div className="flex items-center justify-between">
+          <h4 className="text-base font-semibold text-slate-900">Sample Data</h4>
+          <button type="button" aria-label="Collapse" className="text-slate-400 hover:text-slate-700">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="18 15 12 9 6 15" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Method + URL */}
+        <div className="mt-4 flex items-stretch gap-2">
+          <div className="flex items-center gap-1 rounded-md border border-slate-300 px-3 text-sm font-semibold text-slate-800">
+            POST
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <input
+            defaultValue="https://flow.sokt.io/func/scripQGnrZSF"
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+          />
+        </div>
+
+        {/* Query params */}
+        <div className="mt-5 flex items-center justify-between">
+          <label className="text-sm font-semibold text-slate-900">Query params</label>
+          <button type="button" className="text-xs font-semibold uppercase tracking-wide text-blue-600 hover:text-blue-700">
+            Key-value edit
+          </button>
+        </div>
+        <textarea
+          rows={3}
+          placeholder={"key1:value1\nkey2:value2"}
+          className="mt-2 w-full resize-none rounded-md border border-slate-300 px-3 py-2 font-mono text-xs text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+        />
+
+        {/* Body */}
+        <div className="mt-5">
+          <div className="text-sm font-semibold text-slate-900">Body</div>
+          <div className="mt-2 grid grid-cols-2 gap-y-2 text-sm text-slate-700">
+            {(["form-data", "x-www-form-urlencoded", "json", "raw"] as const).map((b) => (
+              <label key={b} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="body"
+                  checked={body === b}
+                  onChange={() => setBody(b)}
+                  className="size-4 accent-blue-600"
+                />
+                <span>{b}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* form-data editor */}
+        <div className="mt-5 flex items-center justify-end">
+          <button type="button" className="text-xs font-semibold uppercase tracking-wide text-blue-600 hover:text-blue-700">
+            Bulk edit
+          </button>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            placeholder="key 1"
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+          />
+          <input
+            placeholder="value 1"
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+          />
+          <button
+            type="button"
+            aria-label="Remove"
+            className="text-slate-400 hover:text-slate-700"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            </svg>
+          </button>
+        </div>
+        <button type="button" className="mt-2 text-xs font-semibold uppercase tracking-wide text-blue-600 hover:text-blue-700">
+          Add
+        </button>
+
+        {/* Headers */}
+        <div className="mt-6 flex items-center justify-between">
+          <label className="text-sm font-semibold text-slate-900">Headers</label>
+          <button type="button" className="text-xs font-semibold uppercase tracking-wide text-blue-600 hover:text-blue-700">
+            Key-value edit
+          </button>
+        </div>
+        <textarea
+          rows={3}
+          defaultValue={"Content-Type:multipart/form-data"}
+          className="mt-2 w-full resize-none rounded-md border border-slate-300 px-3 py-2 font-mono text-xs text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+        />
+
+        {/* Response */}
+        <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
+          <h4 className="text-base font-semibold text-slate-900">Response</h4>
+          <button type="button" aria-label="Expand" className="text-slate-400 hover:text-slate-700">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center gap-2 border-t border-slate-200 bg-white px-5 py-3">
+        <button
+          type="button"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white hover:bg-blue-700"
+        >
+          Test Flow
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const curl = `curl -X POST 'https://flow.sokt.io/func/scripQGnrZSF' -H 'Content-Type: multipart/form-data'`;
+            navigator.clipboard?.writeText(curl);
+          }}
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy cURL
+        </button>
+      </div>
+    </aside>
   );
 }
