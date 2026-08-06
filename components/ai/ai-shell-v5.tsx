@@ -143,17 +143,19 @@ function StepCard({ step, meta }: { step: Step; meta?: string }) {
             {meta}
           </span>
         )}
-        <div className="ml-auto flex items-center gap-2.5 text-neutral-400">
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="6" y1="3" x2="6" y2="15" />
-            <circle cx="18" cy="6" r="3" />
-            <circle cx="6" cy="18" r="3" />
-            <path d="M18 9a9 9 0 0 1-9 9" />
-          </svg>
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </div>
+        {step.kind === "trigger" && (
+          <div className="ml-auto flex items-center gap-2.5 text-neutral-400">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="6" y1="3" x2="6" y2="15" />
+              <circle cx="18" cy="6" r="3" />
+              <circle cx="6" cy="18" r="3" />
+              <path d="M18 9a9 9 0 0 1-9 9" />
+            </svg>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-3 px-4 py-3">
         <span className="flex size-9 items-center justify-center rounded-lg border border-neutral-200 bg-white">
@@ -369,10 +371,14 @@ function AiComposerBlock({
   draft,
   setDraft,
   onSubmit,
+  noDivider = false,
+  noTitle = false,
 }: {
   draft: string;
   setDraft: (v: string) => void;
   onSubmit: (text: string) => void;
+  noDivider?: boolean;
+  noTitle?: boolean;
 }) {
   const hasText = draft.trim().length > 0;
   const submit = () => {
@@ -382,23 +388,29 @@ function AiComposerBlock({
   return (
     <>
       {/* or divider */}
-      <div className="my-10 flex items-center gap-4">
-        <div className="h-px flex-1 bg-neutral-200" />
-        <span className="flex size-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-sm font-semibold uppercase tracking-wide text-neutral-500 shadow-sm">
-          or
-        </span>
-        <div className="h-px flex-1 bg-neutral-200" />
-      </div>
+      {!noDivider && (
+        <div className="my-10 flex items-center gap-4">
+          <div className="h-px flex-1 bg-neutral-200" />
+          <span className="flex size-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-sm font-semibold uppercase tracking-wide text-neutral-500 shadow-sm">
+            or
+          </span>
+          <div className="h-px flex-1 bg-neutral-200" />
+        </div>
+      )}
 
-      <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-        Let AI do it
-      </h2>
-      <p className="mt-2 text-[15px] text-neutral-500">
-        Describe your idea, import an existing flow, or paste a workflow.
-      </p>
+      {!noTitle && (
+        <>
+          <h2 className="text-center text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+            Let AI do it
+          </h2>
+          <p className="mt-2 text-center text-[15px] text-neutral-500">
+            Describe your idea, import an existing flow, or paste a workflow.
+          </p>
+        </>
+      )}
 
       {/* AI composer */}
-      <div className="mt-5 rounded-2xl border-2 border-blue-500 bg-white text-left shadow-sm">
+      <div className={`mx-auto ${noTitle ? "mt-0" : "mt-5"} w-full rounded-2xl border-2 border-blue-500 bg-white text-left shadow-sm`}>
         <div className="flex gap-3 px-4 pt-4">
           <svg viewBox="0 0 24 24" width="20" height="20" className="mt-0.5 shrink-0 text-blue-500" fill="currentColor" aria-hidden="true">
             <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
@@ -434,7 +446,7 @@ function AiComposerBlock({
       </div>
 
       {/* Quick-start chips */}
-      <div className="mt-4 flex flex-wrap gap-2.5">
+      <div className="mt-4 flex flex-wrap justify-center gap-2.5">
         {SUGGESTIONS.map((s) => (
           <button
             key={s.id}
@@ -601,24 +613,33 @@ function ChatView({ chat, onSubmit }: { chat: ChatMsg[]; onSubmit: (text: string
   );
 }
 
-/** Right-side panel for browsing and searching actions to add to the flow. */
-function ActionPanel({
+/** Right-side panel for browsing and searching triggers or actions to add to the flow. */
+type PickerItem = { id: string; app: keyof typeof APP_ICONS; label: string };
+function PickerPanel({
+  title,
+  placeholder,
+  emptyText,
+  items,
   onSelect,
   onClose,
 }: {
-  onSelect: (a: (typeof ACTIONS)[number]) => void;
+  title: string;
+  placeholder: string;
+  emptyText: string;
+  items: PickerItem[];
+  onSelect: (item: PickerItem) => void;
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const results = q
-    ? ACTIONS.filter((a) => a.label.toLowerCase().includes(q) || a.app.toLowerCase().includes(q))
-    : ACTIONS;
+    ? items.filter((a) => a.label.toLowerCase().includes(q) || a.app.toLowerCase().includes(q))
+    : items;
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-neutral-200 bg-white sm:w-96">
+    <aside className="absolute inset-y-0 right-0 z-30 flex w-80 flex-col border-l border-neutral-200 bg-white shadow-xl sm:w-96">
       <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-        <h3 className="text-[15px] font-semibold text-neutral-900">Add an action</h3>
+        <h3 className="text-[15px] font-semibold text-neutral-900">{title}</h3>
         <button
           type="button"
           onClick={onClose}
@@ -642,7 +663,7 @@ function ActionPanel({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search actions..."
+            placeholder={placeholder}
             className="w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none"
           />
         </div>
@@ -650,7 +671,7 @@ function ActionPanel({
 
       <div className="flex-1 overflow-y-auto p-2">
         {results.length === 0 ? (
-          <p className="px-3 py-8 text-center text-sm text-neutral-400">No actions found</p>
+          <p className="px-3 py-8 text-center text-sm text-neutral-400">{emptyText}</p>
         ) : (
           results.map((a) => (
             <button
@@ -674,7 +695,7 @@ function ActionPanel({
 export function AiShellV5() {
   const [draft, setDraft] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelKind, setPanelKind] = useState<"trigger" | "action" | null>(null);
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const hasFlow = steps.length > 0;
   const hasAction = steps.some((s) => s.kind === "action");
@@ -697,17 +718,19 @@ export function AiShellV5() {
     setDraft("");
   };
 
-  const selectTrigger = (t: (typeof TRIGGERS)[number]) =>
+  const selectTrigger = (t: PickerItem) => {
     setSteps([{ key: `trigger-${t.id}`, kind: "trigger", app: t.app, label: t.label }]);
+    setPanelKind(null);
+  };
 
-  const addAction = (a: (typeof ACTIONS)[number]) => {
+  const addAction = (a: PickerItem) => {
     setSteps((prev) => [...prev, { key: `action-${a.id}-${prev.length}`, kind: "action", app: a.app, label: a.label }]);
-    setPanelOpen(false);
+    setPanelKind(null);
   };
 
   const reset = () => {
     setSteps([]);
-    setPanelOpen(false);
+    setPanelKind(null);
   };
 
   return (
@@ -716,7 +739,7 @@ export function AiShellV5() {
         <AiVersionNav />
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative flex flex-1 overflow-hidden">
       {chatActive ? (
         <ChatView chat={chat} onSubmit={submitAi} />
       ) : (
@@ -724,10 +747,34 @@ export function AiShellV5() {
       <main className="flex flex-1 flex-col justify-center overflow-y-auto py-12">
         {!hasFlow ? (
           <>
-            <div className="w-full max-w-3xl px-6 text-left sm:px-16">
+            <div className="mx-auto w-full max-w-3xl px-6 text-center sm:px-16">
               <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
                 What do you want to automate today?
               </h1>
+              <p className="mt-2 text-[15px] text-neutral-500">
+                Describe your idea, import an existing flow, or paste a workflow.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-6 w-full max-w-3xl px-6 text-center sm:px-16">
+              <AiComposerBlock draft={draft} setDraft={setDraft} onSubmit={submitAi} noDivider noTitle />
+            </div>
+
+            {/* or divider */}
+            <div className="mx-auto w-full max-w-3xl px-6 sm:px-16">
+              <div className="my-10 flex items-center gap-4">
+                <div className="h-px flex-1 bg-neutral-200" />
+                <span className="flex size-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-sm font-semibold uppercase tracking-wide text-neutral-500 shadow-sm">
+                  or
+                </span>
+                <div className="h-px flex-1 bg-neutral-200" />
+              </div>
+            </div>
+
+            <div className="mx-auto w-full max-w-3xl px-6 text-center sm:px-16">
+              <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+                Do it yourself
+              </h2>
               <p className="mt-2 text-[15px] text-neutral-500">
                 Build it yourself — start by choosing a trigger that kicks off your automation.
               </p>
@@ -737,6 +784,7 @@ export function AiShellV5() {
             <div className="mt-8 flex items-stretch gap-3 overflow-x-auto pl-6 pr-6 sm:pl-16 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               <button
                 type="button"
+                onClick={() => setPanelKind("trigger")}
                 className="flex shrink-0 items-center gap-3 rounded-xl border-2 border-dashed border-blue-400 bg-white px-5 py-4 text-left transition-colors hover:bg-blue-50/50"
               >
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-neutral-500">
@@ -759,66 +807,33 @@ export function AiShellV5() {
                 </button>
               ))}
             </div>
-
-            <div className="w-full max-w-3xl px-6 text-left sm:px-16">
-              <AiComposerBlock draft={draft} setDraft={setDraft} onSubmit={submitAi} />
-            </div>
           </>
         ) : (
           <>
             {/* Builder view — trigger selected, now chain actions */}
-            <div className={`w-full max-w-3xl px-6 sm:px-16 ${hasAction ? "mx-auto flex flex-col items-center text-center" : "text-left"}`}>
-              {hasAction ? (
-                <>
-                  <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-                    Build your automation
-                  </h1>
-                  <p className="mt-2 text-[15px] text-neutral-500">
-                    Your trigger is set. Add an action to run whenever it fires.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={reset}
-                    className="mt-4 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-[13px] font-medium text-neutral-600 transition-colors hover:bg-neutral-50"
-                  >
-                    Start over
-                  </button>
-                </>
-              ) : (
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-                      Build your automation
-                    </h1>
-                    <p className="mt-2 text-[15px] text-neutral-500">
-                      Your trigger is set. Add an action to run whenever it fires.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={reset}
-                    className="mt-1 shrink-0 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-[13px] font-medium text-neutral-600 transition-colors hover:bg-neutral-50"
-                  >
-                    Start over
-                  </button>
-                </div>
-              )}
+            <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-6 text-center sm:px-16">
+              <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
+                Build your automation
+              </h1>
+              <p className="mt-2 text-[15px] text-neutral-500">
+                Your trigger is set. Add an action to run whenever it fires.
+              </p>
 
               {/* Step cards */}
-              <div className={`mt-8 ${hasAction ? "flex w-full flex-col items-center" : ""}`}>
+              <div className="mt-8 flex w-full flex-col items-center">
                 {steps.map((step, i) => (
                   <div key={step.key}>
-                    {i > 0 && <StepConnector centered={hasAction} />}
+                    {i > 0 && <StepConnector centered />}
                     <StepCard step={step} meta={step.kind === "trigger" ? "every 5 minutes" : undefined} />
                   </div>
                 ))}
-                <StepConnector centered={hasAction} />
+                <StepConnector centered />
               </div>
             </div>
 
             {/* Choose action heading — hidden once an action has been chosen */}
             {!hasAction && (
-              <div className="w-full max-w-3xl px-6 text-left sm:px-16">
+              <div className="mx-auto w-full max-w-3xl px-6 text-center sm:px-16">
                 <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
                   Choose an action
                 </h2>
@@ -828,11 +843,11 @@ export function AiShellV5() {
               </div>
             )}
 
-            {/* Actions — horizontally scrollable row; full-bleed before an action is chosen, centered after. */}
-            <div className={`mt-8 flex items-stretch gap-3 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${hasAction ? "justify-center px-6" : "pl-6 pr-6 sm:pl-16"}`}>
+            {/* Actions — horizontally scrollable row, centered. */}
+            <div className={`mt-8 flex items-stretch justify-center gap-3 overflow-x-auto px-6 sm:px-16 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}>
               <button
                 type="button"
-                onClick={() => setPanelOpen(true)}
+                onClick={() => setPanelKind("action")}
                 className="flex shrink-0 items-center gap-3 rounded-xl border-2 border-dashed border-blue-400 bg-white px-5 py-4 text-left transition-colors hover:bg-blue-50/50"
               >
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-neutral-500">
@@ -856,18 +871,30 @@ export function AiShellV5() {
                   </button>
                 ))}
             </div>
-
-            {/* AI option stays available until an action is chosen */}
-            {!hasAction && (
-              <div className="w-full max-w-3xl px-6 text-left sm:px-16">
-                <AiComposerBlock draft={draft} setDraft={setDraft} onSubmit={submitAi} />
-              </div>
-            )}
           </>
         )}
       </main>
 
-      {panelOpen && <ActionPanel onSelect={addAction} onClose={() => setPanelOpen(false)} />}
+      {panelKind === "trigger" && (
+        <PickerPanel
+          title="Add a trigger"
+          placeholder="Search triggers..."
+          emptyText="No triggers found"
+          items={TRIGGERS}
+          onSelect={selectTrigger}
+          onClose={() => setPanelKind(null)}
+        />
+      )}
+      {panelKind === "action" && (
+        <PickerPanel
+          title="Add an action"
+          placeholder="Search actions..."
+          emptyText="No actions found"
+          items={ACTIONS}
+          onSelect={addAction}
+          onClose={() => setPanelKind(null)}
+        />
+      )}
       </>
       )}
       </div>

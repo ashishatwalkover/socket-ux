@@ -407,52 +407,76 @@ function generateUseCases(apps: string[]): UseCase[] {
   return cases.slice(0, 3);
 }
 
-function ActivityTicker() {
-  const [index, setIndex] = useState(0);
+function PlatformBadge({
+  platform,
+}: {
+  platform: "capterra" | "linkedin" | "x" | "g2";
+}) {
+  if (platform === "linkedin") {
+    return (
+      <div className="flex items-center gap-1 text-[13px] font-bold text-[#0A66C2]">
+        <svg viewBox="0 0 24 24" className="size-5" fill="#0A66C2" aria-hidden>
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.063 2.063 0 1 1 2.063 2.065zM6.813 20.452H3.859V9h2.954v11.452z" />
+        </svg>
+        LinkedIn
+      </div>
+    );
+  }
+  if (platform === "x") {
+    return (
+      <svg viewBox="0 0 24 24" className="size-5 fill-neutral-900" aria-hidden>
+        <path d="M18.244 2H21l-6.52 7.454L22 22h-6.844l-4.79-6.253L4.8 22H2l7-8.006L2 2h6.99l4.32 5.71L18.244 2Zm-1.2 18h1.88L7.03 4H5.03l12.014 16Z" />
+      </svg>
+    );
+  }
+  if (platform === "g2") {
+    return (
+      <div className="flex size-7 items-center justify-center rounded-full bg-[#FF492C] text-[11px] font-bold text-white">
+        G2
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1 text-[13px] font-semibold text-neutral-800">
+      <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+        <path d="M12 2 22 22H2L12 2z" fill="#3AB0FF" />
+        <path d="M12 2v20L2 22 12 2z" fill="#FF6B6B" />
+      </svg>
+      Capterra
+    </div>
+  );
+}
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % ACTIVITY.length);
-    }, 5000);
-    return () => clearInterval(id);
-  }, []);
-
-  const row = ACTIVITY[index];
-  const style = CATEGORY_STYLE[row.tag];
-  const app = APP_BY_NAME[row.app];
+function FloatingActivityCard({ item }: { item: (typeof ACTIVITY)[0] }) {
+  const style = CATEGORY_STYLE[item.tag];
+  const app = APP_BY_NAME[item.app];
 
   return (
-    <div className="relative mx-auto h-16 w-full max-w-md overflow-hidden ">
-      <div
-        key={index}
-        className="animate-[tickerSlide_500ms_cubic-bezier(0.22,1,0.36,1)] absolute inset-0 flex items-center gap-3 border border-neutral-200 bg-white px-3 py-2 text-left shadow-sm"
-      >
-        {app ? (
-          <img
-            src={app.logo}
-            alt=""
-            className="size-10 shrink-0 border border-neutral-100 object-contain bg-white"
-          />
-        ) : (
-          <div className="flex size-10 shrink-0 items-center justify-center bg-neutral-100 text-xs font-bold text-neutral-700">
-            {row.app.slice(0, 2).toUpperCase()}
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-semibold text-neutral-900">
-              {row.app}
-            </span>
-            <span
-              className={`shrink-0 px-2 py-0.5 text-[10px] font-semibold ${style.tagBg} ${style.tagText}`}
-            >
-              {row.tag}
-            </span>
-          </div>
-          <div className="truncate text-xs text-neutral-600">{row.action}</div>
+    <div className="flex items-center gap-2.5 border border-neutral-200 bg-white px-3 py-2.5 shadow-lg shadow-neutral-900/[0.07]">
+      {app ? (
+        <img
+          src={app.logo}
+          alt=""
+          className="size-9 shrink-0 border border-neutral-100 object-contain bg-white"
+        />
+      ) : (
+        <div className="flex size-9 shrink-0 items-center justify-center bg-neutral-100 text-xs font-bold text-neutral-700">
+          {item.app.slice(0, 2).toUpperCase()}
         </div>
-        <div className="shrink-0 whitespace-nowrap text-[11px] text-neutral-400">
-          {row.time}
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-xs font-semibold text-neutral-900">
+            {item.app}
+          </span>
+          <span
+            className={`shrink-0 px-1.5 py-0.5 text-[9px] font-semibold ${style.tagBg} ${style.tagText}`}
+          >
+            {item.tag}
+          </span>
+        </div>
+        <div className="mt-0.5 text-[11px] leading-snug text-neutral-600">
+          {item.action}
         </div>
       </div>
     </div>
@@ -564,41 +588,100 @@ export function HomeLanding() {
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-neutral-900 antialiased">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-neutral-200/70 bg-[#faf8f5]/85 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden
-              className="inline-block size-2.5 "
-              style={{ backgroundColor: BRAND }}
-            />
-            <span className="text-lg font-semibold tracking-tight">viaSocket</span>
-          </div>
-          <nav className="hidden items-center gap-8 lg:flex">
-            {NAV.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-              >
-                {item}
-              </button>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
+      {/* Top announcement bar */}
+      <div className="sticky top-0 z-50 hidden border-b border-neutral-300 bg-neutral-200/80 backdrop-blur-xl lg:block">
+        <div className="flex h-[30px] items-center justify-end">
+          <div className="flex h-[30px] w-full cursor-pointer items-center justify-center gap-2 bg-[#3B62FF] text-sm text-white">
+            <span className="tracking-[0.06em]">
+              Relay.app is shutting down. We&apos;ll move your workflows to
+              viaSocket for you, <strong>Free</strong>.
+            </span>
             <a
               href="/app/v4"
-              className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+              className="flex h-[20px] items-center gap-1 rounded-full border border-white bg-white px-3 text-xs text-black transition-colors hover:bg-neutral-100"
             >
-              Log in
+              Import Flow →
             </a>
             <a
               href="/app/v4"
-              className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="flex h-[20px] items-center gap-1 rounded-full border border-white bg-white px-3 text-xs text-black transition-colors hover:bg-neutral-100"
+            >
+              Talk to us →
+            </a>
+          </div>
+          <a
+            href="/app/v4"
+            className="flex h-[30px] w-fit shrink-0 items-center border-l border-neutral-300 px-[18.4px] text-[11px] font-medium uppercase tracking-wide text-neutral-800 hover:text-neutral-900"
+          >
+            Contact Sales
+          </a>
+          <a
+            href="/app/v4"
+            className="flex h-[30px] w-fit shrink-0 items-center border-l border-neutral-300 px-[18.4px] text-[11px] font-medium uppercase tracking-wide text-neutral-800 hover:text-neutral-900"
+          >
+            Let Us Build
+          </a>
+          <a
+            href="/app/v4"
+            className="flex h-[30px] w-fit shrink-0 items-center border-l border-neutral-300 px-[18.4px] text-[11px] font-medium uppercase tracking-wide text-[#3B62FF] hover:opacity-80"
+          >
+            Support ↗
+          </a>
+        </div>
+      </div>
+
+      {/* Main navigation */}
+      <header className="sticky top-0 z-40 border-b border-neutral-200 bg-[#faf8f5]/85 backdrop-blur lg:top-[30px]">
+        <div className="flex h-[48px] items-center justify-between px-4">
+          <a href="/" className="flex min-w-[120px] items-center">
+            <span
+              aria-hidden
+              className="inline-block size-2.5"
+              style={{ backgroundColor: BRAND }}
+            />
+            <span className="ml-2 text-lg font-semibold tracking-tight">
+              viaSocket
+            </span>
+          </a>
+          <div className="flex items-center">
+            <div className="flex">
+              <a
+                href="/app/v4"
+                className="hidden h-[54px] w-fit items-center justify-center border-l border-r border-neutral-300 px-6 text-xs uppercase text-neutral-800 hover:text-[#a8200c] lg:flex"
+              >
+                Usecases
+              </a>
+              <a
+                href="/app/v4"
+                className="hidden h-[54px] w-fit items-center justify-center border-r border-neutral-300 px-6 text-xs uppercase text-neutral-800 hover:text-[#a8200c] lg:flex"
+              >
+                Features
+              </a>
+              <a
+                href="/app/v4"
+                className="hidden h-[54px] w-fit items-center justify-center border-r border-neutral-300 px-6 text-xs uppercase text-neutral-800 hover:text-[#a8200c] lg:flex"
+              >
+                Explore Apps
+              </a>
+              <a
+                href="/app/v4"
+                className="hidden h-[54px] w-fit flex-col items-center justify-center border-r border-neutral-300 px-6 text-xs uppercase leading-tight text-neutral-800 hover:text-[#a8200c] lg:flex"
+              >
+                <span>Pricing</span>
+                <span
+                  className="text-[9px] font-normal normal-case"
+                  style={{ color: BRAND }}
+                >
+                  free forever
+                </span>
+              </a>
+            </div>
+            <a
+              href="/ai5"
+              className="mx-4 flex h-[32px] items-center justify-center whitespace-nowrap rounded-full px-4 text-xs text-white transition-colors hover:bg-black lg:mr-0"
               style={{ backgroundColor: BRAND }}
             >
-              Get started →
+              Login/Sign Up
             </a>
           </div>
         </div>
@@ -623,9 +706,9 @@ export function HomeLanding() {
           style={{ backgroundColor: BRAND }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-6 py-16 lg:min-h-[820px] lg:py-24">
+        <div className="relative mx-auto max-w-7xl px-6 py-12 lg:min-h-[780px] lg:py-16">
           {/* Center headline block */}
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="relative z-10 mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-2 border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700">
               <span
                 aria-hidden
@@ -644,63 +727,166 @@ export function HomeLanding() {
               uses. Hire them once — they handle the busywork across every app,
               around the clock.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                className="rounded-full px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: BRAND }}
-              >
-                Start free →
-              </button>
-              <button
-                type="button"
-                className="rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 transition-colors"
-              >
-                See it in action
-              </button>
-            </div>
 
-            {/* In-hero live activity ticker */}
-            <div className="mt-8">
-              <div className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-500">
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping bg-emerald-500 opacity-60" />
-                  <span className="relative inline-flex size-2 bg-emerald-500" />
-                </span>
-                Live — your AI team, right now
+            {/* Inline AI use-case generator (replacing CTA buttons) */}
+            <div className="mt-10 flex flex-col items-center gap-5">
+              {/* Search */}
+              <div className="flex w-full max-w-xl items-center gap-3 border border-neutral-300 bg-white px-4 py-3.5 shadow-sm focus-within:border-neutral-500">
+                <svg
+                  className="size-5 shrink-0 text-neutral-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M21 21l-4.3-4.3" />
+                </svg>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={`Try ${SEARCH_HINTS[hintIdx]}…`}
+                  className="w-full bg-transparent text-base text-neutral-900 placeholder:text-neutral-400 outline-none"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="text-sm text-neutral-500 hover:text-neutral-900"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
-              <div className="mt-3">
-                <ActivityTicker />
+
+              {/* App chips */}
+              <div className="flex flex-wrap justify-center gap-2">
+                {visibleApps.map((app) => {
+                  const active = selected.includes(app.name);
+                  return (
+                    <button
+                      key={app.name}
+                      type="button"
+                      onClick={() => toggle(app.name)}
+                      className={`group flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
+                        active
+                          ? "border-neutral-300 bg-neutral-200 text-neutral-900 shadow-sm"
+                          : "border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <img
+                        src={app.logo}
+                        alt=""
+                        className="size-5 object-contain"
+                      />
+                      {app.name}
+                      {active && (
+                        <span className="ml-1 text-xs text-neutral-600">✓</span>
+                      )}
+                    </button>
+                  );
+                })}
+                {visibleApps.length === 0 && (
+                  <div className="w-full max-w-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-center text-sm text-neutral-500">
+                    No apps match &ldquo;{query}&rdquo;. Try another name.
+                  </div>
+                )}
               </div>
+
             </div>
           </div>
 
-          {/* Floating task cards — absolutely placed on lg, grid on smaller */}
-          <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:hidden">
-            {HERO_TASKS.map((task) => (
-              <TaskCard key={task.category} task={task} />
+          {/* Workflow output — spans full width of hero */}
+          {useCases.length > 0 && (
+            <div className="relative z-10 mt-10 grid gap-5 text-left sm:grid-cols-2 lg:grid-cols-3">
+              {useCases.map((uc, idx) => (
+                <div
+                  key={uc.title}
+                  className="flex flex-col border border-neutral-200 bg-white p-6 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                        Workflow {idx + 1}
+                      </div>
+                      <h3 className="mt-1 text-lg font-semibold leading-snug text-neutral-900">
+                        {uc.title}
+                      </h3>
+                    </div>
+                    <span
+                      className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        backgroundColor: `${BRAND}12`,
+                        color: "#7a1808",
+                      }}
+                    >
+                      {uc.saves}
+                    </span>
+                  </div>
+                  <ol className="mt-4 flex-1 space-y-2.5">
+                    {uc.steps.map((step, i) => (
+                      <li
+                        key={step}
+                        className="flex items-start gap-3 text-sm text-neutral-700"
+                      >
+                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center bg-neutral-100 text-[11px] font-bold text-neutral-700">
+                          {i + 1}
+                        </span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="mt-5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="rounded-full px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: BRAND }}
+                    >
+                      Turn on
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold text-neutral-800 hover:bg-neutral-50"
+                    >
+                      Customize
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Mobile: stacked cards */}
+          <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden">
+            {ACTIVITY.map((item) => (
+              <FloatingActivityCard key={item.app + item.action} item={item} />
             ))}
           </div>
 
+          {/* Desktop: scattered absolutely-positioned cards */}
           <div className="pointer-events-none absolute inset-0 hidden lg:block">
-            <div className="pointer-events-auto absolute left-4 top-16 w-60 -rotate-3">
-              <TaskCard task={HERO_TASKS[0]} />
+            {/* Left side */}
+            <div className="pointer-events-auto absolute left-[50px] top-10 w-fit max-w-xs -rotate-3">
+              <FloatingActivityCard item={ACTIVITY[0]} />
             </div>
-            <div className="pointer-events-auto absolute left-[-8px] top-[380px] w-60 rotate-2">
-              <TaskCard task={HERO_TASKS[2]} />
+            <div className="pointer-events-auto absolute left-0 top-[220px] w-fit max-w-xs rotate-2">
+              <FloatingActivityCard item={ACTIVITY[2]} />
             </div>
-            <div className="pointer-events-auto absolute left-16 bottom-6 w-60 -rotate-2 xl:left-24">
-              <TaskCard task={HERO_TASKS[4]} />
+            <div className="pointer-events-auto absolute left-[-4px] top-[400px] w-fit max-w-xs -rotate-1">
+              <FloatingActivityCard item={ACTIVITY[4]} />
+            </div>            
+            {/* Right side */}
+            <div className="pointer-events-auto absolute right-[100px] top-6 w-fit max-w-xs rotate-3">
+              <FloatingActivityCard item={ACTIVITY[1]} />
             </div>
-            <div className="pointer-events-auto absolute right-4 top-16 w-60 rotate-3">
-              <TaskCard task={HERO_TASKS[1]} />
+            <div className="pointer-events-auto absolute right-0 top-[250px] w-fit max-w-xs -rotate-2">
+              <FloatingActivityCard item={ACTIVITY[3]} />
             </div>
-            <div className="pointer-events-auto absolute right-[-8px] top-[380px] w-60 -rotate-2">
-              <TaskCard task={HERO_TASKS[3]} />
-            </div>
-            <div className="pointer-events-auto absolute right-16 bottom-6 w-60 rotate-2 xl:right-24">
-              <TaskCard task={HERO_TASKS[5]} />
-            </div>
+            <div className="pointer-events-auto absolute right-[-6px] top-[460px] w-fit max-w-xs rotate-1">
+              <FloatingActivityCard item={ACTIVITY[5]} />
+            </div>            
           </div>
         </div>
       </section>
@@ -712,228 +898,380 @@ export function HomeLanding() {
         }
       `}</style>
 
-      {/* AI Use-case generator */}
-      <section className="border-y border-neutral-200 bg-neutral-100">
-        <div className="mx-auto max-w-7xl px-6 py-20 lg:py-24">
-          {/* Header */}
-          <div className="mx-auto max-w-2xl text-center">
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold"
-              style={{ backgroundColor: `${BRAND}12`, color: "#7a1808" }}
-            >
-              <span
-                aria-hidden
-                className="inline-block size-1.5"
-                style={{ backgroundColor: BRAND }}
-              />
-              AI use-case generator
-            </div>
-            <h2 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
-              Pick your apps.
-              <br />
-              Watch AI design your workflow.
+
+      {/* Trusted by Thousands */}
+      <section className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <div className="mb-14 flex flex-col items-center gap-4 text-center">
+            <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              Trusted by Thousands.{" "}
+              <span style={{ color: BRAND }}>Recognized</span> by the Best.
             </h2>
-            <p className="mt-5 text-lg text-neutral-600">
-              Tap the tools your team already uses. Our AI proposes concrete
-              automations you can turn on in one click.
+            <p className="max-w-2xl text-lg text-neutral-600">
+              Recognized by leading review platforms and trusted by 10,000+
+              businesses worldwide.
             </p>
           </div>
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
+            {[
+              {
+                href: "https://www.softwareadvice.com/workflow/#frontrunners",
+                src: "https://brand-assets.softwareadvice.com/badge/92042d6a-aeba-4d59-ba4c-00401332bccf.svg",
+                label: "Workflow Management",
+              },
+              {
+                href: "https://www.capterra.com/workflow-management-software/shortlist",
+                src: "https://brand-assets.capterra.com/badge/a6f0b1ea-b591-4919-9f40-827cd6d6753b.svg",
+                label: "Workflow Management",
+              },
+              {
+                href: "https://www.capterra.com/p/10020406/viaSocket/",
+                src: "https://brand-assets.capterra.com/badge/0c624c79-b388-4438-bb92-6bdbe09c04ee.svg",
+                label: "No Code Platform",
+              },
+              {
+                href: "https://www.capterra.com/p/10020406/viaSocket/",
+                src: "https://brand-assets.capterra.com/badge/3237aa22-913d-4d43-bd35-de61668cbc95.svg",
+                label: "Low Code Development Platform",
+              },
+              {
+                href: "https://www.capterra.com/p/10020406/viaSocket/",
+                src: "https://brand-assets.capterra.com/badge/d7798002-d859-4ccd-8de5-d786d01f39e9.svg",
+                label: "Low Code Development Platform",
+              },
+            ].map((b, i) => (
+              <a
+                key={i}
+                href={b.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center justify-start gap-3 rounded-xl border border-neutral-200 bg-white p-6 transition-shadow hover:shadow-md"
+              >
+                <img
+                  src={b.src}
+                  alt={b.label}
+                  className="h-24 w-24 object-contain"
+                />
+                <p className="mt-2 text-center text-sm font-semibold text-neutral-900">
+                  {b.label}
+                </p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* App picker — centered, first */}
-          <div className="mt-12 flex flex-col items-center gap-5">
-            <div className="flex items-center gap-3">
-              <div className="text-sm font-semibold text-neutral-900">
-                Your stack
-              </div>
-              <div className="text-xs text-neutral-500">
-                {selected.length} selected
-              </div>
-            </div>
-
-            {/* Bigger, centered search */}
-            <div className="flex w-full max-w-xl items-center gap-3 border border-neutral-300 bg-white px-4 py-3.5 shadow-sm focus-within:border-neutral-500">
+      {/* Reviews */}
+      <section className="border-t border-neutral-200 bg-[#f9f6f1]">
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:py-24">
+          <div className="mb-12 flex flex-col items-center justify-between gap-8 md:flex-row">
+            <h2 className="flex items-center gap-2 text-4xl font-semibold tracking-tight sm:text-5xl">
+              <span>Reviews</span>
               <svg
-                className="size-5 shrink-0 text-neutral-400"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="size-5 text-red-700"
+                aria-hidden
               >
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
               </svg>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={`Try ${SEARCH_HINTS[hintIdx]}…`}
-                className="w-full bg-transparent text-base text-neutral-900 placeholder:text-neutral-400 outline-none"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="text-sm text-neutral-500 hover:text-neutral-900"
+            </h2>
+            <div className="inline-flex flex-wrap items-center justify-center gap-3 md:justify-start">
+              {/* All */}
+              <button
+                type="button"
+                aria-label="All"
+                className="relative flex size-12 scale-105 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-offset-2 transition-all"
+                style={{ boxShadow: `0 0 0 2px ${BRAND}` }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-6 text-neutral-700"
+                  aria-hidden
                 >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-2">
-              {visibleApps.map((app) => {
-                const active = selected.includes(app.name);
-                return (
-                  <button
-                    key={app.name}
-                    type="button"
-                    onClick={() => toggle(app.name)}
-                    className={`group flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
-                      active
-                        ? "border-neutral-300 bg-neutral-200 text-neutral-900 shadow-sm"
-                        : "border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300 hover:bg-neutral-50"
-                    }`}
-                  >
-                    <img
-                      src={app.logo}
-                      alt=""
-                      className="size-5 object-contain"
-                    />
-                    {app.name}
-                    {active && (
-                      <span className="ml-1 text-xs text-neutral-600">✓</span>
-                    )}
-                  </button>
-                );
-              })}
-              {visibleApps.length === 0 && (
-                <div className="w-full max-w-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-center text-sm text-neutral-500">
-                  No apps match &ldquo;{query}&rdquo;. Try another name.
-                </div>
-              )}
+                  <rect width="7" height="7" x="3" y="3" rx="1" />
+                  <rect width="7" height="7" x="14" y="3" rx="1" />
+                  <rect width="7" height="7" x="14" y="14" rx="1" />
+                  <rect width="7" height="7" x="3" y="14" rx="1" />
+                </svg>
+              </button>
+              {/* LinkedIn */}
+              <button
+                type="button"
+                aria-label="LinkedIn"
+                className="flex size-12 items-center justify-center rounded-full border border-neutral-200 bg-white transition-all hover:border-[color:var(--brand)] hover:shadow-sm"
+                style={{ ["--brand" as string]: BRAND }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#0A66C2"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-6"
+                  aria-hidden
+                >
+                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
+                  <rect width="4" height="12" x="2" y="9" />
+                  <circle cx="4" cy="4" r="2" />
+                </svg>
+              </button>
+              {/* X */}
+              <button
+                type="button"
+                aria-label="X"
+                className="flex size-12 items-center justify-center rounded-full border border-neutral-200 bg-white transition-all hover:shadow-sm"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="size-5 fill-neutral-900"
+                  aria-hidden
+                >
+                  <path d="M18.244 2H21l-6.52 7.454L22 22h-6.844l-4.79-6.253L4.8 22H2l7-8.006L2 2h6.99l4.32 5.71L18.244 2Zm-1.2 18h1.88L7.03 4H5.03l12.014 16Z" />
+                </svg>
+              </button>
+              {/* G2 */}
+              <button
+                type="button"
+                aria-label="G2"
+                className="flex size-12 items-center justify-center rounded-full border border-neutral-200 bg-white text-sm font-bold text-[#FF492C] transition-all hover:shadow-sm"
+              >
+                G2
+              </button>
+              {/* Trustpilot / other */}
+              <button
+                type="button"
+                aria-label="Trustpilot"
+                className="flex size-12 items-center justify-center rounded-full border border-neutral-200 bg-white transition-all hover:shadow-sm"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#0aa"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-5"
+                  aria-hidden
+                >
+                  <path d="M22 2 11 13" />
+                  <path d="M22 2 15 22l-4-9-9-4 20-7z" />
+                </svg>
+              </button>
             </div>
           </div>
 
-          {/* AI-generated workflows — grid of white cards */}
-          <div className="mt-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="inline-block size-2"
-                  style={{ backgroundColor: BRAND }}
-                />
-                <span className="text-sm font-semibold">
-                  AI-generated workflows
-                </span>
-              </div>
-              <span className="text-xs text-neutral-500">
-                Updates as you pick
-              </span>
-            </div>
-
-            {useCases.length === 0 ? (
-              <div className="relative mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="border border-neutral-200 bg-white p-5 shadow-sm opacity-70"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="h-2 w-16 bg-neutral-200" />
-                        <div className="mt-3 h-3.5 w-3/4 bg-neutral-200" />
-                        <div className="mt-2 h-3.5 w-1/2 bg-neutral-200" />
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                name: "Ahmed D.",
+                role: "CTO (Computer & Network Security)",
+                quote:
+                  "Easy to use platform with very powerful tools that replace both n8n and zapier and other tools as well.",
+                date: "Aug 28, 2025",
+                platform: "capterra" as const,
+              },
+              {
+                name: "Dip Desai",
+                role: "Sanchay CRM Partner",
+                quote:
+                  "Excited to share that we're using viaSocket for our automation workflows, and it's been working exceptionally well! It's making our processes smoother, faster, and more efficient — definitely a keeper.",
+                date: "Aug 13, 2025",
+                platform: "linkedin" as const,
+              },
+              {
+                name: "Wesley B.",
+                role: "\"Finally, a source of MCP services…\"",
+                quote:
+                  "The fact that had most of the apps I use and was really struggling to find MCP servers that contained a good mix of apps from my research. This one was the best.",
+                date: "Oct 01, 2025",
+                platform: "g2" as const,
+              },
+              {
+                name: "Raid D.",
+                role: "Consultant (Automotive)",
+                quote:
+                  "A promising platform that's going to change the automation landscape.",
+                date: "Aug 28, 2025",
+                platform: "capterra" as const,
+              },
+              {
+                name: "Jatinder Grewal",
+                role: "@JGrewalB2B",
+                quote:
+                  "1,877+ MCP servers and AI-powered workflow automation, @viaSocket is redefining what's possible with connected automation. From intelligent AI actions to seamless app integration.",
+                date: "Jun 25, 2025",
+                platform: "x" as const,
+              },
+              {
+                name: "Aditya R.",
+                role: "\"Reliable automation platform…\"",
+                quote:
+                  "viaSocket has been an amazing platform for automations and integrations. We started using it to connect several apps and reduce our manual work. Within a short time, we were able to automate.",
+                date: "Dec 10, 2025",
+                platform: "g2" as const,
+              },
+            ].map((r) => (
+              <div
+                key={r.name + r.date}
+                className="flex flex-col rounded-lg border border-neutral-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-neutral-200 text-sm font-semibold text-neutral-700">
+                      {r.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-neutral-900">
+                        {r.name}
                       </div>
-                      <div className="h-5 w-16 bg-neutral-100" />
-                    </div>
-                    <div className="mt-5 space-y-3">
-                      {[0, 1, 2].map((j) => (
-                        <div key={j} className="flex items-center gap-3">
-                          <div className="size-5 shrink-0 bg-neutral-200" />
-                          <div
-                            className="h-2 bg-neutral-100"
-                            style={{ width: `${75 - j * 12}%` }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-5 flex items-center gap-3">
-                      <div className="h-7 w-16 bg-neutral-100" />
-                      <div className="h-7 w-20 border border-neutral-200 bg-white" />
+                      <div className="max-w-[180px] truncate text-xs text-neutral-500">
+                        {r.role}
+                      </div>
                     </div>
                   </div>
-                ))}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-b from-white/30 via-white/70 to-white/95">
-                  <div className="border border-neutral-200 bg-white px-6 py-4 text-center shadow-md">
-                    <div className="text-sm font-semibold text-neutral-900">
-                      Pick an app to start
-                    </div>
-                    <div className="mt-1 text-xs text-neutral-500">
-                      AI will suggest workflows in seconds.
-                    </div>
-                  </div>
+                  <PlatformBadge platform={r.platform} />
                 </div>
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-neutral-700">
+                  {r.quote}
+                </p>
+                <div className="mt-6 text-xs text-neutral-500">{r.date}</div>
               </div>
-            ) : (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {useCases.map((uc, idx) => (
-                  <div
-                    key={uc.title}
-                    className="flex flex-col border border-neutral-200 bg-white p-5 shadow-sm"
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-3xl px-6 py-20 lg:py-24">
+          <h2 className="text-center text-4xl font-semibold tracking-tight sm:text-5xl">
+            Frequently Asked Questions
+          </h2>
+          <div className="mt-12 divide-y divide-neutral-200 border border-neutral-200 bg-white">
+            {[
+              {
+                q: "What is viaSocket?",
+                a: "viaSocket is an AI workflow automation and app integration platform that helps you connect apps with no code. It lets businesses automate tasks, streamline operations, and scale without engineering overhead.",
+              },
+              {
+                q: "How is AI workflow automation different from regular automation?",
+                a: "Regular automation just runs fixed rules, while AI workflow automation can analyze data, make decisions, and choose smarter paths. This makes workflows adaptive and intelligent.",
+              },
+              {
+                q: "Do I need coding skills to use viaSocket?",
+                a: "Not at all. With viaSocket's no-code workflow integration software, you can build automations through a visual drag-and-drop interface. Developers can also extend workflows with custom code.",
+              },
+              {
+                q: "What type of workflows can I build on viaSocket?",
+                a: "You can automate sales, marketing, HR, finance, and support tasks with ease. From lead routing to invoice management or AI-driven chat support — viaSocket handles it.",
+              },
+              {
+                q: "Is viaSocket suitable for enterprises?",
+                a: "Yes. viaSocket is designed with enterprise-grade security, scalability, and monitoring. Whether you're a startup or a large enterprise, it ensures your workflows run reliably.",
+              },
+              {
+                q: "How quickly can I get started with viaSocket?",
+                a: "Very quickly. You can choose from ready-made templates or build your own workflow in minutes. A free plan is available so you can test and scale as you grow.",
+              },
+            ].map((item) => (
+              <details key={item.q} className="group">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-5 text-left text-base font-semibold text-neutral-900 hover:bg-neutral-50">
+                  <span>{item.q}</span>
+                  <span
+                    aria-hidden
+                    className="shrink-0 text-neutral-400 transition-transform group-open:rotate-45"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-                          Workflow {idx + 1}
-                        </div>
-                        <h3 className="mt-1 text-base font-semibold leading-snug text-neutral-900">
-                          {uc.title}
-                        </h3>
-                      </div>
-                      <span
-                        className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[10px] font-semibold"
-                        style={{
-                          backgroundColor: `${BRAND}12`,
-                          color: "#7a1808",
-                        }}
-                      >
-                        {uc.saves}
-                      </span>
-                    </div>
-                    <ol className="mt-4 flex-1 space-y-2">
-                      {uc.steps.map((step, i) => (
-                        <li
-                          key={step}
-                          className="flex items-start gap-3 text-sm text-neutral-700"
-                        >
-                          <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center bg-neutral-100 text-[11px] font-bold text-neutral-700">
-                            {i + 1}
-                          </span>
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                    <div className="mt-5 flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="rounded-full px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                        style={{ backgroundColor: BRAND }}
-                      >
-                        Turn on
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold text-neutral-800 hover:bg-neutral-50"
-                      >
-                        Customize
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                    +
+                  </span>
+                </summary>
+                <div className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trusted / Security */}
+      <section className="border-t border-neutral-200 bg-neutral-50">
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              viaSocket is the Trusted Choice for{" "}
+              <span style={{ color: BRAND }}>Secure Automation</span>
+            </h2>
+            <p className="mt-5 text-lg text-neutral-600">
+              Your data is safe with us — compliant, secure, and built with
+              privacy in mind at every step, so you can run workflows with
+              confidence.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                title: "SOC 2 (Type II)",
+                desc: "Your workflow's data is handled with the highest level of security, privacy, and confidentiality.",
+              },
+              {
+                title: "ISO Certified",
+                desc: "We consistently meet international standards to deliver reliable and secure solutions for your business.",
+              },
+              {
+                title: "GDPR & CCPA Compliance",
+                desc: "Your data remains private and entirely under your control, at all times.",
+              },
+              {
+                title: "End-to-End Observability",
+                desc: "Gain full visibility into your data's journey with detailed audit logs, real-time analytics, and proactive alerts.",
+              },
+              {
+                title: "99.99% Uptime & Enterprise SLA",
+                desc: "Stay worry-free with 99.99% uptime and fast, reliable support when you need it most.",
+              },
+              {
+                title: "Error Handling & Recovery",
+                desc: "Stay ahead of issues with smart alerts and AI-powered troubleshooting, keeping your workflows running smoothly.",
+              },
+            ].map((f) => (
+              <div
+                key={f.title}
+                className="border border-neutral-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden
+                    className="inline-block size-2.5"
+                    style={{ backgroundColor: BRAND }}
+                  />
+                  <h3 className="text-base font-semibold text-neutral-900">
+                    {f.title}
+                  </h3>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+                  {f.desc}
+                </p>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -971,44 +1309,167 @@ export function HomeLanding() {
 
       {/* Footer */}
       <footer className="border-t border-neutral-200 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className="inline-block size-2.5 "
-                style={{ backgroundColor: BRAND }}
-              />
-              <span className="text-lg font-semibold tracking-tight">viaSocket</span>
-            </div>
-            <p className="mt-3 max-w-xs text-sm text-neutral-600">
-              Run all your apps in one place. AI-powered automation for teams that
-              already have their stack.
-            </p>
+        <div className="mx-auto max-w-7xl px-6 py-14">
+          {/* Brand row */}
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="inline-block size-2.5"
+              style={{ backgroundColor: BRAND }}
+            />
+            <span className="text-lg font-semibold tracking-tight">
+              viaSocket
+            </span>
           </div>
-          {[
-            { title: "Product", links: ["Integrations", "AI Agents", "Templates", "Pricing"] },
-            { title: "Company", links: ["About", "Careers", "Contact", "Blog"] },
-            { title: "Legal", links: ["Privacy", "Terms", "Security"] },
-          ].map((col) => (
-            <div key={col.title}>
-              <div className="text-sm font-semibold text-neutral-900">{col.title}</div>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-600">
-                {col.links.map((l) => (
-                  <li key={l}>
-                    <button type="button" className="hover:text-neutral-900">
-                      {l}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+
+          {/* Columns */}
+          <div className="mt-10 grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            {[
+              {
+                title: "For SaaS",
+                links: [
+                  "List Your App",
+                  "Build Your Own Plug",
+                  "Embed",
+                  "Whitelabel MCP Server",
+                  "Become a Billing Partner",
+                  "Showcase Popular Workflows",
+                ],
+              },
+              {
+                title: "For AI Agent Builders",
+                links: ["viaSocket Embed", "MCP Marketplace"],
+              },
+              {
+                title: "Support",
+                links: [
+                  "Book a Demo",
+                  "Contact Support Team",
+                  "Request a Feature",
+                  "Knowledge Base",
+                  "Community",
+                  "Blog",
+                  "Download Mobile App",
+                  "Request an Integration",
+                ],
+              },
+              {
+                title: "Automation Experts",
+                links: [
+                  "Hire an Expert",
+                  "Become a Partner",
+                  "Partner Program",
+                  "Agency Partner Program",
+                ],
+              },
+              {
+                title: "MCP",
+                links: [
+                  "MCP Marketplace",
+                  "MCP for AI Agents",
+                  "MCP for SaaS Players",
+                ],
+              },
+              {
+                title: "Compare",
+                links: [
+                  "viaSocket vs Zapier",
+                  "viaSocket vs Make",
+                  "viaSocket vs Pabbly",
+                ],
+              },
+              {
+                title: "Company",
+                links: [
+                  "About",
+                  "We are Hiring",
+                  "Culture We Foster",
+                  "Roadmap",
+                  "AI Transparency",
+                ],
+              },
+              {
+                title: "Plans, Pricing and Offer",
+                links: [
+                  "Pricing",
+                  "Startups plan",
+                  "Discount for Developing Nations",
+                  "Free Access Programs",
+                ],
+              },
+              {
+                title: "AI & Automation",
+                links: [
+                  "Apps Integrations",
+                  "Features",
+                  "List Your App",
+                  "Automations",
+                  "Discover Top Apps",
+                  "Embed",
+                  "Workflow Automation Guide",
+                ],
+              },
+            ].map((col) => (
+              <div key={col.title}>
+                <div className="text-sm font-semibold text-neutral-900">
+                  {col.title}
+                </div>
+                <ul className="mt-3 space-y-2 text-sm text-neutral-600">
+                  {col.links.map((l) => (
+                    <li key={l}>
+                      <button
+                        type="button"
+                        className="text-left hover:text-neutral-900"
+                      >
+                        {l}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Explore with AI */}
+          <div className="mt-14 border-t border-neutral-200 pt-8">
+            <div className="text-sm font-semibold text-neutral-900">
+              Explore with AI
             </div>
-          ))}
+            <div className="mt-3 flex flex-wrap gap-2 text-sm text-neutral-600">
+              {["ChatGPT", "Claude AI", "Perplexity AI", "xAI (Grok)"].map(
+                (a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    className="rounded-full border border-neutral-200 bg-white px-4 py-1.5 hover:border-neutral-300 hover:text-neutral-900"
+                  >
+                    {a}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
         </div>
+
         <div className="border-t border-neutral-200">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 text-xs text-neutral-500">
-            <span>© 2026 viaSocket. All rights reserved.</span>
-            <span>Made with care</span>
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-xs text-neutral-500">
+            <span>
+              © 2026 viaSocket |{" "}
+              <button type="button" className="hover:text-neutral-900">
+                Privacy
+              </button>
+              ,{" "}
+              <button type="button" className="hover:text-neutral-900">
+                Terms
+              </button>{" "}
+              and{" "}
+              <button type="button" className="hover:text-neutral-900">
+                Data Retention &amp; Deletion Policy
+              </button>
+            </span>
+            <span>
+              Walkover Web Solutions Pvt Ltd. | All rights reserved.
+            </span>
           </div>
         </div>
       </footer>

@@ -6,92 +6,130 @@ import { HomeVersionSwitcher } from "@/components/home-version-switcher";
 
 type Connection = { name: string; logo: string };
 
+const I = "https://stuff.thingsofbrand.com";
+
 const TOP_CONNECTIONS: Connection[] = [
-  { name: "Slack", logo: "https://stuff.thingsofbrand.com/slack.com/images/img668216333e_slack.jpg" },
-  { name: "Gmail", logo: "https://stuff.thingsofbrand.com/gmail.com/images/imge_idrA5FDGTH_1763454052978.svg" },
-  { name: "HubSpot", logo: "https://stuff.thingsofbrand.com/hubspot.com/images/img61728fea98_hubspot.jpg" },
-  { name: "Stripe", logo: "https://stuff.thingsofbrand.com/stripe.com/images/img67eab239fe_stripe.jpg" },
-  { name: "Google Sheets", logo: "https://stuff.thingsofbrand.com/google.com/images/img4_googlesheet.png" },
+  { name: "HubSpot",     logo: `${I}/hubspot.com/images/img61728fea98_hubspot.jpg` },
+  { name: "Gmail",       logo: `${I}/gmail.com/images/imge_idrA5FDGTH_1763454052978.svg` },
+  { name: "Stripe",      logo: `${I}/stripe.com/images/img67eab239fe_stripe.jpg` },
+  { name: "Salesforce",  logo: `${I}/salesforce.com/images/img1_salesforce.png` },
+  { name: "QuickBooks",  logo: `${I}/quickbooks.intuit.com/images/imgf_Screenshot-2025-03-20-141203.png` },
 ];
 
 const APP_PLACEHOLDERS: Record<string, string> = {
-  Slack: "Summarize unread activity, draft replies, or prepare updates",
-  Gmail: "Draft replies, sort by intent, or send follow-ups",
-  HubSpot: "Enrich contacts, log activities, or update deal stages",
-  Stripe: "Recap revenue, recover failed charges, or forecast MRR",
-  "Google Sheets": "Summarize a sheet, spot outliers, or draft a report",
+  HubSpot:        "Enrich new contacts, update deal stages, or log inbound leads",
+  Gmail:          "Auto-draft replies, sort inbox by intent, or send follow-ups",
+  Stripe:         "Weekly revenue digest, recover failed charges, or announce payments",
+  Salesforce:     "Clean stale deals, flag missing fields, or nudge reps in Slack",
+  QuickBooks:     "Reconcile transactions, close month-end, or match against Stripe",
+  Slack:          "Post daily standup summary, announce revenue, or nudge stale deals",
+  "Google Sheets":"Weekly digest, normalize data, or trigger on new rows",
+  Shopify:        "Low-stock alerts, sync buyers to HubSpot, or order follow-ups",
 };
 
 const APP_SUGGESTIONS: Record<string, string[]> = {
-  Slack: [
-    "Send a message to #general with today's summary",
-    "Schedule a Slack message for 4:00 PM tomorrow",
-    "Remind me every Monday at 10am about the standup",
-  ],
-  Gmail: [
-    "Draft replies to unread emails in my inbox",
-    "Label incoming emails by intent — lead, support, personal",
-    "Send a follow-up if a prospect hasn't replied in 3 days",
-  ],
   HubSpot: [
-    "Add a new contact and assign a lead score",
-    "Log a call as an activity on the linked deal",
+    "Enrich and tag every new HubSpot contact",
+    "Auto-log inbound leads from Gmail into HubSpot",
     "Move deals with no activity in 5 days to a review stage",
   ],
+  Gmail: [
+    "Auto-draft replies from your Gmail inbox",
+    "Sort Gmail by intent and label automatically",
+    "Send a follow-up if a prospect hasn't replied in 3 days",
+  ],
   Stripe: [
-    "Send me a weekly digest of new customers and MRR",
-    "Retry failed charges with a smart dunning cadence",
-    "Notify me in Slack when an invoice over $500 is paid",
+    "Weekly revenue digest, in your inbox every Monday",
+    "Auto-recover failed Stripe charges with dunning cadence",
+    "Announce every paid invoice in Slack #revenue",
+  ],
+  Salesforce: [
+    "Salesforce hygiene on autopilot — scan every night",
+    "Nudge reps when Salesforce deals go stale",
+    "Flag deals with no activity in 5+ days",
+  ],
+  QuickBooks: [
+    "Month-end close checklist, half done for you",
+    "Reconcile 38 transactions from Stripe automatically",
+    "Pull unreconciled transactions and flag exceptions",
+  ],
+  Slack: [
+    "Post a daily standup summary at 9am",
+    "Announce every paid invoice in #revenue",
+    "DM the owner when a deal goes stale",
   ],
   "Google Sheets": [
-    "Summarize the current sheet in plain English",
-    "Add a new row when a HubSpot deal closes",
+    "Weekly digest from your Google Sheet, every Friday",
     "Flag rows where revenue dropped week over week",
+    "Normalize company names, emails, and phone numbers",
+  ],
+  Shopify: [
+    "Low-stock alerts before you sell out",
+    "Sync Shopify buyers into HubSpot with lifetime value",
+    "Slack + email ops lead with reorder quantities",
   ],
 };
 
-const DEFAULT_PLACEHOLDER = "Remind me on slack at 4:00 PM for weekly meeting";
+const DEFAULT_PLACEHOLDER = "Reconcile last month's Stripe payouts with QuickBooks";
 
 const HINT_BANK: Record<string, string[]> = {
-  Slack: [
-    "Repeat this message every day at 9am",
-    "Send as a DM instead of channel post",
-    "Also notify me if this workflow fails",
-    "Pause this on weekends",
+  HubSpot: [
+    "Enrich and tag every new HubSpot contact",
+    "Assign to the right rep with a lead score",
+    "Auto-log inbound leads from Gmail into HubSpot",
+    "Sync Shopify buyers into HubSpot with LTV",
   ],
   Gmail: [
-    "Follow up automatically if no reply in 3 days",
-    "CC my manager on all these emails",
-    "Auto-label emails after sending",
-    "Run this every weekday morning",
-  ],
-  HubSpot: [
-    "Auto-update deal stage when this triggers",
-    "Assign to a team member based on region",
-    "Create a follow-up task 2 days later",
-    "Log this activity to the contact timeline",
+    "Auto-draft replies from your Gmail inbox",
+    "Sort Gmail by intent and label automatically",
+    "Send a follow-up if no reply in 3 days",
+    "Auto-log inbound leads from Gmail into HubSpot",
   ],
   Stripe: [
-    "Send a weekly MRR digest every Monday",
-    "Alert me in Slack on failed payments over $100",
-    "Retry failed charges automatically after 24h",
-    "Only trigger on invoices above $500",
+    "Weekly revenue digest, in your inbox every Monday",
+    "Auto-recover failed Stripe charges",
+    "Announce every paid invoice in Slack",
+    "Month-end close checklist with QuickBooks",
+  ],
+  Salesforce: [
+    "Salesforce hygiene on autopilot",
+    "Nudge reps when deals go stale",
+    "Flag deals with no activity in 5+ days",
+    "Update pipeline — move stale deals to review",
+  ],
+  QuickBooks: [
+    "Month-end close checklist, half done for you",
+    "Match transactions against Stripe and banks",
+    "Pull unreconciled items and flag exceptions",
+    "Weekly revenue digest with QuickBooks data",
+  ],
+  Slack: [
+    "Post a daily standup summary at 9am",
+    "Announce every paid invoice in #revenue",
+    "DM the rep with the next best action",
+    "Summarize yesterday's activity every morning",
   ],
   "Google Sheets": [
-    "Also trigger on row updates, not just new rows",
-    "Only run when column 'Status' = 'Active'",
-    "Run only on a specific sheet tab",
-    "Export a weekly summary to a new sheet",
+    "Weekly digest from your Google Sheet",
+    "Flag rows where revenue dropped",
+    "Normalize company names and emails",
+    "Trigger on row updates, not just new rows",
+  ],
+  Shopify: [
+    "Low-stock alerts before you sell out",
+    "Slack + email ops lead with reorder qty",
+    "Sync Shopify buyers into HubSpot with LTV",
+    "Order confirmation + upsell sequence",
   ],
 };
 
 const GENERIC_HINTS = [
-  "Run this every weekday morning",
-  "Only trigger when a condition is met",
-  "Notify me if this workflow fails",
-  "Pause this on weekends",
-  "Set a 30-day expiry",
-  "Add a retry on failure",
+  "Post a daily standup summary at 9am",
+  "Auto-draft replies from your Gmail inbox",
+  "Weekly revenue digest, in your inbox",
+  "Enrich and tag every new contact",
+  "Nudge reps when deals go stale",
+  "Month-end close checklist, half done",
 ];
 
 function buildHints(text: string, app?: string): string[] {
