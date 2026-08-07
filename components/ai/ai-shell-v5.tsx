@@ -132,19 +132,49 @@ type Step = { key: string; kind: "trigger" | "action"; app: keyof typeof APP_ICO
 
 /** A workflow node card — the selected trigger/action shown as a builder step. */
 function StepCard({ step, meta }: { step: Step; meta?: string }) {
+  const isTrigger = step.kind === "trigger";
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="flex items-center gap-2 bg-neutral-50 px-4 py-2.5">
-        <span className="text-[15px] font-semibold text-neutral-800">
-          {step.kind === "trigger" ? "Trigger" : "Action"}
+    <div
+      className={
+        isTrigger
+          ? "w-full max-w-md overflow-hidden rounded-xl border border-purple-300 bg-white shadow-sm ring-1 ring-purple-200/60"
+          : "w-full max-w-md overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
+      }
+    >
+      <div
+        className={
+          isTrigger
+            ? "flex items-center gap-2 border-b border-purple-200/70 bg-gradient-to-r from-purple-50 to-purple-100/60 px-4 py-2.5"
+            : "flex items-center gap-2 bg-neutral-50 px-4 py-2.5"
+        }
+      >
+        {isTrigger && (
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="text-purple-600">
+            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        )}
+        <span
+          className={
+            isTrigger
+              ? "text-[15px] font-semibold uppercase tracking-wide text-purple-800"
+              : "text-[15px] font-semibold text-neutral-800"
+          }
+        >
+          {isTrigger ? "Trigger" : "Action"}
         </span>
         {meta && (
-          <span className="rounded-full bg-neutral-200/70 px-3 py-0.5 text-[13px] font-medium text-neutral-600">
+          <span
+            className={
+              isTrigger
+                ? "rounded-full bg-white/80 px-3 py-0.5 text-[13px] font-medium text-purple-800 ring-1 ring-purple-200"
+                : "rounded-full bg-neutral-200/70 px-3 py-0.5 text-[13px] font-medium text-neutral-600"
+            }
+          >
             {meta}
           </span>
         )}
-        {step.kind === "trigger" && (
-          <div className="ml-auto flex items-center gap-2.5 text-neutral-400">
+        {isTrigger && (
+          <div className="ml-auto flex items-center gap-2.5 text-purple-700/70">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <line x1="6" y1="3" x2="6" y2="15" />
               <circle cx="18" cy="6" r="3" />
