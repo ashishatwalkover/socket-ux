@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactElement } from "react";
 import { ActivityLogVersionNav } from "@/components/ai/activity-log-version-nav";
 
 /* ------------------------------------------------------------------ */
@@ -31,7 +31,7 @@ type ActionKind = "add" | "remove" | "update" | "move" | "rename" | "default";
 
 const ACTION: Record<
   ActionKind,
-  { label: string; dot: string; text: string; soft: string; icon: JSX.Element }
+  { label: string; dot: string; text: string; soft: string; icon: ReactElement }
 > = {
   add: {
     label: "Added",

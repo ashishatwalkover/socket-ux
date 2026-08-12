@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactElement } from "react";
 import { ActivityLogVersionNav } from "@/components/ai/activity-log-version-nav";
 
 /* ------------------------------------------------------------------ */
@@ -17,7 +17,7 @@ type DaySection = { label: string; groups: ActivityGroup[] };
 
 type ActionKind = "add" | "remove" | "update" | "move" | "rename" | "default";
 
-const ACTION: Record<ActionKind, { verb: string; tile: string; icon: JSX.Element }> = {
+const ACTION: Record<ActionKind, { verb: string; tile: string; icon: ReactElement }> = {
   add: {
     verb: "Added",
     tile: "bg-emerald-50 text-emerald-600 ring-emerald-100",
