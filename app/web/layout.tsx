@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Caveat } from "next/font/google";
 
-const caveat = Caveat({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-caveat" });
+// Caveat is a variable font — don't pin static weights (that generates
+// per-weight slice URLs that 404 on gstatic and break the build).
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" });
 
 export const metadata: Metadata = {
   title: "viaSocket — Build Automations With AI",
