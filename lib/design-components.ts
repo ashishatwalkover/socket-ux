@@ -36,6 +36,14 @@ export const designComponents: DesignComponent[] = [
     openInNewWindow: true,
   },
   {
+    id: "comp-apply-coupon",
+    name: "Apply Coupon",
+    description: "Verify a coupon code and pick a compatible plan to redeem it",
+    href: `${APP_BASE}/components/apply-coupon`,
+    status: "WIP",
+    openInNewWindow: true,
+  },
+  {
     id: "comp-offers-pricing",
     name: "Offers & Pricing",
     description: "Pricing tiers, offers, and promotional banners",
