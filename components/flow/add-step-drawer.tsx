@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -56,6 +56,8 @@ export interface AddStepDrawerProps {
   title?: string;
   searchPlaceholder?: string;
   width?: number;
+  /** Changing this value (e.g. re-clicking the trigger) flashes the drawer and re-focuses search. */
+  pulse?: number;
 }
 
 export function AddStepDrawer({
@@ -66,8 +68,29 @@ export function AddStepDrawer({
   title = "Add a Step",
   searchPlaceholder = "Search Apps",
   width = 360,
+  pulse,
 }: AddStepDrawerProps) {
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // On each pulse (trigger re-click), focus + select the search box and flash the drawer.
+  useEffect(() => {
+    if (!open || pulse == null) return;
+    // Wait a frame so the drawer paper is mounted before focusing/animating.
+    const id = requestAnimationFrame(() => {
+      const input = inputRef.current;
+      input?.focus();
+      input?.select();
+      const el = contentRef.current;
+      if (el) {
+        el.classList.remove("flow-drawer-blink");
+        void el.offsetWidth; // restart the animation
+        el.classList.add("flow-drawer-blink");
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [pulse, open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -84,51 +107,54 @@ export function AddStepDrawer({
       onClose={onClose}
       hideBackdrop
       slotProps={{
-        paper: { sx: { width, bgcolor: "#1f2937", color: "#e5e7eb", pointerEvents: "auto" } },
+        paper: { sx: { width, bgcolor: "#ffffff", color: "#111827", pointerEvents: "auto" } },
         root: { sx: { pointerEvents: "none" } },
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-        <span className="text-base font-semibold">{title}</span>
-        <IconButton size="small" onClick={onClose} sx={{ color: "#9ca3af" }}>
+      <div ref={contentRef} className="flex h-full flex-col">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <span className="text-base font-semibold text-gray-900">{title}</span>
+        <IconButton size="small" onClick={onClose} sx={{ color: "#6b7280" }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </div>
       <div className="px-4 py-3">
         <input
+          ref={inputRef}
           type="text"
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full bg-transparent border border-blue-500 rounded-md px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full bg-white border border-blue-500 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
       <div className="flex-1 overflow-y-auto pb-6">
         {filtered.length === 0 && (
-          <p className="px-4 py-6 text-sm text-gray-400 text-center">No matches found.</p>
+          <p className="px-4 py-6 text-sm text-gray-500 text-center">No matches found.</p>
         )}
         {filtered.map((section, idx) => (
           <div key={section.title} className={`px-4 ${idx === 0 ? "" : "mt-4"}`}>
-            <p className="text-xs text-gray-400 font-medium mt-2 mb-2">{section.title}</p>
+            <p className="text-xs text-gray-500 font-medium mt-2 mb-2">{section.title}</p>
             <ul>
               {section.items.map(item => (
                 <li key={item.name}>
                   <button
                     type="button"
                     onClick={() => onSelect?.(item, section.title)}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-100 transition-colors text-left"
                   >
                     <span className={`w-7 h-7 rounded-md ${item.bg} flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0`}>
                       {item.label}
                     </span>
-                    <span className="text-sm text-gray-100">{item.name}</span>
+                    <span className="text-sm text-gray-800">{item.name}</span>
                   </button>
                 </li>
               ))}
             </ul>
           </div>
         ))}
+      </div>
       </div>
     </Drawer>
   );

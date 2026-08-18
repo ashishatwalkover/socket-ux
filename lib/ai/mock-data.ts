@@ -181,6 +181,20 @@ export const ASSISTANT_SCRIPT: AssistantTurn[] = [
     blocks: [
       {
         kind: "text",
+        text: "Great choice. First, let's connect your store so I can watch for abandoned carts.",
+      },
+      {
+        kind: "credentials",
+        service: "Shopify",
+        description: "Read-only access to orders and abandoned checkouts.",
+      },
+    ],
+    actionAdvances: true,
+  },
+  {
+    blocks: [
+      {
+        kind: "text",
         text: "Perfect. Here's what I'll build for you — review and deploy when you're ready.",
       },
       {
@@ -197,21 +211,6 @@ export const ASSISTANT_SCRIPT: AssistantTurn[] = [
           "Log outcome",
         ],
         estimate: "~2,400 tasks / month",
-      },
-    ],
-    actionAdvances: true,
-  },
-  {
-    blocks: [
-      {
-        kind: "text",
-        text: "I need access to a couple of your tools to make this work.",
-      },
-      {
-        kind: "credentials",
-        service: "Shopify",
-        description:
-          "Read-only access to orders and abandoned checkouts. You can revoke this anytime.",
       },
     ],
     actionAdvances: true,

@@ -258,6 +258,37 @@ function TopHeader({
           <span className="text-muted-foreground">FlowMind</span>
         )}
       </nav>
+      <div className="ml-auto flex items-center gap-2.5">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/70 px-3 py-1 text-xs font-medium text-amber-800">
+          <span className="size-1.5 rounded-full bg-amber-500" />
+          Changes — not live yet
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-amber-700"
+            style={{ animation: "nudge-right 1s ease-in-out infinite" }}
+            aria-hidden="true"
+          >
+            <line x1="4" y1="12" x2="18" y2="12" />
+            <polyline points="12 6 18 12 12 18" />
+          </svg>
+        </span>
+        <button
+          type="button"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-blue-700"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5" /><polyline points="5 12 12 5 19 12" />
+          </svg>
+          Go Live
+        </button>
+      </div>
     </header>
   );
 }

@@ -1415,6 +1415,23 @@ const SAMPLE_FLOW_STEPS: FlowStep[] = [
               },
             ],
           },
+          {
+            id: "loop-2",
+            title: "action click",
+            subtitle: "Loop",
+            app: "loop",
+            type: "loop",
+            loopLabel: "action click",
+            loopBody: [
+              {
+                id: "loop-action-2",
+                title: "Notify customer via Slack",
+                subtitle: "Action",
+                app: "slack",
+                type: "action",
+              },
+            ],
+          },
         ],
       },
     ],

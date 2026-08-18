@@ -128,3 +128,15 @@
     @apply font-sans;
   }
 }
+
+@keyframes nudge-right {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  50% { transform: translateX(5px); opacity: 1; }
+}
+
+@keyframes flow-drawer-blink {
+  0%   { opacity: 1; }
+  50%  { opacity: 0; }
+  100% { opacity: 1; }
+}
+.flow-drawer-blink { animation: flow-drawer-blink 0.2s ease-in-out 1; }

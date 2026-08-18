@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LeftNav } from "@/components/left-nav";
 import { CommandPalette } from "@/components/command-palette";
+import { PrototypeHeader } from "@/components/prototype-header";
 
 export const metadata: Metadata = {
   title: "Workflows Control Center",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <LeftNav />
         <main className="flex-1 overflow-auto min-h-0 min-w-0">{children}</main>
         <CommandPalette />
+        <PrototypeHeader />
       </body>
     </html>
   );

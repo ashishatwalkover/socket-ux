@@ -127,8 +127,8 @@ export function LeftNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  // Hide on the new home experiments (v1, v3), the root marketing home, and v4 which uses its own nav.
-  const isNewHome = pathname === APP_BASE || pathname === `${APP_BASE}/v3`;
+  // Hide on the new home experiments (v2, v3), the root marketing home, and v4 which uses its own nav.
+  const isNewHome = pathname === `${APP_BASE}/v2` || pathname === `${APP_BASE}/v3`;
   const isRootHome = pathname === "/";
   const isV4Route = pathname === `${APP_BASE}/v4` || pathname.startsWith(`${APP_BASE}/v4/`);
   if (isRootHome || isNewHome || isV4Route || FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname) || isFlowRoute(pathname)) return null;
