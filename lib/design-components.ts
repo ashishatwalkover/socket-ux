@@ -44,6 +44,14 @@ export const designComponents: DesignComponent[] = [
     openInNewWindow: true,
   },
   {
+    id: "comp-activity-log",
+    name: "Activity Log",
+    description: "Slide-in feed of workspace changes, grouped by person and date",
+    href: `${APP_BASE}/components/activity-log`,
+    status: "Ready",
+    openInNewWindow: true,
+  },
+  {
     id: "comp-offers-pricing",
     name: "Offers & Pricing",
     description: "Pricing tiers, offers, and promotional banners",

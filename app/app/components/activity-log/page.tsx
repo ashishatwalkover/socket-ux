@@ -202,7 +202,7 @@ function RichText({ text, kind }: { text: string; kind: ActionKind }) {
           const [verb, ...rest] = part.split(" ");
           return (
             <span key={i}>
-              <span className={`font-medium ${ACTION[kind].text}`}>{verb}</span>
+              <span className="font-medium text-gray-700">{verb}</span>
               {rest.length ? " " + rest.join(" ") : ""}
             </span>
           );
