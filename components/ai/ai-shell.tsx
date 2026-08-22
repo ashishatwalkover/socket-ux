@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "./chat-thread";
 import { Composer } from "./composer";
 import { RightPanel } from "./right-panel";
-import { AiVersionNav } from "./ai-version-nav";
 import { ASSISTANT_SCRIPT } from "@/lib/ai/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -252,7 +251,6 @@ function TopHeader({
   const panelLabel = panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : "";
   return (
     <header className="flex items-center gap-3 border-b border-border/70 px-4 py-2">
-      <AiVersionNav />
       <nav className="flex min-w-0 items-center gap-1.5 text-xs">
         {hasPanel ? (
           <>

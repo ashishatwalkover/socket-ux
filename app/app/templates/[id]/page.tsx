@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button, Chip, TextField } from "@mui/material";
 
 /* ─── Icons ─── */
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
@@ -191,7 +189,9 @@ function FieldEditor({
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-foreground">{field.label}</label>
-      <Input
+      <TextField
+        fullWidth
+        size="small"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder}
@@ -246,9 +246,7 @@ export default function TemplateDetailPage({ params }: { params: { id: string } 
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-semibold text-foreground truncate">{detail.title}</h1>
                 {/* Draft chip — ALWAYS visible */}
-                <Badge variant="secondary" className="shrink-0 text-[10px] bg-amber-50 text-amber-700 border-amber-200">
-                  Draft
-                </Badge>
+                <Chip label="Draft" size="small" className="shrink-0" sx={{ bgcolor: "#fffbeb", color: "#b45309" }} />
               </div>
               <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -267,22 +265,20 @@ export default function TemplateDetailPage({ params }: { params: { id: string } 
           {/* Go Live button — always visible, properly placed */}
           <div className="flex items-center gap-2 shrink-0">
             <Button
-              variant="outline"
-              size="sm"
+              variant="outlined"
+              size="small"
               onClick={() => router.push("/app/templates")}
             >
               Cancel
             </Button>
             <Button
-              size="sm"
+              variant="contained"
+              color="success"
+              size="small"
               disabled={!allConfigured}
               onClick={() => setShowGoLiveConfirm(true)}
-              className={cn(
-                "gap-1.5",
-                allConfigured ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""
-              )}
+              startIcon={<PlayIcon className="size-3.5" />}
             >
-              <PlayIcon className="size-3.5" />
               Go Live
             </Button>
           </div>
@@ -321,9 +317,7 @@ export default function TemplateDetailPage({ params }: { params: { id: string } 
                   </p>
                 </div>
                 {savedSteps.has(step.id) && (
-                  <Badge variant="secondary" className="ml-auto text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">
-                    Saved
-                  </Badge>
+                  <Chip label="Saved" size="small" className="ml-auto" sx={{ bgcolor: "#ecfdf5", color: "#047857" }} />
                 )}
               </div>
 
@@ -346,22 +340,21 @@ export default function TemplateDetailPage({ params }: { params: { id: string } 
 
               {/* Action bar: Save + Next — SEPARATE buttons */}
               <div className="flex items-center gap-3 pt-4 border-t border-border">
-                <Button variant="outline" size="sm" onClick={handleSaveStep} className="gap-1.5">
-                  <SaveIcon className="size-3.5" />
+                <Button variant="outlined" size="small" onClick={handleSaveStep} startIcon={<SaveIcon className="size-3.5" />}>
                   Save Step
                 </Button>
                 <Button
-                  size="sm"
+                  variant="contained"
+                  size="small"
                   onClick={handleNext}
                   disabled={activeStep >= detail.steps.length - 1}
-                  className="gap-1.5"
+                  endIcon={<NextIcon className="size-3.5" />}
                 >
                   Next Step
-                  <NextIcon className="size-3.5" />
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="text"
+                  size="small"
                   onClick={handlePrev}
                   disabled={activeStep === 0}
                 >
@@ -382,16 +375,17 @@ export default function TemplateDetailPage({ params }: { params: { id: string } 
               This will activate the workflow and start processing events. All steps have been configured.
             </p>
             <div className="flex items-center justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowGoLiveConfirm(false)}>
+              <Button variant="outlined" size="small" onClick={() => setShowGoLiveConfirm(false)}>
                 Keep Editing
               </Button>
               <Button
-                size="sm"
+                variant="contained"
+                color="success"
+                size="small"
                 onClick={() => {
                   setShowGoLiveConfirm(false);
                   router.push("/app/templates");
                 }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 Yes, Go Live
               </Button>

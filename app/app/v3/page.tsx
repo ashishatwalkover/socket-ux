@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { HomeVersionSwitcher } from "@/components/home-version-switcher";
+import { Button, MenuItem, TextField } from "@mui/material";
+
+const VIOLET_CTA = {
+  bgcolor: "#7c3aed",
+  "&:hover": { bgcolor: "#6d28d9" },
+} as const;
 
 const LOGO = {
   sheets: "https://stuff.thingsofbrand.com/google.com/images/img4_googlesheet.png",
@@ -74,7 +79,6 @@ export default function HomeV3() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <HomeVersionSwitcher />
 
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-4">
@@ -133,13 +137,15 @@ export default function HomeV3() {
                 className="w-full resize-none outline-none text-[15px] text-slate-900 placeholder:text-slate-400"
               />
               <div className="mt-3 flex justify-end">
-                <button
+                <Button
+                  variant="contained"
                   onClick={() => start(input)}
                   disabled={!input.trim()}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  endIcon={<Arrow />}
+                  sx={VIOLET_CTA}
                 >
-                  Continue <Arrow />
-                </button>
+                  Continue
+                </Button>
               </div>
             </div>
 
@@ -185,14 +191,16 @@ export default function HomeV3() {
             </div>
 
             <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep("describe")} className="text-sm text-slate-500 hover:text-slate-800">← Back</button>
-              <button
+              <Button variant="text" onClick={() => setStep("describe")} sx={{ color: "#64748b" }}>← Back</Button>
+              <Button
+                variant="contained"
                 onClick={() => setStep("configure")}
                 disabled={!bothConnected}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                endIcon={<Arrow />}
+                sx={VIOLET_CTA}
               >
-                Continue <Arrow />
-              </button>
+                Continue
+              </Button>
             </div>
           </div>
         )}
@@ -206,37 +214,45 @@ export default function HomeV3() {
             <div className="mt-8 rounded-2xl border border-slate-200 p-5 space-y-4">
               <div>
                 <label className="text-xs font-medium text-slate-500">Channel</label>
-                <select
+                <TextField
+                  select
+                  size="small"
+                  fullWidth
                   value={channel}
                   onChange={(e) => setChannel(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+                  className="mt-1.5"
                 >
-                  <option>#general</option>
-                  <option>#sales</option>
-                  <option>#leads</option>
-                  <option>#alerts</option>
-                </select>
+                  <MenuItem value="#general">#general</MenuItem>
+                  <MenuItem value="#sales">#sales</MenuItem>
+                  <MenuItem value="#leads">#leads</MenuItem>
+                  <MenuItem value="#alerts">#alerts</MenuItem>
+                </TextField>
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-500">Message</label>
-                <textarea
+                <TextField
+                  multiline
+                  rows={3}
+                  size="small"
+                  fullWidth
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  rows={3}
-                  className="mt-1.5 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+                  className="mt-1.5"
                 />
                 <p className="mt-1.5 text-xs text-slate-400">Use <code className="text-violet-600">{"{{column}}"}</code> to insert values from the new row.</p>
               </div>
             </div>
 
             <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep("connect")} className="text-sm text-slate-500 hover:text-slate-800">← Back</button>
-              <button
+              <Button variant="text" onClick={() => setStep("connect")} sx={{ color: "#64748b" }}>← Back</Button>
+              <Button
+                variant="contained"
                 onClick={() => setStep("done")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors"
+                startIcon={<Sparkle width={14} height={14} />}
+                sx={VIOLET_CTA}
               >
-                <Sparkle width={14} height={14} /> Activate workflow
-              </button>
+                Activate workflow
+              </Button>
             </div>
           </div>
         )}
@@ -274,7 +290,7 @@ export default function HomeV3() {
                 ))}
               </div>
               <div className="mt-6 text-center">
-                <button onClick={reset} className="text-sm font-medium text-violet-600 hover:text-violet-700">Start over</button>
+                <Button variant="text" onClick={reset} sx={{ color: "#7c3aed" }}>Start over</Button>
               </div>
             </div>
           </div>
@@ -300,11 +316,13 @@ function ConnectButton({ connected, onClick }: { connected: boolean; onClick: ()
     );
   }
   return (
-    <button
+    <Button
+      variant="outlined"
+      size="small"
       onClick={onClick}
-      className="px-4 py-1.5 rounded-lg border border-violet-300 text-violet-700 text-sm font-medium hover:bg-violet-50 transition-colors"
+      sx={{ color: "#6d28d9", borderColor: "#c4b5fd", "&:hover": { borderColor: "#a78bfa", bgcolor: "#f5f3ff" } }}
     >
       Connect
-    </button>
+    </Button>
   );
 }

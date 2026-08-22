@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
 import { AI_BASE, APP_BASE, isAiRoute, isAppRoute, isWebRoute } from "@/lib/app-routes";
 import { designComponents } from "@/lib/design-components";
 import { cn } from "@/lib/utils";
@@ -131,7 +132,9 @@ export function LeftNav() {
   const isNewHome = pathname === `${APP_BASE}/v2` || pathname === `${APP_BASE}/v3`;
   const isRootHome = pathname === "/";
   const isV4Route = pathname === `${APP_BASE}/v4` || pathname.startsWith(`${APP_BASE}/v4/`);
-  if (isRootHome || isNewHome || isV4Route || FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname) || isFlowRoute(pathname)) return null;
+  // Embed (integrations) pages have their own chrome + breadcrumb, so hide the app nav.
+  const isEmbedRoute = pathname === "/integrations" || pathname.startsWith("/integrations/");
+  if (isRootHome || isNewHome || isV4Route || isEmbedRoute || FULL_BLEED_ROUTES.includes(pathname) || isAiRoute(pathname) || isWebRoute(pathname) || isFlowRoute(pathname)) return null;
 
   const menuItems = [
     { icon: (
@@ -167,7 +170,7 @@ export function LeftNav() {
         </button>
 
         {menuOpen && (
-          <div className="absolute top-full left-3 right-3 mt-1 bg-[#2b333c] text-white rounded-lg shadow-2xl z-50 overflow-hidden py-2">
+          <div className="absolute top-full left-3 right-3 mt-1 bg-[#2b333c] text-white rounded-lg shadow-2xl z-50 py-2">
             {menuItems.map((item) => {
               const cls = cn(
                 "w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors",
@@ -221,31 +224,80 @@ export function LeftNav() {
 
             <div className="my-2 border-t border-white/10" />
 
-            <button
-              onClick={() => setDevToolsOpen((o) => !o)}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors"
+            <div
+              className="relative"
+              onMouseEnter={() => setDevToolsOpen(true)}
+              onMouseLeave={() => setDevToolsOpen(false)}
             >
-              <span className="text-gray-300">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="5" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/></svg>
-              </span>
-              <span>Developer Tools</span>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("ml-auto text-gray-300 transition-transform", devToolsOpen ? "rotate-90" : "")}><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
+              <button
+                onClick={() => setDevToolsOpen((o) => !o)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors",
+                  devToolsOpen ? "bg-white/5" : "hover:bg-white/5"
+                )}
+                aria-haspopup="menu"
+                aria-expanded={devToolsOpen}
+              >
+                <span className="text-gray-300">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="5" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/></svg>
+                </span>
+                <span>Developer Tools</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-auto text-gray-300"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
 
-            {devToolsOpen && (
-              <div className="pb-1">
-                <Link
-                  href={`${APP_BASE}/components/plug-builder`}
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full flex items-center gap-3 py-2 pl-11 pr-4 text-sm text-left text-gray-200 hover:bg-white/5 transition-colors"
+              {devToolsOpen && (
+                <div
+                  role="menu"
+                  className="absolute left-full top-0 w-64 bg-[#2b333c] text-white rounded-lg shadow-2xl z-50 py-2"
                 >
-                  <span className="text-gray-400">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  </span>
-                  <span>Plug Builder</span>
-                </Link>
-              </div>
-            )}
+                  <div className="px-4 pt-1 pb-1.5 text-xs font-medium tracking-wide text-gray-400">
+                    Developer Platform
+                  </div>
+                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors">
+                    <span className="text-gray-300">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </span>
+                    <span>API Doc</span>
+                  </button>
+                  <Link
+                    href={`${APP_BASE}/connections`}
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors"
+                  >
+                    <span className="text-gray-300">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    </span>
+                    <span>OAuth Connections</span>
+                  </Link>
+
+                  <div className="my-2 border-t border-white/10" />
+
+                  <div className="px-4 pt-1 pb-1.5 text-xs font-medium tracking-wide text-gray-400">
+                    Do you own Saas Project?
+                  </div>
+                  <Link
+                    href={`${APP_BASE}/components/plug-builder`}
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors"
+                  >
+                    <span className="text-gray-300">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg>
+                    </span>
+                    <span>Plug Builder</span>
+                  </Link>
+                  <Link
+                    href="/integrations/71635"
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left bg-white/10 hover:bg-white/15 transition-colors"
+                  >
+                    <span className="text-gray-300">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </span>
+                    <span>Embed (Integrations)</span>
+                  </Link>
+                </div>
+              )}
+            </div>
 
             <div className="my-2 border-t border-white/10" />
 

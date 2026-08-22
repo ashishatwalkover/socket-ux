@@ -2,6 +2,7 @@
 
 import type { AppIntegration, FlowStep } from "@/lib/flow-types";
 import { getStepIntegration } from "@/lib/flow-apps";
+import { Button } from "@mui/material";
 
 export type ReadinessCardResult = {
   flowValid: boolean;
@@ -119,14 +120,16 @@ export function ReadinessCard({
                         Connected
                       </span>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="contained"
+                        color="success"
+                        size="small"
                         onClick={() => onConnectApp(app.id)}
                         disabled={connectingAppId === app.id}
-                        className="shrink-0 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                        className="shrink-0"
                       >
                         {connectingAppId === app.id ? "Connecting…" : "Connect"}
-                      </button>
+                      </Button>
                     )}
                   </li>
                 );

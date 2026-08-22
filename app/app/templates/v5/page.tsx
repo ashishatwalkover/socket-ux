@@ -4,9 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button, Chip, InputAdornment, TextField } from "@mui/material";
 import { Dialog, Button as MuiButton, Popover } from "@mui/material";
 
 /* ─── Types ─── */
@@ -555,7 +553,6 @@ function TemplateInstallDialog({
       maxWidth={false}
       sx={{
         "& .MuiDialog-paper": {
-          borderRadius: "8px",
           padding: 0,
           maxWidth: "920px",
           width: "100%",
@@ -892,7 +889,6 @@ function TemplateSliderCards({ templates }: { templates: CardTemplate[] }) {
       maxWidth={false}
       sx={{
         "& .MuiDialog-paper": {
-          borderRadius: "12px",
           padding: 0,
           maxWidth: "90vw",
           overflow: "visible",
@@ -988,10 +984,12 @@ function FeaturedTemplate({ template, onClick }: { template: Template; onClick: 
     >
       <div className="flex-1">
         <div className="mb-2 flex items-center gap-2">
-          <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
-            <SparklesIcon className="size-3 mr-1" />
-            Featured
-          </Badge>
+          <Chip
+            icon={<SparklesIcon className="size-3" />}
+            label="Featured"
+            size="small"
+            sx={{ bgcolor: "#fef3c7", color: "#b45309" }}
+          />
           <span className="text-xs text-muted-foreground">{template.useCase}</span>
         </div>
         <h2 className="text-lg font-semibold text-foreground leading-snug mb-2">{template.title}</h2>
@@ -1007,7 +1005,8 @@ function FeaturedTemplate({ template, onClick }: { template: Template; onClick: 
         </div>
       </div>
       <Button
-        size="sm"
+        variant="contained"
+        size="small"
         className="shrink-0"
         onClick={(e) => {
           e.stopPropagation();
@@ -1173,8 +1172,7 @@ export default function TemplatesPage() {
           <VersionNav current="v4" />
         </div>
 
-        <Button variant="default" size="sm" className="flex items-center gap-2">
-          <PlusIcon className="size-4" />
+        <Button variant="contained" size="small" startIcon={<PlusIcon className="size-4" />}>
           Create New Template
         </Button>
       </div>
@@ -1182,12 +1180,20 @@ export default function TemplatesPage() {
       {/* Search */}
       <div className="mb-5">
         <div className="relative max-w-3xl">
-          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
-          <Input
+          <TextField
+            fullWidth
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search templates, apps, use cases..."
-            className="h-12 pl-12 pr-4 text-base border-2 border-black focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/20"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon className="size-5" />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
         </div>
       </div>      
@@ -1275,8 +1281,10 @@ export default function TemplatesPage() {
                       }}
                     />
                     <div className="absolute left-0 top-full mt-2 z-50 w-64 rounded-lg border border-border bg-background shadow-lg p-2">
-                      <Input
+                      <TextField
                         autoFocus
+                        fullWidth
+                        size="small"
                         value={appSearch}
                         onChange={(e) => setAppSearch(e.target.value)}
                         placeholder="Search apps..."
@@ -1449,8 +1457,7 @@ export default function TemplatesPage() {
                   <p className="text-sm text-muted-foreground">Test and activate your template</p>
                 </div>
               </div>
-              <Button variant="default" size="sm" className="mt-6 flex items-center gap-2">
-                <PlusIcon className="size-4" />
+              <Button variant="contained" size="small" className="mt-6" startIcon={<PlusIcon className="size-4" />}>
                 Create New Template
               </Button>
             </div>

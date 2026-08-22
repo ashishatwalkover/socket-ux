@@ -1,5 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, Paper } from "@mui/material";
 
 export default function Design3() {
   return (
@@ -9,18 +8,18 @@ export default function Design3() {
           <h1 className="text-xl font-semibold">Design 3</h1>
           <p className="text-sm text-muted-foreground">Placeholder for your next UX design</p>
         </div>
-        <Button>Add Content</Button>
+        <Button variant="contained">Add Content</Button>
       </div>
 
-      <Card>
-        <CardContent className="p-12 text-center">
+      <Paper variant="outlined">
+        <div className="p-12 text-center">
           <div className="text-6xl mb-4">🎨</div>
           <h2 className="text-lg font-medium mb-2">Your Design Goes Here</h2>
           <p className="text-sm text-muted-foreground">
             Replace this placeholder with your actual design components
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </Paper>
     </div>
   );
 }

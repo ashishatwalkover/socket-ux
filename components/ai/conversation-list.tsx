@@ -4,6 +4,7 @@ import Link from "next/link";
 import { APP_BASE } from "@/lib/app-routes";
 import { PAST_CONVERSATIONS, type Conversation } from "@/lib/ai/mock-data";
 import { cn } from "@/lib/utils";
+import { Button } from "@mui/material";
 
 type Props = {
   activeId?: string;
@@ -37,13 +38,15 @@ export function ConversationList({ activeId, onNew, onSelect }: Props) {
       </div>
 
       <div className="p-3">
-        <button
+        <Button
           onClick={onNew}
-          className="flex w-full items-center gap-2 rounded-lg border border-border/70 bg-background px-3 py-2 text-left text-sm font-medium hover:bg-muted/40 transition-colors cursor-pointer"
+          variant="outlined"
+          fullWidth
+          startIcon={<PlusIcon className="size-4 text-muted-foreground" />}
+          sx={{ justifyContent: "flex-start", color: "text.primary", borderColor: "divider", "&:hover": { bgcolor: "action.hover", borderColor: "divider" } }}
         >
-          <PlusIcon className="size-4 text-muted-foreground" />
           New automation
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-3">

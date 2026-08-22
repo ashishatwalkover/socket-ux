@@ -20,15 +20,15 @@ export default function LoopIconWithPopover() {
 
   return (
     <>
-      <button
-        type="button"
-        className="hover:text-gray-900"
+      <IconButton
+        size="small"
         title="Refresh"
         onMouseEnter={(e) => setAnchorEl(e.currentTarget)}
         onMouseLeave={() => setAnchorEl(null)}
+        sx={{ p: 0, color: "inherit", "&:hover": { color: "#111827" } }}
       >
         <LoopIcon sx={{ fontSize: 16 }} />
-      </button>
+      </IconButton>
       <Popover
         open={open}
         anchorEl={anchorEl}
@@ -243,7 +243,6 @@ export default function LoopIconWithPopover() {
             sx={{
               bgcolor: "#f9fafb",
               border: "1px solid #e5e7eb",
-              borderRadius: 1,
               p: 1.5,
               fontSize: 12,
               fontFamily: "monospace",

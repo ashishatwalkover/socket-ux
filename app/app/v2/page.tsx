@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { HomeVersionSwitcher } from "@/components/home-version-switcher";
+import { Button, Link } from "@mui/material";
+
+const VIOLET_CTA = {
+  bgcolor: "#7c3aed",
+  "&:hover": { bgcolor: "#6d28d9" },
+} as const;
 
 /* Brand logos (displayed directly; the icon-proxy is only needed for color sampling). */
 const LOGO = {
@@ -115,7 +120,6 @@ export default function HomeV1() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <HomeVersionSwitcher />
 
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-4">
@@ -128,10 +132,13 @@ export default function HomeV1() {
           <span className="text-lg font-bold text-slate-900">ViaSocket</span>
         </div>
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <Button
+            variant="text"
+            sx={{ color: "#475569" }}
+            startIcon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+          >
             Need help?
-          </button>
+          </Button>
           <div className="flex items-center gap-1.5">
             <span className="size-8 rounded-full bg-violet-100 text-violet-700 text-xs font-semibold flex items-center justify-center">AY</span>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
@@ -174,20 +181,25 @@ export default function HomeV1() {
               className="w-full resize-none outline-none text-[15px] text-slate-900 placeholder:text-slate-400"
             />
             <div className="mt-3 flex items-center justify-between">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-medium text-violet-700 hover:bg-violet-50 transition-colors">
-                <Sparkle width={14} height={14} />
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Sparkle width={14} height={14} />}
+                sx={{ color: "#6d28d9", borderColor: "#e2e8f0", "&:hover": { borderColor: "#c4b5fd", bgcolor: "#f5f3ff" } }}
+              >
                 Enhance with AI
-              </button>
+              </Button>
               <div className="flex items-center gap-4">
                 <span className="text-xs text-slate-400">{input.length}/500</span>
-                <button
+                <Button
+                  variant="contained"
                   onClick={build}
                   disabled={!input.trim()}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  startIcon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>}
+                  sx={VIOLET_CTA}
                 >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   Build it with AI
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -236,13 +248,15 @@ export default function HomeV1() {
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Your use case</div>
                 <p className="mt-2 text-sm text-slate-800 leading-relaxed">{input}</p>
               </div>
-              <button
+              <Button
+                variant="contained"
                 onClick={() => router.push(`/ai?prompt=${encodeURIComponent(input)}`)}
-                className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors"
+                startIcon={<Sparkle width={14} height={14} />}
+                className="shrink-0"
+                sx={VIOLET_CTA}
               >
-                <Sparkle width={14} height={14} />
                 Proceed with AI
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -257,13 +271,14 @@ export default function HomeV1() {
                 <div className="font-semibold text-sm text-slate-900">Not sure where to start?</div>
                 <div className="text-sm text-slate-500">Talk to us and we'll help you figure out what to automate.</div>
               </div>
-              <button
+              <Button
+                variant="outlined"
                 onClick={() => router.push("/ai")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium text-slate-800 hover:bg-slate-50 transition-colors"
+                startIcon={<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
+                sx={{ bgcolor: "#fff", color: "#1e293b", borderColor: "#e2e8f0", "&:hover": { bgcolor: "#f8fafc", borderColor: "#cbd5e1" } }}
               >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Talk to us
-              </button>
+              </Button>
             </div>
         )}
       </main>
@@ -272,7 +287,8 @@ export default function HomeV1() {
       <footer className="py-6 text-center text-xs text-slate-400">
         <span className="inline-flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Your data is secure and private. <button className="text-violet-600 hover:underline">Learn more</button>
+          Your data is secure and private.{" "}
+          <Link component="button" underline="hover" sx={{ color: "#7c3aed", verticalAlign: "baseline" }}>Learn more</Link>
         </span>
       </footer>
     </div>

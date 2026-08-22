@@ -455,7 +455,7 @@ function WhereClauseBuilder({ viewMode = "sentence" }: { viewMode?: "sentence" |
                                 <strong>Pro Tips</strong> <em>(recommended)</em>:
                               </p>
                               <ol style={{ margin: 0, paddingLeft: 20 }}>
-                                <li>Use <code style={{ background: "#e0f2fe", padding: "1px 4px", borderRadius: 3 }}>secret keys</code> for authentication.</li>
+                                <li>Use <code style={{ background: "#e0f2fe", padding: "1px 4px"}}>secret keys</code> for authentication.</li>
                                 <li>Enable <strong>retry logic</strong> for failed events.</li>
                                 <li>Monitor with <em>real-time logs</em>.</li>
                               </ol>

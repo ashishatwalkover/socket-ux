@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Drawer, IconButton } from "@mui/material";
+import { Drawer, IconButton, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 export interface AddStepItem {
@@ -119,14 +119,24 @@ export function AddStepDrawer({
         </IconButton>
       </div>
       <div className="px-4 py-3">
-        <input
-          ref={inputRef}
-          type="text"
+        <TextField
+          size="small"
+          fullWidth
           autoFocus
+          inputRef={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full bg-white border border-blue-500 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              bgcolor: "#ffffff",
+              fontSize: "0.875rem",
+              "& fieldset": { borderColor: "#3b82f6" },
+              "&:hover fieldset": { borderColor: "#3b82f6" },
+              "&.Mui-focused fieldset": { borderColor: "#3b82f6", borderWidth: "1px" },
+            },
+            "& .MuiOutlinedInput-input": { color: "#111827" },
+          }}
         />
       </div>
       <div className="flex-1 overflow-y-auto pb-6">

@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input";
+import { Button, TextField } from "@mui/material";
 import { PLANS, type PlanId } from "./plan-data";
 import { LockIcon } from "./icons";
 
@@ -12,13 +12,14 @@ export function PaymentStep({ onBack, selectedPlan }: PaymentStepProps) {
 
   return (
     <div>
-      <button
-        type="button"
+      <Button
+        variant="text"
         onClick={onBack}
-        className="mb-6 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+        className="mb-6"
+        sx={{ color: "text.secondary" }}
       >
         ← Back
-      </button>
+      </Button>
 
       <div className="text-left">        
         {plan && (
@@ -30,23 +31,22 @@ export function PaymentStep({ onBack, selectedPlan }: PaymentStepProps) {
       </div>
 
       <div className="mt-6">
-        <Input
+        <TextField
           type="text"
           placeholder="Card number"
-          className="mb-3 h-12 rounded-lg px-4 text-sm"
+          size="small"
+          fullWidth
+          className="mb-3"
         />
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Input type="text" placeholder="MM / YY" className="h-12 rounded-lg px-4 text-sm" />
-          <Input type="text" placeholder="CVC" className="h-12 rounded-lg px-4 text-sm" />
+          <TextField type="text" placeholder="MM / YY" size="small" fullWidth />
+          <TextField type="text" placeholder="CVC" size="small" fullWidth />
         </div>
 
-        <button
-          type="button"
-          className="mt-6 h-12 w-auto rounded-lg bg-slate-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
-        >
+        <Button variant="contained" className="mt-6">
           Add payment method and lock discount
-        </button>
+        </Button>
 
         <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-slate-500">
           <LockIcon />

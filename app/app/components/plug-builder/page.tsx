@@ -329,7 +329,6 @@ function PlugBuilder() {
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
-    borderRadius: "8px",
     fontSize: "14px",
     "& fieldset": { borderColor: "#e5e5e5" },
     "&:hover fieldset": { borderColor: "#d4d4d4" },

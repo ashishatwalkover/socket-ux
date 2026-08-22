@@ -284,7 +284,6 @@ export function ActivityPanel({
                 variant="outlined"
                 sx={{
                   fontSize: 12,
-                  borderRadius: 999,
                   ".MuiSelect-select": { py: 0.5, pl: 1.5 },
                 }}
               >

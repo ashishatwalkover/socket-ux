@@ -4,9 +4,7 @@ import { useMemo, useState } from "react";
 import type { AppIntegration } from "@/lib/flow-types";
 import { APPS, getConnectableApps } from "@/lib/flow-apps";
 import { ConnectAppDialog } from "@/components/connections/connect-app-dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button, Chip, InputBase, Paper } from "@mui/material";
 
 const Icon = {
   search: (props: React.SVGProps<SVGSVGElement>) => (
@@ -108,27 +106,26 @@ export default function ConnectionsPage() {
             Connect apps and services used across your workflows.
           </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Icon.plus />
+        <Button variant="contained" startIcon={<Icon.plus />}>
           Add Connection
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-4">
+        <Paper variant="outlined">
+          <div className="p-4">
             <div className="text-2xl font-semibold">{connectedCount}</div>
             <div className="text-sm text-muted-foreground">Connected</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
+          </div>
+        </Paper>
+        <Paper variant="outlined">
+          <div className="p-4">
             <div className="text-2xl font-semibold">{apps.length - connectedCount}</div>
             <div className="text-sm text-muted-foreground">Available to connect</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-2">
+          </div>
+        </Paper>
+        <Paper variant="outlined">
+          <div className="p-4 flex items-center gap-2">
             {needsAttention > 0 ? (
               <>
                 <span className="text-amber-500">⚠</span>
@@ -143,16 +140,16 @@ export default function ConnectionsPage() {
                 <div className="text-sm text-muted-foreground">All flow apps are connected</div>
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </Paper>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <Paper variant="outlined">
+        <div>
           <div className="flex items-center gap-2 border-b px-4 py-3">
             <Icon.search />
-            <input
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            <InputBase
+              className="flex-1 text-sm"
               placeholder="Search connections…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -187,28 +184,28 @@ export default function ConnectionsPage() {
                     </td>
                     <td>
                       {isConnected ? (
-                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Connected</Badge>
+                        <Chip label="Connected" size="small" color="success" variant="outlined" />
                       ) : flows > 0 ? (
-                        <Badge variant="destructive">Missing</Badge>
+                        <Chip label="Missing" size="small" color="error" variant="outlined" />
                       ) : (
-                        <Badge variant="outline">Not connected</Badge>
+                        <Chip label="Not connected" size="small" variant="outlined" />
                       )}
                     </td>
                     <td className="text-muted-foreground">{isConnected ? ACCOUNT_LABELS[app.id] ?? "—" : "—"}</td>
                     <td>{flows > 0 ? flows : "—"}</td>
                     <td className="p-4">
                       {isConnected ? (
-                        <Button variant="outline" size="sm" onClick={() => handleDisconnect(app.id)}>
+                        <Button variant="outlined" size="small" onClick={() => handleDisconnect(app.id)}>
                           Disconnect
                         </Button>
                       ) : (
                         <Button
-                          size="sm"
-                          className="flex items-center gap-1.5"
+                          variant="contained"
+                          size="small"
+                          startIcon={<Icon.link />}
                           onClick={() => openConnectDialog(app)}
                           disabled={connectingId === app.id}
                         >
-                          <Icon.link />
                           Connect
                         </Button>
                       )}
@@ -225,8 +222,8 @@ export default function ConnectionsPage() {
               )}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </Paper>
 
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Browse apps</h2>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AiVersionNav } from "./ai-version-nav";
 
 // Version 5 — a fresh "starting point" canvas. Combines the trigger picker with
 // an AI composer (create / import / transform) and quick-start suggestion chips.
@@ -765,10 +764,6 @@ export function AiShellV5() {
 
   return (
     <div className="flex h-full flex-col bg-neutral-50">
-      <header className="flex items-center gap-3 border-b border-border/70 px-4 py-2">
-        <AiVersionNav />
-      </header>
-
       <div className="relative flex flex-1 overflow-hidden">
       {chatActive ? (
         <ChatView chat={chat} onSubmit={submitAi} />

@@ -1,7 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button, Chip, IconButton, InputAdornment, Paper, TextField } from "@mui/material";
 import { VersionSelector } from "@/components/version-selector";
 
 const Icon = {
@@ -40,20 +37,36 @@ export default function WorkflowsFocusView() {
           </div>
           <VersionSelector />
         </div>
-        <Button>Create Flow</Button>
+        <Button variant="contained">Create Flow</Button>
       </div>
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold">Filter</h2>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Icon.folder className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search folders..." className="pl-9 w-64" />
-          </div>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">👤</span>
-            <Input placeholder="Search users..." className="pl-9 w-64" />
-          </div>
+          <TextField
+            placeholder="Search folders..."
+            size="small"
+            className="w-64"
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Icon.folder />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <TextField
+            placeholder="Search users..."
+            size="small"
+            className="w-64"
+            slotProps={{
+              input: {
+                startAdornment: <InputAdornment position="start">👤</InputAdornment>,
+              },
+            }}
+          />
         </div>
         
         <div className="flex items-center gap-2">
@@ -75,24 +88,24 @@ export default function WorkflowsFocusView() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-2">
+        <Paper variant="outlined">
+          <div className="p-4 flex items-center gap-2">
             <Icon.alert className="text-red-500" /> 3 Errors
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">⏸ 40 Paused</CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">🧪 120 Unused</CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">✅ 125 Active</CardContent>
-        </Card>
+          </div>
+        </Paper>
+        <Paper variant="outlined">
+          <div className="p-4">⏸ 40 Paused</div>
+        </Paper>
+        <Paper variant="outlined">
+          <div className="p-4">🧪 120 Unused</div>
+        </Paper>
+        <Paper variant="outlined">
+          <div className="p-4">✅ 125 Active</div>
+        </Paper>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <Paper variant="outlined">
+        <div className="p-0">
           <table className="w-full text-sm">
             <thead className="border-b">
               <tr className="text-left">
@@ -110,15 +123,15 @@ export default function WorkflowsFocusView() {
                   <div className="font-medium">Spreadsheet Update Trigger</div>
                   <div className="text-muted-foreground text-xs">Sheet updated trigger</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>100%</td>
                 <td>10</td>
                 <td>28m ago</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.pause/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.pause/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -128,15 +141,15 @@ export default function WorkflowsFocusView() {
                   <div className="font-medium">Always True Function</div>
                   <div className="text-muted-foreground text-xs">All runs failed</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td className="text-red-500">0%</td>
                 <td>6</td>
                 <td>3d ago</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.alert/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.alert/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -146,21 +159,21 @@ export default function WorkflowsFocusView() {
                   <div className="font-medium">Cron at 11:55</div>
                   <div className="text-muted-foreground text-xs">Not triggered yet</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>—</td>
                 <td>0</td>
                 <td>1d ago</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </Paper>
 
     </div>
   );

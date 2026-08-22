@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, IconButton } from "@mui/material";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -91,42 +91,42 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
               <div className="flex items-center gap-2 shrink-0">
                 {selectedStep ? (
                   <Button
-                    size="sm"
-                    variant="outline"
+                    size="small"
+                    variant="outlined"
                     onClick={onTest}
-                    className="text-xs cursor-pointer"
+                    startIcon={<PlayIcon className="size-3.5" />}
                   >
-                    <PlayIcon className="size-3.5" />
                     Test
                   </Button>
                 ) : (
                   <>
                     <Button
-                      size="sm"
-                      variant="outline"
+                      size="small"
+                      variant="outlined"
                       onClick={onTest}
-                      className="text-xs cursor-pointer"
+                      startIcon={<PlayIcon className="size-3.5" />}
                     >
-                      <PlayIcon className="size-3.5" />
                       Test
                     </Button>
                     <Button
-                      size="sm"
+                      size="small"
+                      variant="contained"
                       onClick={onPublish}
-                      className="text-xs cursor-pointer"
                     >
                       Publish
                     </Button>
                   </>
                 )}
                 {selectedStep && (
-                  <button
+                  <IconButton
                     onClick={onClose}
-                    className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-100 transition-colors cursor-pointer"
+                    size="small"
+                    className="shrink-0"
                     aria-label="Close flow"
+                    sx={{ color: "#059669", "&:hover": { bgcolor: "#d1fae5" } }}
                   >
                     <CloseIcon className="size-3" />
-                  </button>
+                  </IconButton>
                 )}
               </div>
             </div>
@@ -155,27 +155,29 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
             placeholder={placeholder ?? "Describe an automation in plain language..."}
             className="min-h-[28px] flex-1 resize-none bg-transparent py-1.5 text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
           />
-          <Button
-            size="icon-sm"
+          <IconButton
+            size="small"
             onClick={onSend}
             disabled={disabled || !value.trim()}
             aria-label="Send"
-            className="cursor-pointer"
+            sx={{
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              "&:hover": { bgcolor: "primary.dark" },
+            }}
           >
-            <ArrowUp />
-          </Button>
+            <ArrowUp className="size-4" />
+          </IconButton>
           <div ref={menuWrapRef} className="relative">
-            <Button
-              size="icon-sm"
-              variant="ghost"
+            <IconButton
+              size="small"
               onClick={() => setMenuOpen((v) => !v)}
-              className="cursor-pointer"
               aria-label="More options"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
-              <DotsVertical />
-            </Button>
+              <DotsVertical className="size-4" />
+            </IconButton>
             {menuOpen && (
               <div
                 role="menu"
@@ -212,9 +214,9 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
   );
 }
 
-function ArrowUp() {
+function ArrowUp(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <line x1="12" y1="19" x2="12" y2="5" />
       <polyline points="5 12 12 5 19 12" />
     </svg>

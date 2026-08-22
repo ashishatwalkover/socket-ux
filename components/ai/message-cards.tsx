@@ -3,8 +3,7 @@
 import { LuKey, LuUnplug, LuEye, LuShieldCheck } from "react-icons/lu";
 import { SiShopify } from "react-icons/si";
 import type { IconType } from "react-icons";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button, Chip } from "@mui/material";
 import { cn } from "@/lib/utils";
 import type { AssistantBlock } from "@/lib/ai/mock-data";
 import { TRUST_SIGNALS } from "@/lib/connections-data";
@@ -34,10 +33,9 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
             {block.options.map((opt) => (
               <Button
                 key={opt}
-                size="sm"
-                variant="outline"
+                size="small"
+                variant="outlined"
                 onClick={() => onAction?.(opt)}
-                className="cursor-pointer"
               >
                 {opt}
               </Button>
@@ -115,10 +113,9 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
           </div>
           <div className="mt-3 flex justify-end">
             <Button
-              size="sm"
-              variant="ghost"
+              size="small"
+              variant="text"
               onClick={() => onAction?.("Skip")}
-              className="cursor-pointer"
             >
               Skip
             </Button>
@@ -137,7 +134,7 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{block.summary}</p>
             </div>
-            <Badge variant="secondary">Draft</Badge>
+            <Chip label="Draft" size="small" variant="outlined" />
           </div>
 
           <ol className="mt-4 space-y-2">
@@ -154,10 +151,10 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
           <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-3">
             <span className="text-xs text-muted-foreground">{block.estimate}</span>
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => onAction?.("Edit plan")} className="cursor-pointer">
+              <Button size="small" variant="text" onClick={() => onAction?.("Edit plan")}>
                 Edit
               </Button>
-              <Button size="sm" onClick={() => onAction?.("Deploy")} className="cursor-pointer">
+              <Button size="small" variant="contained" onClick={() => onAction?.("Deploy")}>
                 Deploy
               </Button>
             </div>
@@ -194,12 +191,20 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
 
           <div className="mt-3 flex justify-center">
             <Button
-              size="lg"
-              variant="outline"
+              size="large"
+              variant="outlined"
               onClick={() => onAction?.(`Connect ${block.service}`)}
-              className="cursor-pointer border-blue-500 px-4 text-blue-600 hover:border-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              startIcon={<SiShopify className="text-[#5E8E3E]" />}
+              sx={{
+                borderColor: "#3b82f6",
+                color: "#2563eb",
+                "&:hover": {
+                  borderColor: "#2563eb",
+                  bgcolor: "#eff6ff",
+                  color: "#1d4ed8",
+                },
+              }}
             >
-              <SiShopify className="text-[#5E8E3E]" />
               Connect {block.service}
             </Button>
           </div>
@@ -213,11 +218,11 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
             <div className="flex items-center gap-2">
               <span className="inline-flex size-2 rounded-full bg-emerald-500" />
               <h3 className="text-sm font-semibold">{block.name}</h3>
-              <Badge variant="secondary">Running</Badge>
+              <Chip label="Running" size="small" variant="outlined" />
             </div>
-            <button className="text-xs text-muted-foreground hover:text-foreground cursor-pointer">
+            <Button variant="text" size="small" sx={{ color: "text.secondary" }}>
               View all logs →
-            </button>
+            </Button>
           </div>
           <ul className="mt-3 space-y-1.5">
             {block.logs.map((l, i) => (
@@ -250,14 +255,13 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
               <p className="mt-1 text-sm text-violet-900/80">{block.body}</p>
               <div className="mt-3 flex gap-2">
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size="small"
+                  variant="outlined"
                   onClick={() => onAction?.("Not now")}
-                  className="cursor-pointer"
                 >
                   Not now
                 </Button>
-                <Button size="sm" onClick={() => onAction?.("Add it")} className="cursor-pointer">
+                <Button size="small" variant="contained" onClick={() => onAction?.("Add it")}>
                   Add it
                 </Button>
               </div>

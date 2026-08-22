@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import {
+  Button,
+  IconButton,
+  InputBase,
+  Link as MuiLink,
+  TextField,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AssistantBlockView } from "@/components/ai/message-cards";
-import { AiVersionNav } from "@/components/ai/ai-version-nav";
 import { FlowMiniApp } from "@/components/ai/flow-mini-app";
 import { ASSISTANT_SCRIPT, PAST_CONVERSATIONS } from "@/lib/ai/mock-data";
 import type { AssistantBlock } from "@/lib/ai/mock-data";
@@ -273,34 +279,72 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
   return (
     <div className="flex h-screen flex-col bg-white">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-gray-200/70 bg-white px-6 py-3">
-        <AiVersionNav />
+      <header className="flex items-center justify-end border-b border-gray-200/70 bg-white px-6 py-3">
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
+            variant="outlined"
             onClick={() => setShowImport(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            startIcon={<Upload className="h-3.5 w-3.5" />}
+            className="rounded-full px-3 py-1.5"
+            sx={{
+              textTransform: "none",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              color: "#374151",
+              bgcolor: "#fff",
+              borderColor: "#e5e7eb",
+              boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+              minWidth: 0,
+              "& .MuiButton-startIcon": { marginLeft: 0, marginRight: "0.375rem" },
+              "&:hover": { bgcolor: "#f9fafb", borderColor: "#e5e7eb" },
+            }}
           >
-            <Upload className="h-3.5 w-3.5" />
             Import JSON
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outlined"
             onClick={() => setShowExpert(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            startIcon={<Headset className="h-3.5 w-3.5" />}
+            className="rounded-full px-3 py-1.5"
+            sx={{
+              textTransform: "none",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              color: "#374151",
+              bgcolor: "#fff",
+              borderColor: "#e5e7eb",
+              boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+              minWidth: 0,
+              "& .MuiButton-startIcon": { marginLeft: 0, marginRight: "0.375rem" },
+              "&:hover": { bgcolor: "#f9fafb", borderColor: "#e5e7eb" },
+            }}
           >
-            <Headset className="h-3.5 w-3.5" />
             Hire an expert
-          </button>
+          </Button>
           {flowActive && (
-            <button
+            <Button
               type="button"
+              variant="outlined"
               onClick={switchToManual}
-              className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
+              startIcon={<Layers className="h-3.5 w-3.5" />}
+              className="rounded-full px-3 py-1.5"
+              sx={{
+                textTransform: "none",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                color: "#1d4ed8",
+                bgcolor: "#eff6ff",
+                borderColor: "#bfdbfe",
+                boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                minWidth: 0,
+                "& .MuiButton-startIcon": { marginLeft: 0, marginRight: "0.375rem" },
+                "&:hover": { bgcolor: "#dbeafe", borderColor: "#bfdbfe" },
+              }}
             >
-              <Layers className="h-3.5 w-3.5" />
               Build manually
-            </button>
+            </Button>
           )}
         </div>
       </header>
@@ -471,13 +515,22 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                       <h2 className="text-sm font-semibold text-gray-900">Draft flows</h2>
                       <p className="text-xs text-gray-500 mt-0.5">Continue where you left off</p>
                     </div>
-                    <button
+                    <Button
                       type="button"
+                      variant="text"
                       onClick={() => setShowDrafts(false)}
-                      className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                      className="p-0"
+                      sx={{
+                        textTransform: "none",
+                        fontSize: "0.75rem",
+                        fontWeight: 400,
+                        minWidth: 0,
+                        color: "#6b7280",
+                        "&:hover": { bgcolor: "transparent", color: "#374151" },
+                      }}
                     >
                       Skip
-                    </button>
+                    </Button>
                   </div>
                   <div className="rounded-lg bg-gray-50 divide-y divide-gray-100">
                     {PAST_CONVERSATIONS.filter((c) => c.status === "draft").map((flow, i) => (
@@ -535,20 +588,25 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                   {hasChanges && (
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-100 border border-blue-200">
                       <span className="text-xs font-medium text-blue-900">{changesCount} changes made</span>
-                      <button
+                      <IconButton
                         type="button"
+                        size="small"
                         onClick={() => {
                           setHasChanges(false);
                           setChangedSteps(new Set());
                           setChangesCount(0);
                         }}
-                        className="text-blue-600 hover:text-blue-700"
+                        sx={{
+                          p: 0,
+                          color: "#2563eb",
+                          "&:hover": { color: "#1d4ed8", bgcolor: "transparent" },
+                        }}
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
+                      </IconButton>
                     </div>
                   )}
-                  <textarea
+                  <InputBase
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -557,32 +615,55 @@ export function FreshChatbot({ miniAppOnTop = false }: { miniAppOnTop?: boolean 
                         send(input);
                       }
                     }}
-                    rows={1}
+                    multiline
+                    minRows={1}
                     placeholder="Describe an automation in plain language…"
-                    className="max-h-40 flex-1 resize-none bg-transparent py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    className="max-h-40 flex-1"
+                    sx={{
+                      p: 0,
+                      fontSize: "0.875rem",
+                      color: "#111827",
+                      "& .MuiInputBase-input": {
+                        py: "0.375rem",
+                        "&::placeholder": { color: "#9ca3af", opacity: 1 },
+                      },
+                    }}
                   />
                   {!miniAppOnTop && (
-                    <button
+                    <IconButton
                       type="button"
                       onClick={toggleVoice}
                       title={isListening ? "Stop listening" : "Speak your prompt"}
                       aria-label={isListening ? "Stop listening" : "Speak your prompt"}
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
+                      className={`h-8 w-8 shrink-0${isListening ? " animate-pulse" : ""}`}
+                      sx={
                         isListening
-                          ? "bg-red-100 text-red-600 animate-pulse"
-                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      }`}
+                          ? { bgcolor: "#fee2e2", color: "#dc2626", "&:hover": { bgcolor: "#fee2e2" } }
+                          : { color: "#6b7280", "&:hover": { bgcolor: "#f3f4f6", color: "#374151" } }
+                      }
                     >
                       <Mic className="h-4 w-4" />
-                    </button>
+                    </IconButton>
                   )}
-                  <button
+                  <IconButton
                     type="submit"
                     disabled={!input.trim() && !hasChanges}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-opacity hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="h-8 w-8 shrink-0"
+                    sx={{
+                      bgcolor: "#2563eb",
+                      color: "#fff",
+                      "&:hover": { bgcolor: "#1d4ed8" },
+                      "&.Mui-disabled": {
+                        bgcolor: "#2563eb",
+                        color: "#fff",
+                        opacity: 0.3,
+                        cursor: "not-allowed",
+                        pointerEvents: "auto",
+                      },
+                    }}
                   >
                     <ArrowUp className="h-3.5 w-3.5" />
-                  </button>
+                  </IconButton>
                 </form>
 
                 {/* Version 3: attach + mic controls below the input box */}

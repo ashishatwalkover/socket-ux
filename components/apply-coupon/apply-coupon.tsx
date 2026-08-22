@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Button, IconButton, Link, TextField } from "@mui/material";
 import { cn } from "@/lib/utils";
+
+const BLUE_CTA = {
+  bgcolor: "#2563eb",
+  "&:hover": { bgcolor: "#1d4ed8" },
+} as const;
 
 /* ─── Icons ─── */
 
@@ -199,13 +205,9 @@ export function ApplyCoupon({ className, onClose }: ApplyCouponProps) {
             Enter a coupon code to unlock a discount on your order.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-gray-200 px-3.5 py-1.5 text-sm font-medium uppercase tracking-wide text-blue-600 transition-colors hover:bg-gray-50"
-        >
+        <Button variant="outlined" size="small" onClick={onClose}>
           Close
-        </button>
+        </Button>
       </div>
 
       {/* Coupon panel */}
@@ -215,13 +217,14 @@ export function ApplyCoupon({ className, onClose }: ApplyCouponProps) {
             <TagIcon className="size-5 text-blue-600" />
             <span className="text-base font-medium text-gray-900">Apply Coupon</span>
           </div>
-          <button
-            type="button"
+          <Link
+            component="button"
             onClick={() => setShowCoupon((v) => !v)}
-            className="text-sm font-medium text-blue-600 hover:underline"
+            underline="hover"
+            sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#2563eb" }}
           >
             {showCoupon ? "Hide" : "Show"}
-          </button>
+          </Link>
         </div>
 
         {showCoupon && (
@@ -229,7 +232,7 @@ export function ApplyCoupon({ className, onClose }: ApplyCouponProps) {
             {/* Input + verify — hidden once a valid coupon is applied */}
             {!hasCoupon && (
               <div className="flex items-stretch gap-3">
-                <input
+                <TextField
                   value={code}
                   onChange={(e) => {
                     setCode(e.target.value);
@@ -238,20 +241,13 @@ export function ApplyCoupon({ className, onClose }: ApplyCouponProps) {
                   onKeyDown={(e) => e.key === "Enter" && handleApply()}
                   placeholder="Enter coupon code"
                   spellCheck={false}
-                  className={cn(
-                    "h-11 flex-1 rounded-lg border bg-white px-3.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:ring-2",
-                    result === "invalid"
-                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                      : "border-gray-300 focus:border-blue-400 focus:ring-blue-100"
-                  )}
+                  error={result === "invalid"}
+                  size="small"
+                  fullWidth
                 />
-                <button
-                  type="button"
-                  onClick={handleApply}
-                  className="rounded-lg bg-blue-600 px-6 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-blue-700"
-                >
+                <Button variant="contained" onClick={handleApply} sx={BLUE_CTA}>
                   Verify
-                </button>
+                </Button>
               </div>
             )}
 
@@ -306,22 +302,24 @@ export function ApplyCoupon({ className, onClose }: ApplyCouponProps) {
                 {/* Actions (B) */}
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {isPending && planBlocked && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="contained"
+                      size="small"
                       onClick={() => setCurrentPlan("premium")}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                      endIcon={<ArrowRightIcon className="size-4" />}
+                      sx={BLUE_CTA}
                     >
                       Upgrade to Premium to use it
-                      <ArrowRightIcon className="size-4" />
-                    </button>
+                    </Button>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="text"
+                    size="small"
                     onClick={handleRemove}
-                    className="text-sm font-medium text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                    sx={{ color: "text.secondary", textDecoration: "underline" }}
                   >
                     Remove coupon
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -493,17 +491,14 @@ function PlanCard({
               {couponActive ? `· $${couponAmount} off ${plan.name}` : "· NOT APPLICABLE"}
             </span>
           </span>
-          <button
-            type="button"
+          <IconButton
             onClick={onRemoveCoupon}
             aria-label="Remove coupon"
-            className={cn(
-              "rounded p-0.5 transition-colors",
-              couponActive ? "hover:bg-emerald-100" : "hover:bg-amber-100"
-            )}
+            size="small"
+            sx={{ color: "inherit", p: 0.25 }}
           >
             <XIcon className="size-3.5" />
-          </button>
+          </IconButton>
         </div>
       )}
 
@@ -527,18 +522,14 @@ function PlanCard({
             Current Plan
           </div>
         ) : (
-          <button
-            type="button"
+          <Button
+            fullWidth
             onClick={onUpgrade}
-            className={cn(
-              "w-full rounded-lg py-2.5 text-center text-sm font-semibold uppercase tracking-wide transition-colors",
-              plan.featured
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-            )}
+            variant={plan.featured ? "contained" : "outlined"}
+            sx={plan.featured ? BLUE_CTA : undefined}
           >
             Upgrade
-          </button>
+          </Button>
         )}
       </div>
     </div>

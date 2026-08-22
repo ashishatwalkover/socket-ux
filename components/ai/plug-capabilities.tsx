@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Checkbox, Chip, CircularProgress, TextField } from "@mui/material";
+import { Button, Checkbox, Chip, CircularProgress, TextField } from "@mui/material";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -299,7 +299,6 @@ export function CapabilityList({
           }}
           sx={{
             "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
               fontSize: "14px",
               "& fieldset": { borderColor: "#e5e5e5" },
               "&:hover fieldset": { borderColor: "#d4d4d4" },
@@ -407,13 +406,15 @@ export function CapabilityList({
         {filtered.length === 0 && (
           <div className="px-4 py-10 text-center">
             <p className="text-[13px] text-neutral-500">No triggers or actions match “{search}”.</p>
-            <button
-              type="button"
+            <Button
+              variant="text"
+              size="small"
               onClick={() => onSearch("")}
-              className="mt-1 text-[13px] font-medium text-[#2f6bff] hover:underline"
+              className="mt-1"
+              sx={{ color: "#2f6bff" }}
             >
               Clear search
-            </button>
+            </Button>
           </div>
         )}
       </div>

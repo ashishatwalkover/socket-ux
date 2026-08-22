@@ -2,10 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { APP_BASE } from "@/lib/app-routes";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button, Chip, IconButton, Paper } from "@mui/material";
 import { VersionSelector } from "@/components/version-selector";
 
 const Icon = {
@@ -49,54 +46,52 @@ export default function WorkflowsControlCenter() {
           <VersionSelector />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">CMD + K</Button>
-          <Button className="flex items-center gap-2" onClick={() => router.push(`${APP_BASE}/workflows/new`)}><Icon.plus /> Create New Flow</Button>
+          <Button variant="outlined">CMD + K</Button>
+          <Button variant="contained" startIcon={<Icon.plus />} onClick={() => router.push(`${APP_BASE}/workflows/new`)}>Create New Flow</Button>
         </div>
       </div>
 
       <div className="flex items-center gap-3 overflow-x-auto">
-        <Button variant="secondary" className="flex items-center gap-2"><Icon.folder/> All</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> CrowdSourceTrials</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Customer Support</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Finance & Accounting</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Information Tech</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> My-Space</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> One_time</Button>
-        <Button variant="outline" className="flex items-center gap-2"><Icon.folder/> Parakh Testing</Button>
+        <Button variant="contained" color="secondary" startIcon={<Icon.folder/>}>All</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>CrowdSourceTrials</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>Customer Support</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>Finance & Accounting</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>Information Tech</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>My-Space</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>One_time</Button>
+        <Button variant="outlined" startIcon={<Icon.folder/>}>Parakh Testing</Button>
       </div>
 
       <div className="grid grid-cols-5 gap-4 items-stretch">
-        <Card className="col-span-1">
-          <CardContent className="p-0 h-full">
-            <div className="flex items-center h-full px-3 gap-2">
-              <Icon.search />
-              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md text-lg font-bold">
-                <Icon.folder />
-                <span>All</span>
-                <button className="ml-1 text-muted-foreground"><Icon.close/></button>
-              </div>
-              <input className="flex-1 outline-none text-base" />
+        <Paper variant="outlined" className="col-span-1">
+          <div className="flex items-center h-full px-3 gap-2">
+            <Icon.search />
+            <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-md text-lg font-bold">
+              <Icon.folder />
+              <span>All</span>
+              <button className="ml-1 text-muted-foreground"><Icon.close/></button>
             </div>
-          </CardContent>
-        </Card>
+            <input className="flex-1 outline-none text-base" />
+          </div>
+        </Paper>
 
-        <Card><CardContent className="p-4 flex items-center gap-2"><Icon.alert/> 3 Errors</CardContent></Card>
-        <Card><CardContent className="p-4">⏸ 40 Paused</CardContent></Card>
-        <Card><CardContent className="p-4">🧪 120 Unused</CardContent></Card>
-        <Card><CardContent className="p-4">✅ 125 Active</CardContent></Card>
+        <Paper variant="outlined"><div className="p-4 flex items-center gap-2"><Icon.alert/> 3 Errors</div></Paper>
+        <Paper variant="outlined"><div className="p-4">⏸ 40 Paused</div></Paper>
+        <Paper variant="outlined"><div className="p-4">🧪 120 Unused</div></Paper>
+        <Paper variant="outlined"><div className="p-4">✅ 125 Active</div></Paper>
       </div>
 
       <div className="flex gap-2 overflow-x-auto">
-        <Button variant="outline">Suyash Singh (531)</Button>
-        <Button variant="outline">Naman Tamrakar (82)</Button>
-        <Button variant="outline">swapnil soni (52)</Button>
-        <Button variant="outline">Chirag Devlani (48)</Button>
-        <Button variant="outline">ankita bhatt (42)</Button>
-        <Button variant="outline">View All</Button>
+        <Button variant="outlined">Suyash Singh (531)</Button>
+        <Button variant="outlined">Naman Tamrakar (82)</Button>
+        <Button variant="outlined">swapnil soni (52)</Button>
+        <Button variant="outlined">Chirag Devlani (48)</Button>
+        <Button variant="outlined">ankita bhatt (42)</Button>
+        <Button variant="outlined">View All</Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <Paper variant="outlined">
+        <div className="p-0">
           <table className="w-full text-sm">
             <thead className="border-b">
               <tr className="text-left">
@@ -114,15 +109,15 @@ export default function WorkflowsControlCenter() {
                   <div className="font-medium">Spreadsheet Update Trigger</div>
                   <div className="text-muted-foreground text-xs">Sheet updated trigger</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>100%</td>
                 <td>10</td>
                 <td>28m ago</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.pause/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.pause/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -132,15 +127,15 @@ export default function WorkflowsControlCenter() {
                   <div className="font-medium">Always True Function</div>
                   <div className="text-muted-foreground text-xs">All runs failed</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td className="text-red-500">0%</td>
                 <td>6</td>
                 <td>3d ago</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.alert/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.alert/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -150,14 +145,14 @@ export default function WorkflowsControlCenter() {
                   <div className="font-medium">Cron at 11:55</div>
                   <div className="text-muted-foreground text-xs">Not triggered yet</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>—</td>
                 <td>0</td>
                 <td>1d ago</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -167,14 +162,14 @@ export default function WorkflowsControlCenter() {
                   <div className="font-medium">Master Slide</div>
                   <div className="text-muted-foreground text-xs">Linear summary of all flows</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>—</td>
                 <td>0</td>
                 <td>just now</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -186,14 +181,14 @@ export default function WorkflowsControlCenter() {
                   </div>
                   <div className="text-muted-foreground text-xs">AI-generated workflow</div>
                 </td>
-                <td><Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">AI</Badge></td>
+                <td><Chip label="AI" size="small" sx={{ bgcolor: "#f3e8ff", color: "#7e22ce" }} /></td>
                 <td>—</td>
                 <td>0</td>
                 <td>just now</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.sparkles/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.sparkles/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -203,14 +198,14 @@ export default function WorkflowsControlCenter() {
                   <div className="font-medium">Loop</div>
                   <div className="text-muted-foreground text-xs">Iterative workflow loop</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>—</td>
                 <td>0</td>
                 <td>just now</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
@@ -219,21 +214,21 @@ export default function WorkflowsControlCenter() {
                   <div className="font-medium">click-action</div>
                   <div className="text-muted-foreground text-xs">Iterative workflow loop</div>
                 </td>
-                <td><Badge>Active</Badge></td>
+                <td><Chip label="Active" size="small" variant="outlined" /></td>
                 <td>—</td>
                 <td>0</td>
                 <td>just now</td>
                 <td className="p-4">
                   <div className="flex gap-2">
-                    <Button size="icon"><Icon.play/></Button>
-                    <Button size="icon"><Icon.edit/></Button>
+                    <IconButton size="small"><Icon.play/></IconButton>
+                    <IconButton size="small"><Icon.edit/></IconButton>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </Paper>
 
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { TextField } from "@mui/material";
 import type { FlowStep, VariableRef } from "@/lib/flow-types";
 import { formatSample, getUpstreamVariableGroups } from "@/lib/map-variables";
 
@@ -53,12 +54,24 @@ export function UpstreamVariablesPanel({
             Select an input on the left, then pick a variable below.
           </p>
         )}
-        <input
+        <TextField
           type="search"
+          size="small"
+          fullWidth
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Search variables…"
-          className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+          className="mt-2"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              bgcolor: "#ffffff",
+              fontSize: "0.875rem",
+              "& fieldset": { borderColor: "#e5e7eb" },
+              "&:hover fieldset": { borderColor: "#e5e7eb" },
+              "&.Mui-focused fieldset": { borderColor: "#d8b4fe", borderWidth: "1px" },
+            },
+            "& .MuiOutlinedInput-input": { color: "#1f2937" },
+          }}
         />
       </div>
 

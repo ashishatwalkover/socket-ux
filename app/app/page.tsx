@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { APP_BASE } from "@/lib/app-routes";
-import { HomeVersionSwitcher } from "@/components/home-version-switcher";
+import { IconButton, Link } from "@mui/material";
 
 const Icon = {
   alert: (props: React.SVGProps<SVGSVGElement>) => (
@@ -33,7 +33,6 @@ export default function WorkflowsControlCenterV2() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <HomeVersionSwitcher />
       {/* Main */}
       <main className="bg-white overflow-y-auto">
         <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
@@ -60,19 +59,21 @@ export default function WorkflowsControlCenterV2() {
                   rows={3}
                   className="w-full pl-10 pr-12 py-3 rounded-xl bg-white focus:outline-none text-sm placeholder:text-slate-400 resize-none"
                 />
-                <button
+                <IconButton
                   onClick={handleCreateFlow}
-                  className="absolute bottom-3 right-3 text-slate-400 hover:text-blue-600"
+                  className="absolute bottom-3 right-3"
                   title="Send"
+                  size="small"
+                  sx={{ color: "#94a3b8", "&:hover": { color: "#2563eb" } }}
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-                </button>
+                </IconButton>
               </div>
               <div className="mt-3 text-center">
                 <span className="text-sm text-slate-500">or</span>
-                <button onClick={() => router.push(`${APP_BASE}`)} className="text-sm text-blue-600 hover:text-blue-700 font-medium ml-1 cursor-pointer">
+                <Link component="button" onClick={() => router.push(`${APP_BASE}`)} underline="hover" sx={{ ml: 0.5, fontSize: "0.875rem", fontWeight: 500, color: "#2563eb" }}>
                   build flow manually
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -88,9 +89,9 @@ export default function WorkflowsControlCenterV2() {
                 <div className="font-medium text-sm text-slate-900">Get critical alerts on WhatsApp</div>
                 <div className="text-xs text-slate-600 mt-0.5">Add your WhatsApp number to receive important alerts about your workflows and automations.</div>
               </div>
-              <button className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors flex-shrink-0 cursor-pointer">
+              <Link component="button" underline="hover" className="flex-shrink-0" sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#2563eb" }}>
                 Add number →
-              </button>
+              </Link>
             </div>
           </section>
 
@@ -105,7 +106,7 @@ export default function WorkflowsControlCenterV2() {
                 <div className="font-medium text-sm text-slate-900">2 connections need your attention</div>
                 <div className="text-xs text-slate-600 mt-0.5">Shopify · HubSpot are expired and pausing 4 flows</div>
               </div>
-              <button className="text-sm font-medium text-red-600 hover:text-red-700 flex-shrink-0">Fix now →</button>
+              <Link component="button" underline="hover" className="flex-shrink-0" sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#dc2626" }}>Fix now →</Link>
             </div>
           </section>
 
@@ -113,7 +114,7 @@ export default function WorkflowsControlCenterV2() {
           <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900">Recent Workflows</h2>
-              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">All workflows →</button>
+              <Link component="button" underline="hover" sx={{ fontSize: "0.875rem", fontWeight: 500, color: "#2563eb" }}>All workflows →</Link>
             </div>
             <div className="grid grid-cols-4 gap-3">
               {RECENT_WORKFLOWS.map((wf) => (
@@ -125,9 +126,9 @@ export default function WorkflowsControlCenterV2() {
                     }`}>
                       {wf.status}
                     </span>
-                    <button className="text-slate-400 hover:text-slate-600 flex-shrink-0">
+                    <IconButton size="small" className="flex-shrink-0" sx={{ color: "#94a3b8" }}>
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                    </button>
+                    </IconButton>
                   </div>
                   <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-snug">{wf.description}</p>
                   <div className="mt-3 text-xs text-slate-500">Runs <span className="text-slate-900 font-medium">{wf.runs}</span></div>
@@ -141,9 +142,9 @@ export default function WorkflowsControlCenterV2() {
             <div className="col-span-2 border border-slate-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-900">What's New</h3>
-                <button className="text-slate-400 hover:text-slate-600">
+                <IconButton size="small" sx={{ color: "#94a3b8" }}>
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
-                </button>
+                </IconButton>
               </div>
               <div className="mt-3">
                 <div className="text-sm font-semibold text-slate-900">Smarter template suggestions</div>
@@ -168,7 +169,7 @@ export default function WorkflowsControlCenterV2() {
               </div>
               <p className="text-xs text-slate-600 mt-3 leading-relaxed">
                 Your workspace is in <span className="font-semibold">good shape</span>. Most flows are running without errors.{" "}
-                <button className="text-blue-600 hover:text-blue-700 font-medium">View flows</button>
+                <Link component="button" underline="hover" sx={{ fontWeight: 500, color: "#2563eb", verticalAlign: "baseline" }}>View flows</Link>
               </p>
             </div>
           </section>

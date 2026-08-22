@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
+import { Button, IconButton, InputAdornment, TextField } from "@mui/material";
 import { ActivityLogVersionNav } from "@/components/ai/activity-log-version-nav";
 
 /* ------------------------------------------------------------------ */

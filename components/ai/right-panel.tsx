@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, IconButton, TextField, Radio } from "@mui/material";
 import { cn } from "@/lib/utils";
 
 type Props = { panel: string; onStepSelect?: (step: { name: string; description: string; id: string }) => void; selectedStepId?: string; onStepDeselect?: () => void };
@@ -288,8 +288,17 @@ function MicroAppV3() {
             <p className="mt-1 text-xs text-[#60734d]">One clear decision at a time.</p>
           </div>
           <div ref={advancedFlowMenuRef} className="relative flex shrink-0 items-center gap-1">
-            <Button size="sm" variant="outline" className="border-[#b8cf92] bg-[#f8fcf2] text-[#37442e] hover:bg-white">
-              <PlayIcon className="size-3" />
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<PlayIcon className="size-3" />}
+              sx={{
+                borderColor: "#b8cf92",
+                bgcolor: "#f8fcf2",
+                color: "#37442e",
+                "&:hover": { bgcolor: "#fff", borderColor: "#b8cf92" },
+              }}
+            >
               Test
             </Button>
             <button
@@ -530,11 +539,10 @@ function FlowDetail({ flow, onStepSelect, selectedStepId, onStepDeselect }: { fl
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="cursor-pointer">
-            <PlayIcon className="size-3.5" />
+          <Button size="small" variant="outlined" startIcon={<PlayIcon className="size-3.5" />}>
             Test
           </Button>
-          <Button size="sm" className="cursor-pointer">
+          <Button size="small" variant="contained">
             Publish Flow
           </Button>
         </div>

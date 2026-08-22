@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { IconButton, InputBase } from "@mui/material";
 import {
   actionItems,
   navigationItems,
@@ -205,13 +206,14 @@ export function CommandPalette() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <h2 className="text-xl font-semibold">Search</h2>
-          <button
+          <IconButton
             onClick={() => setOpen(false)}
-            className="text-white/60 hover:text-white transition-colors"
             aria-label="Close"
+            size="small"
+            sx={{ color: "rgba(255,255,255,0.6)", "&:hover": { color: "#fff" } }}
           >
             <KindIcon.close />
-          </button>
+          </IconButton>
         </div>
 
         {/* Search input */}
@@ -220,15 +222,20 @@ export function CommandPalette() {
             <span className="text-white/50">
               <KindIcon.search />
             </span>
-            <input
-              ref={inputRef}
+            <InputBase
+              inputRef={inputRef}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
                 setActiveIndex(0);
               }}
               placeholder="Search components, flows, logs, navigation..."
-              className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40"
+              className="flex-1"
+              sx={{
+                color: "#fff",
+                fontSize: "0.875rem",
+                "& input::placeholder": { color: "rgba(255,255,255,0.4)", opacity: 1 },
+              }}
             />
             <kbd className="text-[11px] bg-white/10 text-white/70 px-2 py-0.5 rounded">
               Cmd K

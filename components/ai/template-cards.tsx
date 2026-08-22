@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useState } from "react";
+import { IconButton } from "@mui/material";
 
 type Template = {
   id: string;
@@ -60,30 +61,32 @@ export function TemplateCards({ templates }: TemplateCardsProps) {
                 alt="Template preview"
                 className="w-full h-full object-cover"
               />
-              <button
+              <IconButton
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSliderPrev(template.id, template.images!.length);
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                sx={{ bgcolor: "rgba(255,255,255,0.8)", "&:hover": { bgcolor: "#fff" } }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 19l-7-7 7-7"/>
                 </svg>
-              </button>
-              <button
+              </IconButton>
+              <IconButton
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSliderNext(template.id, template.images!.length);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                sx={{ bgcolor: "rgba(255,255,255,0.8)", "&:hover": { bgcolor: "#fff" } }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 5l7 7-7 7"/>
                 </svg>
-              </button>
+              </IconButton>
             </div>
           )}
 
@@ -158,15 +161,16 @@ export function TemplateCards({ templates }: TemplateCardsProps) {
               onClick={() => setSelectedImage(null)}
             >
               <div className="relative bg-white rounded-lg max-w-2xl max-h-[80vh]">
-                <button
+                <IconButton
                   type="button"
                   onClick={() => setSelectedImage(null)}
-                  className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100"
+                  className="absolute top-4 right-4"
+                  sx={{ bgcolor: "#fff", "&:hover": { bgcolor: "#f3f4f6" } }}
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6l-12 12M6 6l12 12"/>
                   </svg>
-                </button>
+                </IconButton>
                 <img src={selectedImage} alt="Full view" className="w-full h-auto rounded-lg" />
               </div>
             </div>

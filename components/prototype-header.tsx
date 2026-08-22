@@ -26,6 +26,44 @@ type PrototypeSwitch = {
   options: { value: string; label: string }[];
 };
 
+/**
+ * Version groups — routes that are alternate designs of the same page. When the
+ * current route belongs to a group, the chip shows pills to hop between them.
+ * (Consolidates the old standalone HomeVersionSwitcher / AiVersionNav / etc.)
+ */
+type VersionGroup = { id: string; versions: { label: string; href: string }[] };
+
+const PROTOTYPE_VERSIONS: VersionGroup[] = [
+  {
+    id: "app-home",
+    versions: [
+      { label: "v1", href: APP_BASE },
+      { label: "v2", href: `${APP_BASE}/v2` },
+      { label: "v3", href: `${APP_BASE}/v3` },
+      { label: "v4", href: `${APP_BASE}/v4` },
+    ],
+  },
+  {
+    id: "ai",
+    versions: [
+      { label: "v1", href: "/ai2" },
+      { label: "v2", href: "/ai" },
+      { label: "v3", href: "/ai3" },
+      { label: "v4", href: "/ai4" },
+      { label: "v5", href: "/ai5" },
+    ],
+  },
+  {
+    id: "activity-log",
+    versions: [
+      { label: "v1", href: `${APP_BASE}/components/activity-log` },
+      { label: "v2", href: `${APP_BASE}/components/activity-log/v2` },
+      { label: "v3", href: `${APP_BASE}/components/activity-log/v3` },
+      { label: "v4", href: `${APP_BASE}/components/activity-log/v4` },
+    ],
+  },
+];
+
 const PROTOTYPE_CONTROLS: Record<string, PrototypeSwitch[]> = {
   "/app/connections": [
     {
@@ -78,10 +116,38 @@ function SegmentedSwitch({ control }: { control: PrototypeSwitch }) {
   );
 }
 
+function VersionSwitch({ group, pathname }: { group: VersionGroup; pathname: string }) {
+  const router = useRouter();
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-white/40">
+        Version
+      </span>
+      <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-0.5">
+        {group.versions.map((v) => (
+          <button
+            key={v.href}
+            type="button"
+            onClick={() => router.push(v.href)}
+            className={cn(
+              "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+              v.href === pathname ? "bg-white text-slate-900" : "text-white/70 hover:text-white"
+            )}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PrototypeHeaderInner() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
   const controls = PROTOTYPE_CONTROLS[pathname] ?? [];
+  const versionGroup = PROTOTYPE_VERSIONS.find((g) =>
+    g.versions.some((v) => v.href === pathname)
+  );
 
   // Dragging: while pos is null the bar stays centered (default); the first drag
   // pins it to an absolute x/y that the user can then move anywhere on screen.
@@ -118,29 +184,15 @@ function PrototypeHeaderInner() {
       className={cn("fixed z-[100]", pos ? "" : "left-1/2 top-3 -translate-x-1/2")}
       style={pos ? { left: pos.x, top: pos.y } : undefined}
     >
-      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/95 px-2 py-1.5 text-white shadow-lg backdrop-blur">
-        <button
-          type="button"
-          onMouseDown={startDrag}
-          className="flex cursor-grab touch-none items-center rounded-full px-0.5 text-white/40 hover:text-white/70 active:cursor-grabbing"
-          title="Drag to move"
-          aria-label="Drag prototype toolbar"
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <circle cx="9" cy="6" r="1.4" /><circle cx="15" cy="6" r="1.4" />
-            <circle cx="9" cy="12" r="1.4" /><circle cx="15" cy="12" r="1.4" />
-            <circle cx="9" cy="18" r="1.4" /><circle cx="15" cy="18" r="1.4" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={() => setCollapsed((c) => !c)}
-          className="flex items-center gap-1.5 rounded-full px-1.5 text-[10px] font-semibold uppercase tracking-widest text-amber-300"
-          title="Prototype tools"
-        >
+      <div
+        onMouseDown={startDrag}
+        className="flex cursor-grab touch-none items-center gap-2 rounded-full border border-white/10 bg-slate-900/95 px-2 py-1.5 text-white shadow-lg backdrop-blur active:cursor-grabbing"
+        title="Drag to move"
+      >
+        <span className="flex items-center gap-1.5 rounded-full px-1.5 text-[10px] font-semibold uppercase tracking-widest text-amber-300">
           <span className="inline-block size-1.5 rounded-full bg-amber-400" />
           Proto
-        </button>
+        </span>
 
         <Link
           href={APP_BASE}
@@ -153,7 +205,14 @@ function PrototypeHeaderInner() {
           </svg>
         </Link>
 
-        {!collapsed && controls.length > 0 && (
+        {versionGroup && (
+          <>
+            <span className="h-4 w-px bg-white/15" />
+            <VersionSwitch group={versionGroup} pathname={pathname} />
+          </>
+        )}
+
+        {controls.length > 0 && (
           <>
             <span className="h-4 w-px bg-white/15" />
             {controls.map((c) => (

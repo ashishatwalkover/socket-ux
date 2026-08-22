@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Button, Paper, TextField } from "@mui/material";
 import {
   CheckCircleRounded,
   CancelRounded,
@@ -116,8 +110,8 @@ function UsageStat({
   const isOver = used > total;
 
   return (
-    <Card className="!bg-white">
-      <CardContent className="!px-5">
+    <Paper variant="outlined" className="!bg-white">
+      <div className="px-5 py-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 text-gray-500">
             <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${color}`}>
@@ -153,8 +147,8 @@ function UsageStat({
           <span>{pct}% used</span>
           <span className="tabular-nums">{remaining.toLocaleString()} remaining</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Paper>
   );
 }
 
@@ -209,8 +203,8 @@ export default function BillingPage() {
             icon={<CheckCircleRounded style={{ fontSize: 18 }} />}
             trend="+12% vs last month"
           />
-          <Card className="!bg-gradient-to-br !from-blue-600 !to-indigo-700 !text-white !ring-0">
-            <CardContent className="!px-5">
+          <Paper variant="outlined" className="!bg-gradient-to-br !from-blue-600 !to-indigo-700 !text-white !ring-0">
+            <div className="px-5 py-4">
               <div className="flex items-center gap-2 text-white/80">
                 <StarRounded style={{ fontSize: 18 }} />
                 <span className="text-xs font-medium uppercase tracking-wide">Current plan</span>
@@ -222,12 +216,16 @@ export default function BillingPage() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-white/70">$0 / month · 500 credits · 2,000 tasks</p>
-              <button className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-white hover:gap-2 transition-all">
+              <Button
+                variant="text"
+                className="mt-4"
+                endIcon={<ArrowForwardRounded style={{ fontSize: 16 }} />}
+                sx={{ color: "#fff", px: 0, minWidth: 0 }}
+              >
                 Compare plans
-                <ArrowForwardRounded style={{ fontSize: 16 }} />
-              </button>
-            </CardContent>
-          </Card>
+              </Button>
+            </div>
+          </Paper>
         </section>
 
         {/* Upgrade section */}
@@ -354,30 +352,29 @@ export default function BillingPage() {
 
         {/* Coupon + Payment method */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card className="!bg-white">
-            <CardHeader>
+          <Paper variant="outlined" className="!bg-white">
+            <div className="p-5">
               <div className="flex items-center gap-2">
                 <LocalOfferRounded className="text-blue-600" style={{ fontSize: 20 }} />
-                <CardTitle>Have a coupon?</CardTitle>
+                <h3 className="text-base font-medium">Have a coupon?</h3>
               </div>
-              <CardDescription>Apply a discount code before you upgrade.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <input
+              <p className="mt-1 text-sm text-muted-foreground">Apply a discount code before you upgrade.</p>
+              <div className="mt-4 flex gap-2">
+                <TextField
                   type="text"
+                  size="small"
+                  fullWidth
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                   placeholder="Enter coupon code"
-                  className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 />
-                <button
+                <Button
+                  variant="contained"
                   disabled={!coupon}
                   onClick={() => setCouponApplied(true)}
-                  className="rounded-lg bg-gray-900 text-white px-4 py-2 text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400 hover:bg-gray-800 transition-colors"
                 >
                   Apply
-                </button>
+                </Button>
               </div>
               {couponApplied && (
                 <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">
@@ -385,30 +382,33 @@ export default function BillingPage() {
                   Coupon <strong>{coupon}</strong> applied · 15% off next invoice
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </Paper>
 
-          <Card className="!bg-white">
-            <CardHeader>
+          <Paper variant="outlined" className="!bg-white">
+            <div className="p-5">
               <div className="flex items-center gap-2">
                 <CreditCardRounded className="text-blue-600" style={{ fontSize: 20 }} />
-                <CardTitle>Payment method</CardTitle>
+                <h3 className="text-base font-medium">Payment method</h3>
               </div>
-              <CardDescription>Cards used for billing your subscription.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/50 p-6 flex flex-col items-center justify-center text-center">
+              <p className="mt-1 text-sm text-muted-foreground">Cards used for billing your subscription.</p>
+              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 p-6 flex flex-col items-center justify-center text-center">
                 <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white ring-1 ring-gray-200 mb-2">
                   <CreditCardRounded className="text-gray-400" style={{ fontSize: 20 }} />
                 </div>
                 <p className="text-sm text-gray-600">No payment method on file</p>
-                <button className="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-600 text-white px-3.5 py-2 text-xs font-medium hover:bg-blue-700 transition-colors">
-                  <AddRounded style={{ fontSize: 16 }} />
+                <Button
+                  variant="contained"
+                  size="small"
+                  className="mt-3"
+                  startIcon={<AddRounded style={{ fontSize: 16 }} />}
+                  sx={{ bgcolor: "#2563eb", "&:hover": { bgcolor: "#1d4ed8" } }}
+                >
                   Add payment method
-                </button>
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </Paper>
         </section>
 
         {/* Invoice history */}

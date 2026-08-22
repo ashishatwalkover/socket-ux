@@ -2,7 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { HomeVersionSwitcher } from "@/components/home-version-switcher";
+import { Button, IconButton } from "@mui/material";
+
+const VIOLET_CTA = {
+  bgcolor: "#7c3aed",
+  "&:hover": { bgcolor: "#6d28d9" },
+} as const;
 
 type Connection = { name: string; logo: string };
 
@@ -258,7 +263,6 @@ export default function HomeV4() {
 
   return (
     <div className={`bg-white flex flex-col ${mode === "chat" ? "h-screen" : "min-h-screen"}`}>
-      <HomeVersionSwitcher />
 
       <header className="flex items-center justify-between border-b border-slate-200 px-6 py-3 shrink-0">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
@@ -298,11 +302,11 @@ export default function HomeV4() {
                     <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-sm font-medium text-slate-800">
                       <img src={attachedApp.logo} alt="" className="size-4 object-contain" />
                       {attachedApp.name}
-                      <button type="button" onClick={clearAttachedApp} className="ml-0.5 text-slate-500 hover:text-slate-900" aria-label={`Remove ${attachedApp.name}`}>
+                      <IconButton type="button" onClick={clearAttachedApp} size="small" className="ml-0.5" aria-label={`Remove ${attachedApp.name}`} sx={{ color: "#64748b", p: 0.25 }}>
                         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
-                      </button>
+                      </IconButton>
                     </span>
                   )}
                   <textarea
@@ -325,17 +329,17 @@ export default function HomeV4() {
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <div className="relative">
-                    <button
+                    <IconButton
                       type="button"
                       onClick={() => setPlusMenuOpen((o) => !o)}
-                      className="flex size-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-600 transition-colors"
                       aria-label="Attach or insert"
                       aria-expanded={plusMenuOpen}
+                      sx={{ border: "1px solid #e2e8f0", color: "#64748b", width: 36, height: 36, "&:hover": { borderColor: "#c4b5fd", color: "#7c3aed" } }}
                     >
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${plusMenuOpen ? "rotate-45" : ""}`}>
                         <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                       </svg>
-                    </button>
+                    </IconButton>
                     {plusMenuOpen && (
                       <>
                         <div className="fixed inset-0 z-30" onClick={() => setPlusMenuOpen(false)} />
@@ -348,13 +352,15 @@ export default function HomeV4() {
                       </>
                     )}
                   </div>
-                  <button
+                  <Button
+                    variant="contained"
                     onClick={() => submitFirst(input)}
                     disabled={!input.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    endIcon={<Arrow />}
+                    sx={VIOLET_CTA}
                   >
-                    Continue <Arrow />
-                  </button>
+                    Continue
+                  </Button>
                 </div>
               </div>
 
@@ -437,13 +443,16 @@ export default function HomeV4() {
                 />
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[11px] text-slate-400">Enter to send · Shift+Enter for new line</span>
-                  <button
+                  <Button
+                    variant="contained"
+                    size="small"
                     onClick={() => sendMessage(chatInput)}
                     disabled={!chatInput.trim() || processing}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    endIcon={<Arrow width={13} height={13} />}
+                    sx={VIOLET_CTA}
                   >
-                    Send <Arrow width={13} height={13} />
-                  </button>
+                    Send
+                  </Button>
                 </div>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, CircularProgress } from "@mui/material";
+import { Button, CircularProgress, IconButton, InputBase } from "@mui/material";
 import { APP_BASE } from "@/lib/app-routes";
 import { PlugBuilderVersionNav } from "@/components/ai/plug-builder-version-nav";
 import {

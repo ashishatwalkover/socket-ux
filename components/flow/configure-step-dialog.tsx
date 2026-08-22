@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, TextField } from "@mui/material";
 import type { AppIntegration } from "@/lib/flow-types";
 import type { FlowStep, InputValue, VariableRef } from "@/lib/flow-types";
 import { fieldType } from "@/lib/map-variables";
@@ -102,10 +102,11 @@ export function ConfigureStepDialog({
                 <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   Title
                 </label>
-                <input
+                <TextField
                   type="text"
                   defaultValue={step.title}
-                  className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+                  size="small"
+                  fullWidth
                 />
               </div>
 
@@ -113,10 +114,12 @@ export function ConfigureStepDialog({
                 <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   Description
                 </label>
-                <textarea
+                <TextField
                   defaultValue={step.subtitle}
+                  multiline
                   rows={3}
-                  className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+                  size="small"
+                  fullWidth
                 />
               </div>
 
@@ -190,11 +193,10 @@ export function ConfigureStepDialog({
                       </span>
                     ) : (
                       <Button
-                        size="sm"
-                        variant="outline"
+                        size="small"
+                        variant="outlined"
                         onClick={() => onConnectApp(integration.id)}
                         disabled={connectingAppId === integration.id}
-                        className="h-7 px-2 text-[11px]"
                       >
                         {connectingAppId === integration.id ? "Connecting..." : "Connect"}
                       </Button>
@@ -207,19 +209,21 @@ export function ConfigureStepDialog({
                 <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   Notes
                 </label>
-                <textarea
+                <TextField
                   placeholder="Add configuration notes..."
+                  multiline
                   rows={3}
-                  className="w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-200"
+                  size="small"
+                  fullWidth
                 />
               </div>
             </div>
 
             <footer className="border-t border-gray-200 px-5 py-3 flex items-center justify-end gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" onClick={onClose}>
+              <Button variant="outlined" size="small" onClick={onClose}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={onClose}>
+              <Button variant="contained" size="small" onClick={onClose}>
                 Save
               </Button>
             </footer>

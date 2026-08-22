@@ -2,11 +2,11 @@
 
 import { useCallback, useState, useEffect } from "react";
 import Link from "next/link";
+import { Button } from "@mui/material";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ChatThread, type ChatMessage } from "./chat-thread";
 import { Composer } from "./composer";
 import { MiniAppConfig } from "./mini-app-config";
-import { AiVersionNav } from "./ai-version-nav";
 import { ASSISTANT_SCRIPT } from "@/lib/ai/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -232,7 +232,6 @@ function TopHeader({
   const panelLabel = panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : "";
   return (
     <header className="flex items-center gap-3 border-b border-border/70 px-4 py-2">
-      <AiVersionNav />
       <nav className="flex min-w-0 items-center gap-1.5 text-xs">
         {hasPanel ? (
           <>
@@ -279,15 +278,15 @@ function TopHeader({
             <polyline points="12 6 18 12 12 18" />
           </svg>
         </span>
-        <button
-          type="button"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-blue-700"
+        <Button
+          variant="contained"
+          size="small"
+          className="shrink-0"
+          startIcon={<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5" /><polyline points="5 12 12 5 19 12" /></svg>}
+          sx={{ bgcolor: "#2563eb", "&:hover": { bgcolor: "#1d4ed8" } }}
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 19V5" /><polyline points="5 12 12 5 19 12" />
-          </svg>
           Go Live
-        </button>
+        </Button>
       </div>
     </header>
   );

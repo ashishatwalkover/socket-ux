@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, Chip } from "@mui/material";
 import type {
   AppIntegration,
   FlowStep,
@@ -418,8 +417,8 @@ export default function FlowByAIPage() {
         </nav>
         {steps.length > 0 && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={reset}>Start over</Button>
-            <Button size="sm" onClick={() => router.push(`${APP_BASE}/flows/1/v2`)}>Open in editor</Button>
+            <Button variant="outlined" size="small" onClick={reset}>Start over</Button>
+            <Button variant="contained" size="small" onClick={() => router.push(`${APP_BASE}/flows/1/v2`)}>Open in editor</Button>
           </div>
         )}
       </header>
@@ -473,8 +472,8 @@ export default function FlowByAIPage() {
                       )
                     )}
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant="outlined"
+                      size="small"
                       onClick={() =>
                         runReadinessCheck({
                           addToChat: true,
@@ -607,7 +606,7 @@ export default function FlowByAIPage() {
               <div className="text-sm font-medium text-gray-800">Flow by AI</div>
               <div className="text-[11px] text-gray-400 truncate">Describe your automation</div>
             </div>
-            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">AI</Badge>
+            <Chip label="AI" size="small" sx={{ bgcolor: "#f3e8ff", color: "#7e22ce" }} />
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
@@ -1096,14 +1095,14 @@ function StepRow({
         </span>
         {hasMissingConnection && stepIntegration && (
           <Button
-            size="sm"
-            variant="outline"
+            size="small"
+            variant="outlined"
+            color="error"
             onClick={(e) => {
               e.stopPropagation();
               connectApp(stepIntegration.id);
             }}
             disabled={connectingAppId === stepIntegration.id}
-            className="h-6 px-2 text-[11px] border-red-200 text-red-700 hover:bg-red-50"
           >
             {connectingAppId === stepIntegration.id ? "Connecting..." : `Connect ${stepIntegration.name}`}
           </Button>
