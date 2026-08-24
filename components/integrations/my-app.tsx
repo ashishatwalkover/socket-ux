@@ -10,8 +10,6 @@ import {
   Snackbar,
   Switch,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
 } from "@mui/material";
 import { cn } from "@/lib/utils";
@@ -44,7 +42,6 @@ const ACTIONS: string[] = [
   "View_open BlockKit Modal using JSON",
 ];
 
-type ViewFilter = "all" | "trigger" | "action";
 type SelMap = Record<string, boolean>;
 
 const allTrue = (names: string[]): SelMap => Object.fromEntries(names.map((n) => [n, true]));
@@ -114,7 +111,7 @@ function CapabilityColumn({
             onClick={() => setMany(!allFilteredOn)}
             className="text-xs font-medium text-blue-600 hover:underline"
           >
-            {allFilteredOn ? "Clear" : "Select all"}
+            {allFilteredOn ? "Unselect All" : "Select all"}
           </button>
         )}
       </div>
@@ -151,7 +148,6 @@ function CapabilityColumn({
 }
 
 export function MyApp() {
-  const [view, setView] = useState<ViewFilter>("all");
   const [query, setQuery] = useState("");
   const [triggerSel, setTriggerSel] = useState<SelMap>(() => allTrue(TRIGGERS));
   const [actionSel, setActionSel] = useState<SelMap>(() => allTrue(ACTIONS));
@@ -166,9 +162,6 @@ export function MyApp() {
   const [savedOpen, setSavedOpen] = useState(false);
 
   const q = query.trim().toLowerCase();
-  const showTriggers = view !== "action";
-  const showActions = view !== "trigger";
-  const columns = (showTriggers ? 1 : 0) + (showActions ? 1 : 0);
 
   const totalOn = countOn(TRIGGERS, triggerSel) + countOn(ACTIONS, actionSel);
   const totalAll = TRIGGERS.length + ACTIONS.length;
@@ -216,11 +209,11 @@ export function MyApp() {
       </div>
 
       <Paper variant="outlined" sx={{ borderColor: "divider", borderRadius: 2 }}>
-        {/* Toolbar: search + view filter */}
-        <div className="flex flex-col gap-3 border-b border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Toolbar: search */}
+        <div className="border-b border-gray-100 p-4">
           <TextField
             size="small"
-            placeholder="Search capabilities…"
+            placeholder="Search triggers and actions"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full sm:max-w-xs"
@@ -234,29 +227,12 @@ export function MyApp() {
               },
             }}
           />
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={view}
-            onChange={(_, v) => v && setView(v)}
-            sx={{
-              "& .MuiToggleButton-root": { textTransform: "none", px: 1.75, py: 0.5 },
-            }}
-          >
-            <ToggleButton value="all">All</ToggleButton>
-            <ToggleButton value="trigger">Triggers</ToggleButton>
-            <ToggleButton value="action">Actions</ToggleButton>
-          </ToggleButtonGroup>
         </div>
 
         {/* Capability lists */}
-        <div className={cn("grid gap-x-10 gap-y-6 p-5", columns === 2 ? "md:grid-cols-2" : "grid-cols-1")}>
-          {showTriggers && (
-            <CapabilityColumn title="Triggers" caps={TRIGGERS} query={q} selected={triggerSel} setSelected={setTriggerSel} />
-          )}
-          {showActions && (
-            <CapabilityColumn title="Actions" caps={ACTIONS} query={q} selected={actionSel} setSelected={setActionSel} />
-          )}
+        <div className="grid gap-x-10 gap-y-6 p-5 md:grid-cols-2">
+          <CapabilityColumn title="Triggers" caps={TRIGGERS} query={q} selected={triggerSel} setSelected={setTriggerSel} />
+          <CapabilityColumn title="Actions" caps={ACTIONS} query={q} selected={actionSel} setSelected={setActionSel} />
         </div>
 
         {/* Auto-enable — the old cryptic "maintains selection" made explicit */}

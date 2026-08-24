@@ -17,7 +17,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { cn } from "@/lib/utils";
-import { APPS } from "@/lib/flow-apps";
+import { EmbedIntegrationsPreview } from "./embed-preview";
 
 /* ─── Small inline icons ─── */
 const CloseIcon = (p: React.SVGProps<SVGSVGElement>) => (
@@ -147,50 +147,6 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: stri
   );
 }
 
-/* The actual integrations embed prototype — a realistic app-catalog screen,
-   shown full-size when the user opens "Show preview". */
-function IntegrationsPrototype({ title, subtitle }: { title: string; subtitle: string }) {
-  const apps = Object.values(APPS);
-  return (
-    <div className="flex h-full flex-col overflow-hidden bg-white">
-      <div className="border-b border-gray-100 px-6 py-5">
-        <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-        <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
-      </div>
-      <div className="border-b border-gray-100 px-6 py-3">
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-          Search apps…
-        </div>
-      </div>
-      <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {apps.map((app) => (
-            <div
-              key={app.id}
-              className="flex flex-col items-start gap-2 rounded-xl border border-gray-200 p-4 transition hover:border-gray-300 hover:shadow-sm"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-gray-50 text-2xl">
-                {app.icon}
-              </div>
-              <div className="text-sm font-medium text-gray-900">{app.name}</div>
-              <button
-                type="button"
-                className="mt-1 rounded-md border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                Connect
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─────────────────────────────── Live preview ──────────────────────────── */
 
 function Preview({
@@ -223,7 +179,7 @@ function Preview({
     </div>
   );
 
-  const content = large ? <IntegrationsPrototype title={t} subtitle={s} /> : skeleton;
+  const content = large ? <EmbedIntegrationsPreview title={t} subtitle={s} /> : skeleton;
   const sliderW = large ? "w-[42%]" : "w-2/5";
   const pad = large ? "" : "p-2";
 
@@ -329,7 +285,7 @@ export function Configuration() {
         </IconButton>
       </div>
       <div className="min-h-0 flex-1">
-        <IntegrationsPrototype title={pvTitle} subtitle={pvSubtitle} />
+        <EmbedIntegrationsPreview title={pvTitle} subtitle={pvSubtitle} />
       </div>
     </div>
   );

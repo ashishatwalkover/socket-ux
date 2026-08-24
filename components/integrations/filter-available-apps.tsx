@@ -83,7 +83,7 @@ function CapabilityGroup({
           </span>
         </div>
         <button type="button" onClick={() => onSetAll(!allOn)} className="text-xs font-medium text-blue-600 hover:underline">
-          {allOn ? "Clear" : "All"}
+          {allOn ? "Unselect All" : "Select all"}
         </button>
       </div>
       <div className="flex flex-col">
@@ -210,7 +210,7 @@ export function FilterAvailableApps() {
           <TextField
             fullWidth
             size="small"
-            placeholder="Search services by name, category…"
+            placeholder="Search services by name, domain, or description"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             slotProps={{
@@ -229,7 +229,7 @@ export function FilterAvailableApps() {
             </span>
             <label className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-600">
               <Checkbox size="small" checked={availableOnly} onChange={(e) => setAvailableOnly(e.target.checked)} sx={{ p: 0.25 }} />
-              Available only
+              Filtered only
             </label>
           </div>
 
@@ -293,7 +293,7 @@ export function FilterAvailableApps() {
                 onClick={() => setServiceAll(active, svcOn(active, activeSel) !== svcTotal(active))}
                 className="shrink-0 text-xs font-medium text-blue-600 hover:underline"
               >
-                {svcOn(active, activeSel) === svcTotal(active) ? "Disable all" : "Enable all"}
+                {svcOn(active, activeSel) === svcTotal(active) ? "Unselect All" : "Select all"}
               </button>
             </div>
             <div className="flex flex-col gap-5 p-4">

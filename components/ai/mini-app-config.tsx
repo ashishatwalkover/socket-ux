@@ -13,7 +13,7 @@ const LOGO = {
     "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20x='3'%20y='3'%20width='8'%20height='8'%20rx='1.5'%20fill='%23FCB400'/%3E%3Crect%20x='13'%20y='3'%20width='8'%20height='8'%20rx='1.5'%20fill='%2318BFFF'/%3E%3Crect%20x='3'%20y='13'%20width='18'%20height='8'%20rx='1.5'%20fill='%23F82B60'/%3E%3C/svg%3E",
 };
 
-type Tab = "home" | "destinations" | "destinations2" | "content1" | "content2" | "airtable";
+type Tab = "home" | "destinations" | "destinations2" | "content1" | "content2" | "airtable" | "tablerows";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "home", label: "Home" },
@@ -22,6 +22,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "content1", label: "Notification Content 1" },
   { id: "content2", label: "Notification Content 2" },
   { id: "airtable", label: "Airtable Logging" },
+  { id: "tablerows", label: "Get Table Rows" },
 ];
 
 function Logo({ src }: { src: string }) {
@@ -153,6 +154,7 @@ export function MiniAppConfig() {
           {tab === "content1" && <ContentTab variant="inline" />}
           {tab === "content2" && <ContentTab variant="stacked" />}
           {tab === "airtable" && <AirtableTab />}
+          {tab === "tablerows" && <GetTableRowsTab />}
         </div>
       </div>
 
@@ -372,6 +374,142 @@ function AirtableTab() {
             <span className="text-sm font-medium">Airtable Table</span>
           </div>
           <EditableValue initial="Emplooyee" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Get Table Rows — a spreadsheet-style grid of the rows fetched from the
+   source table, mirroring the DBdash / Airtable data view. ── */
+type ColType = "text" | "number" | "date" | "select";
+
+const ColTypeIcon = ({ type }: { type: ColType }) => {
+  const common = { viewBox: "0 0 24 24", width: 13, height: 13, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, className: "shrink-0 text-slate-400" };
+  if (type === "number") return (<svg {...common}><line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" /><line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" /></svg>);
+  if (type === "date") return (<svg {...common}><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>);
+  if (type === "select") return (<svg {...common}><polyline points="6 9 12 15 18 9" /></svg>);
+  return (<svg {...common}><polyline points="4 7 4 4 20 4 20 7" /><line x1="9" y1="20" x2="15" y2="20" /><line x1="12" y1="4" x2="12" y2="20" /></svg>);
+};
+
+const TABLE_COLS: { key: string; label: string; type: ColType; w: number }[] = [
+  { key: "name", label: "Name", type: "text", w: 150 },
+  { key: "phone", label: "Phone", type: "number", w: 140 },
+  { key: "email", label: "Email", type: "text", w: 200 },
+  { key: "row", label: "Row", type: "number", w: 64 },
+  { key: "change", label: "Change Type", type: "select", w: 120 },
+  { key: "status", label: "Status", type: "select", w: 120 },
+  { key: "created", label: "Created At", type: "date", w: 140 },
+];
+
+type Row = { name: string; phone: string; email: string; row: number; change: "added" | "updated"; status: "Notified" | "Pending" | "Failed"; created: string };
+const TABLE_ROWS: Row[] = [
+  { name: "Priya Sharma", phone: "+91 98765 43210", email: "priya@acme.com", row: 2, change: "added", status: "Notified", created: "2m ago" },
+  { name: "Marcus Lee", phone: "+1 415 555 0132", email: "marcus@brightlabs.io", row: 3, change: "added", status: "Notified", created: "8m ago" },
+  { name: "Aïsha Karim", phone: "+44 7700 900432", email: "aisha.k@northwind.co", row: 4, change: "updated", status: "Pending", created: "21m ago" },
+  { name: "Diego Fernández", phone: "+34 612 345 678", email: "diego@ventura.es", row: 5, change: "added", status: "Failed", created: "44m ago" },
+  { name: "Sana Gupta", phone: "+91 90123 45678", email: "sana@leadflow.in", row: 6, change: "added", status: "Notified", created: "1h ago" },
+  { name: "Tom Becker", phone: "+49 151 23456789", email: "tom.becker@kmail.de", row: 7, change: "updated", status: "Notified", created: "2h ago" },
+  { name: "Lena Novak", phone: "+420 601 234 567", email: "lena@novaktech.cz", row: 8, change: "added", status: "Pending", created: "3h ago" },
+];
+
+const STATUS_STYLE: Record<Row["status"], string> = {
+  Notified: "border-emerald-200 text-emerald-700",
+  Pending: "border-amber-200 text-amber-700",
+  Failed: "border-red-200 text-red-700",
+};
+
+function GetTableRowsTab() {
+  const [sub, setSub] = useState<"config" | "table">("config");
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <Logo src={LOGO.sheets} />
+        <h2 className="text-xl font-semibold">Get Table Rows</h2>
+      </div>
+
+      {/* Sub-tabs: Configuration / Table */}
+      <div className="mt-4 inline-flex gap-1 rounded-lg bg-slate-100 p-1">
+        {([
+          { id: "config", label: "Configuration" },
+          { id: "table", label: "Table" },
+        ] as const).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setSub(t.id)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              sub === t.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5">{sub === "config" ? <RowsConfig /> : <RowsTable />}</div>
+    </div>
+  );
+}
+
+function RowsConfig() {
+  return (
+    <div>
+      <p className="text-sm text-slate-500">Configure which rows to fetch from the source sheet.</p>
+      <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
+        <ConnectionRow label="Google Account" chipLogo={LOGO.sheets} chipValue="ashish@walkover.in" variant="inline" />
+        <ValueRow logo={LOGO.sheets} label="Spreadsheet" value="Leads 2026" variant="inline" />
+        <ValueRow logo={LOGO.sheets} label="Worksheet" value="Sheet1" variant="inline" />
+        <ValueRow logo={LOGO.sheets} label="Range" value="A1:G" variant="inline" />
+        <ValueRow logo={LOGO.sheets} label="Max Rows" value="100" variant="inline" />
+      </div>
+    </div>
+  );
+}
+
+function RowsTable() {
+  const totalW = TABLE_COLS.reduce((a, c) => a + c.w, 0) + 48; // + row-number gutter
+  return (
+    <div>
+      <p className="text-sm text-slate-500">
+        Rows returned from the source sheet. {TABLE_ROWS.length} rows fetched.
+      </p>
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+        <div style={{ minWidth: totalW }}>
+          {/* Header */}
+          <div className="flex border-b border-slate-200 bg-slate-50 text-sm font-medium text-slate-700">
+            <div className="flex w-12 shrink-0 items-center justify-center border-r border-slate-200 py-2 text-xs text-slate-400">#</div>
+            {TABLE_COLS.map((c) => (
+              <div key={c.key} className="flex shrink-0 items-center gap-1.5 border-r border-slate-200 px-3 py-2 last:border-r-0" style={{ width: c.w }}>
+                <ColTypeIcon type={c.type} />
+                <span className="truncate">{c.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {TABLE_ROWS.map((r, i) => (
+            <div key={r.row} className="flex border-b border-slate-100 text-sm text-slate-700 last:border-b-0 hover:bg-slate-50">
+              <div className="flex w-12 shrink-0 items-center justify-center border-r border-slate-100 py-2 text-xs text-slate-400">{i + 1}</div>
+              <div className="shrink-0 truncate border-r border-slate-100 px-3 py-2 font-medium text-slate-800" style={{ width: TABLE_COLS[0].w }}>{r.name}</div>
+              <div className="shrink-0 truncate border-r border-slate-100 px-3 py-2 tabular-nums" style={{ width: TABLE_COLS[1].w }}>{r.phone}</div>
+              <div className="shrink-0 truncate border-r border-slate-100 px-3 py-2 text-slate-600" style={{ width: TABLE_COLS[2].w }}>{r.email}</div>
+              <div className="shrink-0 border-r border-slate-100 px-3 py-2 tabular-nums text-slate-500" style={{ width: TABLE_COLS[3].w }}>{r.row}</div>
+              <div className="shrink-0 border-r border-slate-100 px-3 py-2" style={{ width: TABLE_COLS[4].w }}>
+                <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{r.change}</span>
+              </div>
+              <div className="shrink-0 border-r border-slate-100 px-3 py-2" style={{ width: TABLE_COLS[5].w }}>
+                <span className={`rounded-full border bg-white px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[r.status]}`}>{r.status}</span>
+              </div>
+              <div className="shrink-0 px-3 py-2 text-slate-500" style={{ width: TABLE_COLS[6].w }}>{r.created}</div>
+            </div>
+          ))}
+
+          {/* New row */}
+          <button type="button" className="flex w-full items-center gap-2 border-t border-slate-200 px-3 py-2 text-sm text-slate-400 hover:bg-slate-50 hover:text-slate-600">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            New row
+          </button>
         </div>
       </div>
     </div>
