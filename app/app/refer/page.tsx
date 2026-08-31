@@ -182,7 +182,7 @@ function ReferAndEarnPageInner() {
         <header className="flex flex-wrap items-start gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <Typography variant="h5" fontWeight={600} color="text.primary">
+              <Typography variant="h5" color="text.primary" sx={{ fontWeight: 600 }}>
                 Refer &amp; Earn
               </Typography>
               <Chip
@@ -202,7 +202,7 @@ function ReferAndEarnPageInner() {
         {!isEmpty && (
           <section>
             <div className="flex items-center justify-between gap-3 mb-4">
-              <Typography variant="h6" fontWeight={600} color="text.primary">
+              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 600 }}>
                 Your progress
               </Typography>
               <Button
@@ -235,7 +235,7 @@ function ReferAndEarnPageInner() {
 
                   <div className="mt-6">
                     <div className="flex items-baseline justify-between">
-                      <Typography variant="body2" fontWeight={500} color="text.primary">
+                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
                         {upcoming
                           ? `Next milestone: ${target} clients`
                           : "You've reached the top tier"}
@@ -300,7 +300,7 @@ function ReferAndEarnPageInner() {
                     </Typography>
                   </div>
                   <div className="mt-3 flex items-baseline gap-1">
-                    <Typography variant="h4" fontWeight={600} color="text.primary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                    <Typography variant="h4" color="text.primary" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                       ${monthlyCommission.toFixed(0)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">/mo</Typography>
@@ -314,7 +314,7 @@ function ReferAndEarnPageInner() {
                     <Typography variant="caption" sx={{ color: green[700] }}>
                       Projected annual commission
                     </Typography>
-                    <Typography variant="h6" fontWeight={600} sx={{ color: green[800], fontVariantNumeric: "tabular-nums" }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: green[800], fontVariantNumeric: "tabular-nums" }}>
                       ${(monthlyCommission * 12).toLocaleString()}
                     </Typography>
                   </Box>
@@ -364,7 +364,7 @@ function ReferAndEarnPageInner() {
                   The more you refer, the more you earn
                 </Box>
 
-                <Typography variant="h3" fontWeight={700} sx={{ mt: 2, lineHeight: 1.1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, mt: 2, lineHeight: 1.1 }}>
                   Refer more. Earn more.
                 </Typography>
                 <Typography variant="body1" sx={{ mt: 1.5, maxWidth: 520, color: "rgba(255,255,255,0.85)" }}>
@@ -445,7 +445,7 @@ function ReferAndEarnPageInner() {
                               bgcolor: isCurrent ? "#fff" : "rgba(255,255,255,0.22)",
                             }}
                           >
-                            <Typography variant="subtitle1" fontWeight={700} sx={{ color: isCurrent ? indigo[700] : "#fff" }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: isCurrent ? indigo[700] : "#fff" }}>
                               {t.rate}%
                             </Typography>
                           </Box>
@@ -471,7 +471,7 @@ function ReferAndEarnPageInner() {
         {/* Section 2: Commission Levels */}
         <section>
           <div className="mb-4">
-            <Typography variant="h6" fontWeight={600} color="text.primary">
+            <Typography variant="h6" color="text.primary" sx={{ fontWeight: 600 }}>
               Commission levels
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -522,12 +522,12 @@ function ReferAndEarnPageInner() {
                     >
                       {tier.icon}
                     </Box>
-                    <Typography variant="h3" fontWeight={700} sx={{ color: c.strong, fontVariantNumeric: "tabular-nums" }}>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: c.strong, fontVariantNumeric: "tabular-nums" }}>
                       {tier.rate}%
                     </Typography>
                   </div>
 
-                  <Typography variant="subtitle1" fontWeight={600} color="text.primary" sx={{ mt: 2 }}>
+                  <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 600, mt: 2 }}>
                     {tier.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -561,7 +561,7 @@ function ReferAndEarnPageInner() {
 
         {/* Section 3: How It Works */}
         <section>
-          <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ mb: 2 }}>
+          <Typography variant="h6" color="text.primary" sx={{ fontWeight: 600, mb: 2 }}>
             How it works
           </Typography>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -583,11 +583,11 @@ function ReferAndEarnPageInner() {
                     >
                       {step.icon}
                     </Box>
-                    <Typography variant="h4" fontWeight={700} sx={{ color: grey[300], lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: grey[300], lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                       {i + 1}
                     </Typography>
                   </div>
-                  <Typography variant="subtitle2" fontWeight={600} color="text.primary" sx={{ mt: 1.5 }}>
+                  <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600, mt: 1.5 }}>
                     {step.title}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.5 }}>
