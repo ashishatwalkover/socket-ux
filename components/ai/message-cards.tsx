@@ -164,24 +164,19 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
 
     case "credentials":
       return (
-        <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+        <div className="rounded-xl border border-border/70 bg-background p-4">
           {/* Trust reassurance — reduces the "connect step" bounce */}
           <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
-            <div className="flex items-center justify-center gap-2 border-b border-border/60 pb-2 text-foreground/80">
-              <LuShieldCheck className="size-3.5 text-emerald-600" />
-              <span className="text-[11px] font-semibold">Connecting is safe and reversible</span>
-            </div>
-            <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+            <div className="grid gap-2.5 sm:grid-cols-2">
               {TRUST_SIGNALS.map((s) => {
                 const SignalIcon = TRUST_ICON[s.icon];
                 return (
-                  <div key={s.title} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+                  <div key={s.title} className="flex items-center gap-2.5">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
                       <SignalIcon className="size-4" />
                     </span>
                     <div className="min-w-0">
                       <div className="text-[11px] font-medium text-foreground">{s.title}</div>
-                      <div className="text-[11px] leading-snug text-muted-foreground">{s.detail}</div>
                     </div>
                   </div>
                 );
@@ -189,7 +184,7 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
             </div>
           </div>
 
-          <div className="mt-3 flex justify-center">
+          <div className="mt-3 flex justify-start">
             <Button
               size="large"
               variant="outlined"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Chip,
   Dialog,
@@ -12,6 +13,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  Snackbar,
   Switch,
   TextField,
   Tooltip,
@@ -250,6 +252,9 @@ export function Configuration() {
   const [heightUnit, setHeightUnit] = useState("%");
   const [widthUnit, setWidthUnit] = useState("%");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
+
+  const handleSave = () => setSavedOpen(true);
 
   const addDomain = () => {
     const d = domainDraft.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -315,7 +320,7 @@ export function Configuration() {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <Button variant="contained">Save changes</Button>
+            <Button variant="contained" onClick={handleSave}>Save changes</Button>
           </div>
         </div>
       </div>
@@ -527,7 +532,7 @@ export function Configuration() {
             <Button variant="text" color="inherit">
               Reset
             </Button>
-            <Button variant="contained">Save changes</Button>
+            <Button variant="contained" onClick={handleSave}>Save changes</Button>
           </div>
         </div>
 
@@ -597,6 +602,17 @@ export function Configuration() {
       >
         {previewShell}
       </Dialog>
+
+      <Snackbar
+        open={savedOpen}
+        autoHideDuration={2500}
+        onClose={() => setSavedOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="success" variant="filled" onClose={() => setSavedOpen(false)} sx={{ width: "100%" }}>
+          Configuration saved
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

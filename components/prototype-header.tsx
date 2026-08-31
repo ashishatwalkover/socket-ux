@@ -76,6 +76,17 @@ const PROTOTYPE_CONTROLS: Record<string, PrototypeSwitch[]> = {
       ],
     },
   ],
+  "/app/refer": [
+    {
+      param: "state",
+      label: "Referrals",
+      defaultValue: "with-data",
+      options: [
+        { value: "with-data", label: "Referred" },
+        { value: "empty", label: "None yet" },
+      ],
+    },
+  ],
 };
 
 function SegmentedSwitch({ control }: { control: PrototypeSwitch }) {
