@@ -167,6 +167,7 @@ function PrototypeHeaderInner() {
   // outruns the small handle.
   const containerRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const startDrag = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -198,12 +199,19 @@ function PrototypeHeaderInner() {
     >
       <div
         onMouseDown={startDrag}
-        className="flex cursor-grab touch-none items-center gap-2 rounded-full border border-white/10 bg-slate-900/95 px-2 py-1.5 text-white shadow-lg backdrop-blur active:cursor-grabbing"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        className="relative flex cursor-grab touch-none items-center gap-2 rounded-full border border-white/10 bg-slate-900/95 px-2 py-1.5 text-white shadow-lg backdrop-blur active:cursor-grabbing"
         title="Drag to move"
       >
+        {showTooltip && (
+          <div className="absolute top-full left-1/2 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-950 px-3 py-1.5 text-[11px] font-medium text-amber-100 shadow-lg border border-white/10 pointer-events-none">
+            Drag anywhere to move
+          </div>
+        )}
         <span className="flex items-center gap-1.5 rounded-full px-1.5 text-[10px] font-semibold uppercase tracking-widest text-amber-300">
           <span className="inline-block size-1.5 rounded-full bg-amber-400" />
-          Proto
+          Not a part of UI
         </span>
 
         <Link
