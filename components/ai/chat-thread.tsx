@@ -33,7 +33,7 @@ export function ChatThread({ messages, onAction, onPickStarter, empty }: Props) 
           <h1 className="text-2xl font-semibold tracking-tight">
             What should we automate?
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-gray-600">
             Describe a workflow in plain language. I&rsquo;ll handle the setup, code, and monitoring.
           </p>
         </div>
@@ -42,10 +42,10 @@ export function ChatThread({ messages, onAction, onPickStarter, empty }: Props) 
             <button
               key={s.title}
               onClick={() => onPickStarter(s.prompt)}
-              className="group rounded-xl border border-border/70 bg-background p-4 text-left transition-all hover:border-violet-300 hover:bg-violet-50/40 hover:shadow-sm cursor-pointer"
+              className="group rounded-xl border border-gray-200 bg-white p-4 text-left transition-all hover:border-violet-300 hover:bg-violet-50/40 hover:shadow-sm cursor-pointer"
             >
-              <p className="text-sm font-medium text-foreground">{s.title}</p>
-              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+              <p className="text-sm font-medium text-gray-900">{s.title}</p>
+              <p className="mt-1 text-xs text-gray-600 line-clamp-2">
                 {s.prompt}
               </p>
             </button>

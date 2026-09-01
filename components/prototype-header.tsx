@@ -51,6 +51,7 @@ const PROTOTYPE_VERSIONS: VersionGroup[] = [
       { label: "v3", href: "/ai3" },
       { label: "v4", href: "/ai4" },
       { label: "v5", href: "/ai5" },
+      { label: "v6", href: "/ai6" },
     ],
   },
   {

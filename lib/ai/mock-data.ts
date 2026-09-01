@@ -113,6 +113,22 @@ export type AssistantBlock =
       logs: { time: string; text: string; status: "ok" | "warn" | "err" }[];
     }
   | {
+      kind: "flowPlan";
+      title: string;
+      description: string;
+      steps: Array<{
+        id: string;
+        number: number;
+        icon: string;
+        title: string;
+        status: "proposed" | "configured" | "pending";
+        description: string;
+        details: string[];
+        type: "trigger" | "action";
+        config?: Record<string, string | number | boolean>;
+      }>;
+    }
+  | {
       kind: "suggestion";
       title: string;
       body: string;

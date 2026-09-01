@@ -137,8 +137,8 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
         <div>
         <div
           className={cn(
-            "flex items-center gap-2 rounded-2xl border-2 border-black bg-background px-3 py-2 transition-all",
-            "focus-within:border-black focus-within:ring-2 focus-within:ring-black/20"
+            "flex items-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-3 py-2 transition-all",
+            "focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10"
           )}
         >
           <textarea
@@ -181,7 +181,7 @@ export function Composer({ value, onChange, onSend, disabled, placeholder, flowN
             {menuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 bottom-full z-50 mb-2 w-48 overflow-hidden rounded-xl border border-border/70 bg-background py-1 shadow-lg"
+                className="absolute right-0 bottom-full z-50 mb-2 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
               >
                 {MENU_ITEMS.map((item) => {
                   const Icon = item.icon;
