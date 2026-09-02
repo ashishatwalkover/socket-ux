@@ -334,15 +334,7 @@ export function AssistantBlockView({ block, onAction, isLast = true }: CardProps
           </div>
 
           <div className="mt-4 border-t border-gray-200 pt-4">
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button
-                size="small"
-                variant="contained"
-                onClick={() => onAction?.(block.primaryActionLabel ?? "Build this flow")}
-                sx={{ bgcolor: blue[600], color: "#fff", "&:hover": { bgcolor: blue[700] } }}
-              >
-                {block.primaryActionLabel ?? "Build this flow"}
-              </Button>
+            <div className="flex items-center justify-between gap-2">
               <Button
                 size="small"
                 variant="text"
@@ -350,6 +342,14 @@ export function AssistantBlockView({ block, onAction, isLast = true }: CardProps
                 sx={{ color: "text.secondary" }}
               >
                 Change the plan
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => onAction?.(block.primaryActionLabel ?? "Build this flow")}
+                sx={{ bgcolor: blue[600], color: "#fff", "&:hover": { bgcolor: blue[700] } }}
+              >
+                {block.primaryActionLabel ?? "Build this flow"}
               </Button>
             </div>
           </div>
