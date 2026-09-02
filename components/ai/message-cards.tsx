@@ -334,7 +334,7 @@ export function AssistantBlockView({ block, onAction, isLast = true }: CardProps
           </div>
 
           <div className="mt-4 border-t border-gray-200 pt-4">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-end gap-2">
               <Button
                 size="small"
                 variant="text"

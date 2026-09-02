@@ -35,7 +35,6 @@ function iconClass(icon: string) {
 
 export function StepperConfig({ title, description, steps, webhookUrl, onFinish }: Props) {
   const [active, setActive] = useState(0);
-  const [showConfig, setShowConfig] = useState(false);
   const current = steps[active];
   const isLast = active === steps.length - 1;
 
@@ -44,47 +43,7 @@ export function StepperConfig({ title, description, steps, webhookUrl, onFinish 
       <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       <p className="mt-1 mb-4 text-sm text-gray-600">{description}</p>
 
-      {/* Summary Section - Webhook URL */}
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Webhook URL</p>
-        <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 mb-3">
-          <span className="flex-1 truncate font-mono text-xs text-gray-700">{webhookUrl || "https://flow.sokt.io/func/scripQGnrZSF"}</span>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(webhookUrl || "https://flow.sokt.io/func/scripQGnrZSF");
-            }}
-            className="flex size-6 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-100"
-            title="Copy webhook URL"
-          >
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Configure Button */}
-      <div className="mb-4">
-        <Button
-          size="small"
-          variant={showConfig ? "contained" : "outlined"}
-          onClick={() => setShowConfig(!showConfig)}
-          sx={{
-            bgcolor: showConfig ? "#2563eb" : undefined,
-            color: showConfig ? "#fff" : "text.primary",
-            borderColor: showConfig ? undefined : "divider",
-            "&:hover": showConfig ? { bgcolor: "#1d4ed8" } : undefined,
-          }}
-        >
-          {showConfig ? "Hide" : "Configure"}
-        </Button>
-      </div>
-
-      {/* Stepper Configuration - Hidden by Default */}
-      {showConfig && (
-        <>
-          <div className="mb-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+      <div className="mb-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
         <span className="flex-1 text-[13px] text-gray-700">
           <span className="font-semibold text-gray-900">
             Step {active + 1} of {steps.length}
@@ -192,8 +151,6 @@ export function StepperConfig({ title, description, steps, webhookUrl, onFinish 
           {isLast ? "Finish" : "Next"}
         </Button>
       </div>
-        </>
-      )}
     </div>
   );
 }
