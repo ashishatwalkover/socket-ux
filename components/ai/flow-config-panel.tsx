@@ -110,9 +110,10 @@ const isReady = (s: ConfigStep) => s.details.length === 0;
 
 export function FlowConfigPanel({ title, description, steps }: Props) {
   const firstIncomplete = steps.find((s) => !isReady(s));
-  const [openId, setOpenId] = useState<string | null>(firstIncomplete?.id ?? null);
-  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"summary" | "flow" | "log">("summary");
+  const [showSteps, setShowSteps] = useState(false);
 
   const fieldsLeft = steps.reduce((n, s) => n + s.details.length, 0);
   const stepsLeft = steps.filter((s) => !isReady(s)).length;
@@ -152,23 +153,33 @@ export function FlowConfigPanel({ title, description, steps }: Props) {
   return (
     <div className="relative h-full overflow-y-auto bg-white">
       <div className="flex max-w-3xl flex-col gap-3.5 py-6 pl-4 pr-7">
+        {/* Tabs */}
+        <div className="flex w-fit items-center gap-1 rounded-lg bg-gray-100 p-1">
+          {(
+            [
+              { id: "summary", label: "Summary" },
+              { id: "flow", label: "Flow" },
+              { id: "log", label: "Log" },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                activeTab === tab.id
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Title */}
         <div className="flex flex-col gap-2.5">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {steps.map((s, i) => (
-              <span key={s.id} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-xs text-gray-500">→</span>}
-                <span
-                  className={cn(
-                    "flex size-[30px] items-center justify-center rounded-md text-[11px] font-extrabold",
-                    iconClass(s.icon)
-                  )}
-                >
-                  {s.icon}
-                </span>
-              </span>
-            ))}
-          </div>
           <div className="flex min-w-0 flex-col gap-1">
             <h2 className="text-[22px] font-semibold leading-tight tracking-tight text-gray-900">
               {title}
@@ -177,98 +188,156 @@ export function FlowConfigPanel({ title, description, steps }: Props) {
           </div>
         </div>
 
-        {/* Readiness bar OR Go Live */}
-        {allReady ? (
-          <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-            <span className="flex-1 text-[13px] text-gray-800">
-              <span className="font-semibold text-green-700">✓ Everything is filled in.</span>{" "}
-              Test with real data, then take it live.
-            </span>
-            <Button
-              size="small"
-              variant="contained"
-              sx={{
-                bgcolor: "#16a34a",
-                color: "#fff",
-                fontWeight: 600,
-                "&:hover": { bgcolor: "#15803d" },
+        {/* Webhook URL */}
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Webhook URL</p>
+          <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2">
+            <span className="flex-1 truncate font-mono text-xs text-gray-700">https://flow.sokt.io/func/scripQGnrZSF</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText("https://flow.sokt.io/func/scripQGnrZSF");
               }}
-              onClick={() => flash("Automation is going live…")}
+              className="flex size-6 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-100"
+              title="Copy webhook URL"
             >
-              ↑ Go Live
-            </Button>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
           </div>
-        ) : (
-          <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-            <span className="flex-1 text-[13px] text-gray-700">
-              <span className="font-semibold text-gray-900">
-                {fieldsLeft} {fieldsLeft === 1 ? "field" : "fields"}
-              </span>{" "}
-              across {stepsLeft} {stepsLeft === 1 ? "step" : "steps"} to fill before this can go live.
-            </span>
-            <span className="flex gap-1">
-              {steps.map((s) => (
-                <span
-                  key={s.id}
-                  className={cn(
-                    "block h-[5px] w-[26px] rounded-full",
-                    isReady(s) ? "bg-green-500" : s.id === openId ? "bg-blue-500" : "bg-gray-300"
-                  )}
+        </div>
+
+        {/* Steps Description */}
+        <div className="mb-4">
+          <ol className="space-y-2">
+            {steps.map((step, i) => (
+              <li key={step.id} className="flex gap-3 text-sm">
+                <span className="flex-shrink-0 font-medium text-gray-600">{i + 1}.</span>
+                <span className="text-gray-700">{step.description}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mb-4 flex gap-2">
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => flash("Flow is going live…")}
+            sx={{ bgcolor: "#16a34a", color: "#fff", "&:hover": { bgcolor: "#15803d" } }}
+            startIcon={
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 19V5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+            }
+          >
+            Go Live
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => flash("Testing flow…")}
+            sx={{ color: "text.primary", borderColor: "divider" }}
+          >
+            ▶ Test Flow
+          </Button>
+          <Button
+            size="small"
+            variant={showSteps ? "contained" : "outlined"}
+            onClick={() => setShowSteps(!showSteps)}
+            sx={{
+              bgcolor: showSteps ? "#2563eb" : undefined,
+              color: showSteps ? "#fff" : "text.primary",
+              borderColor: showSteps ? undefined : "divider",
+              "&:hover": showSteps ? { bgcolor: "#1d4ed8" } : undefined,
+            }}
+            startIcon={
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="1" />
+                <path d="M12 19a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            }
+          >
+            {showSteps ? "Hide" : "Configure"}
+          </Button>
+        </div>
+
+        {/* Readiness bar OR Go Live - Only shown when Configure is clicked */}
+        {showSteps && (
+          <>
+            {allReady ? (
+              <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+                <span className="flex-1 text-[13px] text-gray-800">
+                  <span className="font-semibold text-green-700">✓ Everything is filled in.</span>{" "}
+                  Test with real data, then take it live.
+                </span>
+                <Button
+                  size="small"
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#16a34a",
+                    color: "#fff",
+                    fontWeight: 600,
+                    "&:hover": { bgcolor: "#15803d" },
+                  }}
+                  onClick={() => flash("Automation is going live…")}
+                >
+                  ↑ Go Live
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <span className="flex-1 text-[13px] text-gray-700">
+                  <span className="font-semibold text-gray-900">
+                    {fieldsLeft} {fieldsLeft === 1 ? "field" : "fields"}
+                  </span>{" "}
+                  across {stepsLeft} {stepsLeft === 1 ? "step" : "steps"} to fill before this can go live.
+                </span>
+                <span className="flex gap-1">
+                  {steps.map((s) => (
+                    <span
+                      key={s.id}
+                      className={cn(
+                        "block h-[5px] w-[26px] rounded-full",
+                        isReady(s) ? "bg-green-500" : s.id === openId ? "bg-blue-500" : "bg-gray-300"
+                      )}
+                    />
+                  ))}
+                </span>
+                <button
+                  onClick={jumpToNext}
+                  className="cursor-pointer text-xs font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  Jump to next ↓
+                </button>
+              </div>
+            )}
+
+            {/* Steps */}
+            {steps.map((step) => (
+                <StepCard
+                  key={step.id}
+                  step={step}
+                  eyebrow={
+                    step.type === "trigger" ? "TRIGGER" : `STEP ${actionNumbers.get(step.id)}`
+                  }
+                  open={openId === step.id}
+                  isNextBlocker={step.id === nextBlockerId}
+                  onToggle={() => setOpenId(openId === step.id ? null : step.id)}
+                  onTest={() => flash(`Testing "${step.title}"…`)}
+                  onSave={() => flash("Step saved.")}
                 />
               ))}
-            </span>
-            <button
-              onClick={jumpToNext}
-              className="cursor-pointer text-xs font-semibold text-blue-600 hover:text-blue-700"
-            >
-              Jump to next ↓
-            </button>
-          </div>
+
+
+            {/* Footer */}
+          </>
         )}
 
-        {/* Steps */}
-        {steps.map((step) => (
-          <StepCard
-            key={step.id}
-            step={step}
-            eyebrow={
-              step.type === "trigger" ? "TRIGGER" : `STEP ${actionNumbers.get(step.id)}`
-            }
-            open={openId === step.id}
-            isNextBlocker={step.id === nextBlockerId}
-            onToggle={() => setOpenId(openId === step.id ? null : step.id)}
-            onTest={() => flash(`Testing "${step.title}"…`)}
-            onSave={() => flash("Step saved.")}
-          />
-        ))}
-
-        {/* Footer */}
-        <div className="mt-2 flex flex-col gap-2 border-t border-gray-200 pt-3.5">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setHowItWorksOpen((v) => !v)}
-              className="cursor-pointer text-[13px] font-medium text-blue-600 hover:text-blue-700"
-            >
-              How it works {howItWorksOpen ? "▴" : "▾"}
-            </button>
-            <span className="flex-1" />
-            <Button
-              size="small"
-              variant="outlined"
-              sx={{ color: "text.primary", borderColor: "divider" }}
-              onClick={() => flash("Running full automation test…")}
-            >
-              ▶ Test this automation
-            </Button>
-          </div>
-          {howItWorksOpen && (
-            <p className="rounded-md border border-gray-200 bg-gray-50 p-3 text-[13px] leading-relaxed text-gray-600">
-              The trigger fires on schedule. Each action then runs in order,
-              passing its output to the next. You can test one step at a time,
-              or run the whole automation end-to-end from the button on the right.
-            </p>
-          )}
-        </div>
       </div>
 
       {toast && (

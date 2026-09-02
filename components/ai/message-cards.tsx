@@ -8,6 +8,7 @@ import { blue } from "@mui/material/colors";
 import { cn } from "@/lib/utils";
 import type { AssistantBlock } from "@/lib/ai/mock-data";
 import { TRUST_SIGNALS } from "@/lib/connections-data";
+import { StepperConfig } from "./stepper-config";
 
 const TRUST_ICON: Record<string, IconType> = {
   key: LuKey,
@@ -19,9 +20,10 @@ const TRUST_ICON: Record<string, IconType> = {
 type CardProps = {
   block: AssistantBlock;
   onAction?: (label: string) => void;
+  isLast?: boolean;
 };
 
-export function AssistantBlockView({ block, onAction }: CardProps) {
+export function AssistantBlockView({ block, onAction, isLast = true }: CardProps) {
   switch (block.kind) {
     case "text":
       return <p className="text-sm leading-relaxed text-gray-900/90">{block.text}</p>;
@@ -156,7 +158,7 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
                 Edit
               </Button>
               <Button size="small" variant="contained" onClick={() => onAction?.("Deploy")}>
-                Deploy
+                Go Live
               </Button>
             </div>
           </div>
@@ -164,6 +166,18 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
       );
 
     case "credentials":
+      if (!isLast) {
+        return (
+          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <LuShieldCheck className="size-3.5" />
+            </span>
+            <span className="text-sm font-medium text-gray-900">
+              {block.service} connected
+            </span>
+          </div>
+        );
+      }
       return (
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           {/* Trust reassurance — reduces the "connect step" bounce */}
@@ -245,18 +259,36 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
       return (
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                ✓ Your flow plan is ready
-              </div>
-            </div>
-            <div className="mb-2 flex flex-wrap gap-3 text-xs text-gray-600">
-              <span>📋 {block.steps.length} steps</span>
-              <span>📝 Roughly {block.steps.reduce((sum, s) => sum + s.details.length, 0)} details needed</span>
-              <span>⏱️ About 8 minutes to build</span>
-            </div>
             <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
-            <p className="mt-1 text-sm text-gray-600">{block.description}</p>
+            <p className="mt-1 mb-3 text-sm text-gray-600">{block.description}</p>
+            {(() => {
+              const fieldsLeft = block.steps.reduce((sum, s) => sum + s.details.length, 0);
+              const stepsLeft = block.steps.length;
+              return (
+                <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                  <span className="flex-1 text-[13px] text-gray-700">
+                    <span className="font-semibold text-gray-900">
+                      {fieldsLeft} {fieldsLeft === 1 ? "field" : "fields"}
+                    </span>{" "}
+                    across {stepsLeft} {stepsLeft === 1 ? "step" : "steps"} to fill before this can go live.
+                  </span>
+                  <span className="flex gap-1">
+                    {block.steps.map((s, i) => (
+                      <span
+                        key={s.id}
+                        className={cn(
+                          "block h-[5px] w-[26px] rounded-full",
+                          i === 0 ? "bg-blue-500" : "bg-gray-300"
+                        )}
+                      />
+                    ))}
+                  </span>
+                  <button className="cursor-pointer text-xs font-semibold text-blue-600 hover:text-blue-700">
+                    Jump to next ↓
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="space-y-3">
@@ -302,18 +334,14 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
           </div>
 
           <div className="mt-4 border-t border-gray-200 pt-4">
-            <p className="text-sm text-gray-600">
-              Happy with this plan? I&rsquo;ll walk you through each step and connect
-              the apps it needs — you can still change anything along the way.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 size="small"
                 variant="contained"
-                onClick={() => onAction?.("Build this flow")}
+                onClick={() => onAction?.(block.primaryActionLabel ?? "Build this flow")}
                 sx={{ bgcolor: blue[600], color: "#fff", "&:hover": { bgcolor: blue[700] } }}
               >
-                Build this flow
+                {block.primaryActionLabel ?? "Build this flow"}
               </Button>
               <Button
                 size="small"
@@ -326,6 +354,17 @@ export function AssistantBlockView({ block, onAction }: CardProps) {
             </div>
           </div>
         </div>
+      );
+
+    case "stepperConfig":
+      return (
+        <StepperConfig
+          title={block.title}
+          description={block.description}
+          webhookUrl={block.webhookUrl}
+          steps={block.steps}
+          onFinish={() => onAction?.("Deploy")}
+        />
       );
 
     case "suggestion":

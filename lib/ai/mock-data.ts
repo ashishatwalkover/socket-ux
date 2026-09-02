@@ -116,6 +116,7 @@ export type AssistantBlock =
       kind: "flowPlan";
       title: string;
       description: string;
+      primaryActionLabel?: string;
       steps: Array<{
         id: string;
         number: number;
@@ -132,6 +133,23 @@ export type AssistantBlock =
       kind: "suggestion";
       title: string;
       body: string;
+    }
+  | {
+      kind: "stepperConfig";
+      title: string;
+      description: string;
+      webhookUrl?: string;
+      steps: Array<{
+        id: string;
+        number: number;
+        icon: string;
+        title: string;
+        status: "proposed" | "configured" | "pending";
+        description: string;
+        details: string[];
+        type: "trigger" | "action";
+        config?: Record<string, string | number | boolean>;
+      }>;
     };
 
 export type AssistantTurn = {
@@ -184,49 +202,26 @@ export const ASSISTANT_SCRIPT: AssistantTurn[] = [
     blocks: [
       {
         kind: "text",
-        text: "Got it. A couple quick questions before I set this up:",
+        text: "Got it. Let's set up the first step:",
       },
       {
-        kind: "clarify",
-        question: "Which platform should I monitor for this?",
-        options: ["Shopify", "WooCommerce", "Stripe"],
-      },
-    ],
-  },
-  {
-    blocks: [
-      {
-        kind: "text",
-        text: "Great choice. First, let's connect your store so I can watch for abandoned carts.",
-      },
-      {
-        kind: "credentials",
-        service: "Shopify",
-        description: "Read-only access to orders and abandoned checkouts.",
-      },
-    ],
-    actionAdvances: true,
-  },
-  {
-    blocks: [
-      {
-        kind: "text",
-        text: "Perfect. Here's what I'll build for you — review and deploy when you're ready.",
-      },
-      {
-        kind: "plan",
-        title: "Abandoned cart recovery",
-        summary:
-          "Watch for abandoned carts on Shopify, wait 2 hours, then send a reminder email. Retry once on failure.",
+        kind: "flowPlan",
+        title: "Invoice reminder - Step 1",
+        description: "Configure how we'll check for unpaid invoices",
+        primaryActionLabel: "Next",
         steps: [
-          "Trigger: Shopify cart abandoned",
-          "Wait 2 hours",
-          "Check if order was completed — if yes, stop",
-          "Send reminder email via Gmail",
-          "Retry once if email fails",
-          "Log outcome",
+          {
+            id: "invoice-check",
+            number: 1,
+            icon: "SC",
+            title: "Check unpaid invoices daily",
+            status: "configured",
+            description: "Daily check for invoices unpaid for 3+ days",
+            details: [],
+            type: "trigger",
+            config: { frequency: "Daily at 9 AM", timezone: "IST" },
+          },
         ],
-        estimate: "~2,400 tasks / month",
       },
     ],
     actionAdvances: true,
@@ -235,30 +230,7 @@ export const ASSISTANT_SCRIPT: AssistantTurn[] = [
     blocks: [
       {
         kind: "text",
-        text: "All set — your automation is live. Here's a sample run from the last hour:",
-      },
-      {
-        kind: "deployed",
-        name: "Abandoned cart recovery",
-        logs: [
-          { time: "10:42 AM", text: "Cart abandoned by priya@example.com", status: "ok" },
-          { time: "12:42 PM", text: "Reminder email sent", status: "ok" },
-          { time: "12:43 PM", text: "Email delivered", status: "ok" },
-          { time: "12:51 PM", text: "Customer reopened cart", status: "warn" },
-        ],
-      },
-      {
-        kind: "suggestion",
-        title: "Want to extend this?",
-        body: "If a customer still hasn't checked out 24 hours after the email, send a WhatsApp follow-up. I can add that in one click.",
-      },
-    ],
-  },
-  {
-    blocks: [
-      {
-        kind: "text",
-        text: "Done — WhatsApp follow-up added at the 24h mark. I'll keep an eye on delivery rates and let you know if something looks off.",
+        text: "All set — your automation is live.",
       },
     ],
   },

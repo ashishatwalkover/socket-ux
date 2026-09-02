@@ -324,9 +324,55 @@ export function AiShellV6() {
       }
       if (label === "Deploy") setDeployed(true);
       setSelectedFlow(label);
+
+      // "Build this flow" from a flow-plan card: reply with an inline
+      // stepper-config UI (same as the right-pane FlowConfigPanel) so the user
+      // can walk each step's fields with a Next button.
+      if (label === "Build this flow" && activeFlowKey) {
+        const flow = FLOW_PLANS[activeFlowKey];
+        if (flow) {
+          const userMsg: ChatMessage = { id: nextId(), role: "user", text: label };
+          const pendingId = nextId();
+          setMessages((prev) => [
+            ...prev,
+            userMsg,
+            { id: pendingId, role: "assistant", pending: true },
+          ]);
+          setPending(true);
+          window.setTimeout(() => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === pendingId
+                  ? {
+                      id: pendingId,
+                      role: "assistant" as const,
+                      blocks: [
+                        {
+                          kind: "text",
+                          text: "Let's walk through each step. Fill what's needed and hit Next.",
+                        },
+                        {
+                          kind: "stepperConfig",
+                          title: flow.title,
+                          description: flow.description,
+                          webhookUrl: "https://flow.sokt.io/func/scripQGnrZSF",
+                          steps: flow.steps,
+                        },
+                      ],
+                    }
+                  : m
+              )
+            );
+            setPending(false);
+            setTurn((t) => t + 1);
+          }, 500);
+          return;
+        }
+      }
+
       submitText(label);
     },
-    [submitText, flowId, panel, router]
+    [submitText, flowId, panel, router, activeFlowKey, pending]
   );
 
   const handleNewChat = useCallback(() => {
@@ -441,7 +487,8 @@ function TopHeader({
         )}
       </nav>
       <div className="ml-auto flex items-center gap-2.5">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/70 px-3 py-1 text-xs font-medium text-amber-800">
+        {/* Hidden: Changes chip and Go Live button - will display after next step */}
+        {/* <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/70 px-3 py-1 text-xs font-medium text-amber-800">
           <span className="size-1.5 rounded-full bg-amber-500" />
           Changes — not live yet
           <svg
@@ -469,7 +516,7 @@ function TopHeader({
           sx={{ bgcolor: "#2563eb", color: "#ffffff", "&:hover": { bgcolor: "#1d4ed8" } }}
         >
           Go Live
-        </Button>
+        </Button> */}
       </div>
     </header>
   );
